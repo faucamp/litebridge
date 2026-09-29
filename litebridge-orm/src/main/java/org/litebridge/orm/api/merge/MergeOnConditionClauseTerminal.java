@@ -1,9 +1,12 @@
 package org.litebridge.orm.api.merge;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -24,18 +27,31 @@ public final class MergeOnConditionClauseTerminal<DTO,
         MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>>,
         MergeOnConditionClauseTerminal<DTO, MUS, MIS>> {
 
+    private final @Nullable String usingTable;
+    private final @Nullable Class<?> usingDtoClass;
+    private final @Nullable QueryNode usingQueryNode;
+    private final @Nullable String usingAlias;
+    private @Nullable UsingNode usingNode;
+
     /**
      * Creates a new {@code MergeOnConditionClauseTerminal} instance.
      *
      * @param mergeNode         the root merge query node
-     * @param usingNode         the using clause query node
+     * @param on                the using on condition clause query node
      * @param litebridgeContext the Litebridge context
      */
-    public MergeOnConditionClauseTerminal(final MergeNode mergeNode,
-                                          final UsingNode usingNode,
+    public MergeOnConditionClauseTerminal(final @Nullable String usingTable,
+                                          final @Nullable Class<?> usingDtoClass,
+                                          final @Nullable QueryNode usingQueryNode,
+                                          final @Nullable String usingAlias,
+                                          final QueryNode on,
+                                          final MergeNode mergeNode,
                                           final LitebridgeContext litebridgeContext) {
-        super(mergeNode, usingNode, litebridgeContext);
-
+        super(mergeNode, on, litebridgeContext);
+        this.usingTable = usingTable;
+        this.usingDtoClass = usingDtoClass;
+        this.usingQueryNode = usingQueryNode;
+        this.usingAlias = usingAlias;
     }
 
     /**
@@ -46,7 +62,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      */
     @Override
     public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> and(final String column) {
-        return null;
+        return onImpl(LogicOperator.AND, column, null);
     }
 
     /**
@@ -57,7 +73,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      */
     @Override
     public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> and(final ExpressionSpec expression) {
-        return null;
+        return onImpl(LogicOperator.AND, null, expression);
     }
 
     /**
@@ -79,7 +95,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      */
     @Override
     public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> or(final String column) {
-        return null;
+        return onImpl(LogicOperator.OR, column, null);
     }
 
     /**
@@ -90,7 +106,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      */
     @Override
     public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> or(final ExpressionSpec expression) {
-        return null;
+        return onImpl(LogicOperator.OR, null, expression);
     }
 
     /**
@@ -102,5 +118,27 @@ public final class MergeOnConditionClauseTerminal<DTO,
     @Override
     public MergeOnConditionClauseTerminal<DTO, MUS, MIS> or(final QueryConditionBuilder<DTO> query) {
         return null;
+    }
+
+    private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> onImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
+        return new MergeConditionClause<>(litebridgeContext,
+                logicOperator,
+                column,
+                expression,
+                node,
+                conditionNode -> {
+                    node = conditionNode;
+                    return this;
+                });
+    }
+
+    @Override
+    QueryNode node() {
+        if (usingNode == null) {
+            usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, usingQueryNode, usingAlias, node);
+            return usingNode;
+        } else {
+            return node;
+        }
     }
 }

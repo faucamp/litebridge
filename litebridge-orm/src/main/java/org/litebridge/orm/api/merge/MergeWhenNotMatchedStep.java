@@ -53,7 +53,7 @@ public sealed class MergeWhenNotMatchedStep<MIS extends MergeInsertStep>
         final MIS mergeInsertStep = createMergeInsertStep();
         final MergeTerminal mergeTerminal = insert.apply(mergeInsertStep);
         final QueryNode terminalNode = MergeTerminalInspector.getNode(mergeTerminal);
-        node = new WhenNotMatchedNode(node, null, terminalNode);
+        node = new WhenNotMatchedNode(node(), null, terminalNode);
         return this;
     }
 

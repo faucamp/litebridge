@@ -75,6 +75,21 @@ public class MergeE2eTest extends AbstractE2eTest {
             assertEquals(isOracle ? 10 : 5, count);
         }
 
+        // Similar query as above, but with multiple USING ON conditions and no DELETE/INSERT clause
+        {
+            final UpdateResult result = litebridge.mergeInto(Account.class, m -> m
+                    .using(Person.class)
+                    .on(AccountMeta.id).eq(PersonMeta.id)
+                    .and(AccountMeta.id).gt(1000)
+                    .or(AccountMeta.name).eq("Random Account Name")
+                    .whenMatched(u -> u
+                            .update(account -> account
+                                    .set(AccountMeta.balance).to(500)
+                                    .where(AccountMeta.id).lt(5))));
+
+            assertEquals(0, result.rowsAffected());
+        }
+
         // Merge with: "USING <dto>", "WHEN NOT MATCHED <insert dto>"
         {
             final boolean isOracle = "Oracle".equals(dbEnv.getName());

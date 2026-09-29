@@ -94,9 +94,6 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
                 column,
                 expression,
                 null,
-                conditionNode -> {
-                    final UsingNode usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, usingQueryNode, alias, conditionNode);
-                    return new MergeOnConditionClauseTerminal<>(mergeNode, usingNode, litebridgeContext);
-                });
+                conditionNode -> new MergeOnConditionClauseTerminal<>(usingTable, usingDtoClass, usingQueryNode, alias, conditionNode, mergeNode, litebridgeContext));
     }
 }

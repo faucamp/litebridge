@@ -3,6 +3,7 @@ package org.litebridge.orm.api.merge;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhenMatchedNode;
 
 import java.util.function.Function;
@@ -48,18 +49,19 @@ public sealed class MergeWhenMatchedStep<DTO, MUS extends MergeUpdateStep, MIS e
      * @return this instance of {@code MergeWhenMatchedStep} for further chaining of merge match clauses.
      */
     public MergeWhenMatchedStep<DTO, MUS, MIS> whenMatched(final Function<MUS, MergeTerminal> update) {
-        final MUS mergeUpdateStep = createMergeUpdateStep();
+        final QueryNode prevNode = node();
+        final MUS mergeUpdateStep = createMergeUpdateStep(prevNode);
         final MergeTerminal terminal = update.apply(mergeUpdateStep);
-        node = new WhenMatchedNode(node, terminal.node());
+        node = new WhenMatchedNode(prevNode, terminal.node());
         return this;
     }
 
     @SuppressWarnings({"unchecked", "ConstantConditions"})
-    private MUS createMergeUpdateStep() {
+    private MUS createMergeUpdateStep(final QueryNode prevNode) {
         if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
-            return (MUS) new DtoMergeUpdateStep<>(mergeNode.dtoClass(), node, litebridgeContext);
+            return (MUS) new DtoMergeUpdateStep<>(mergeNode.dtoClass(), prevNode, litebridgeContext);
         } else {
-            return (MUS) new SqlMergeUpdateStep(mergeNode.table(), node, litebridgeContext);
+            return (MUS) new SqlMergeUpdateStep(mergeNode.table(), prevNode, litebridgeContext);
         }
     }
 }
