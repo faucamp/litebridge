@@ -149,8 +149,8 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("SQL merge: upsert")
-    public void merge_upsert(final DbEnvDtoTableMapper tableMapper) throws Exception {
+    @DisplayName("SQL merge: upsert using SELECT")
+    public void merge_upsert_subquery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Don't run test for databases that do not support MERGE INTO
         assumeTrue(litebridge instanceof Litebridge);
         final Litebridge litebridge = (Litebridge) this.litebridge;
@@ -164,7 +164,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
         int prevCacheSize = queryPlanCache.size();
 
-        // Insert a row that does not exist
+        // Insert a row that does not exist by selecting literals in the USING clause
         {
             final UpdateResult insertResult = litebridge.mergeInto(personTable, m -> m
                     .using(Fn.alias(q -> q
@@ -194,6 +194,66 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
                     .using(Fn.alias(q -> q
                                     .select(Fn.literal(123).as(personId)),
                             "X"))
+                    .on(personId).eq(Fn.aliasRef("X", personId))
+                    .whenMatched(u -> u
+                            .update(person -> person
+                                    .set(firstName).to("Updated Name")
+                                    .set(surname).to("Updated Surname")))
+                    .whenNotMatched(i -> i
+                            .insert(personId, firstName, surname, age)
+                            .values(123, "Inserted Name", "Inserted Surname", 30)));
+
+            assertEquals(1, updateResult.rowsAffected());
+            assertEquals(prevCacheSize, queryPlanCache.size());
+            final Row row = litebridge.select().from(personTable).where(personId).eq(123).oneOrThrow();
+            assertEquals("Updated Name", row.value(firstName));
+            assertEquals("Updated Surname", row.value(surname));
+            assertEquals(30, ((Number) row.value(age)).intValue());
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("SQL merge: upsert using VALUES")
+    public void merge_upsert_values(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Don't run test for databases that do not support MERGE INTO
+        assumeTrue(litebridge instanceof Litebridge);
+        final Litebridge litebridge = (Litebridge) this.litebridge;
+
+        final String personTable = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+        final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        int prevCacheSize = queryPlanCache.size();
+
+        // Insert a row that does not exist by selecting literals in the USING clause
+        {
+            final UpdateResult insertResult = litebridge.mergeInto(personTable, m -> m
+                    .using(Fn.values(123))
+                    .on(personId).eq(123)
+                    .whenMatched(u -> u
+                            .update(person -> person
+                                    .set(firstName).to("Updated Name")
+                                    .set(surname).to("Updated Surname")))
+                    .whenNotMatched(i -> i
+                            .insert(personId, firstName, surname, age)
+                            .values(123, "Inserted Name", "Inserted Surname", 30)));
+
+            assertEquals(1, insertResult.rowsAffected());
+            assertEquals(prevCacheSize + 1, queryPlanCache.size());
+            final Row row = litebridge.select().from(personTable).where(personId).eq(123).oneOrThrow();
+            assertEquals("Inserted Name", row.value(firstName));
+            assertEquals("Inserted Surname", row.value(surname));
+            assertEquals(30, ((Number) row.value(age)).intValue());
+            prevCacheSize = queryPlanCache.size();
+        }
+
+        // Update an existing row with the same merge statement
+        {
+            final UpdateResult updateResult = litebridge.mergeInto(personTable, m -> m
+                    .using(Fn.values(123))
                     .on(personId).eq(Fn.aliasRef("X", personId))
                     .whenMatched(u -> u
                             .update(person -> person

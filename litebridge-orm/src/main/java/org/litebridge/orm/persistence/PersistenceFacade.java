@@ -206,20 +206,23 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createInsertBuilder(final Object dto, final OrmTable ormTable, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final InsertBuilder insertBuilder;
-
-        if (tableRegistry.containsOrmTable(dto.getClass())) {
-            // Root-level DTO class (default); omit context
-            insertBuilder = new InsertBuilder(ormTable, null, litebridgeContext);
-        } else {
-            insertBuilder = new InsertBuilder(ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
-        }
+        final InsertBuilder insertBuilder = new InsertBuilder(ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
 
         if (prepareUpdateStatement(dto, ormTable, insertBuilder, inProgressDtos, tableProvider) == null) {
             return NO_OP_STATEMENT_BUILDER;
         }
 
         return insertBuilder;
+    }
+
+    private StatementBuilder createMergeBuilder(final Object dto, final OrmTable ormTable, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
+        final MergeBuilder mergeBuilder = new MergeBuilder(dto, ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
+
+        if (prepareUpdateStatement(dto, ormTable, mergeBuilder, inProgressDtos, tableProvider) == null) {
+            return NO_OP_STATEMENT_BUILDER;
+        }
+
+        return mergeBuilder;
     }
 
     private StatementBuilder createUpdateBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
@@ -394,7 +397,7 @@ public class PersistenceFacade {
 
                                     statementChain.addDependency(value, dependencyPipe);
                                 } else {
-                                    // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
+                                    // PK already set - set the FK value on the current DTO and ensure the embedded DTO is persisted
                                     nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                                         final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
@@ -662,7 +665,9 @@ public class PersistenceFacade {
         if (ormTable.isPersistedDto(dto)) {
             return createUpdateBuilder(dto, ormTable, inProgressDtos, tableProvider);
         } else {
-            return createInsertBuilder(dto, ormTable, inProgressDtos, tableProvider);
+            // Do an upsert. If the database provider supports MERGE, use that, else use an update, inserting if no records were updated
+            return createMergeBuilder(dto, ormTable, inProgressDtos, tableProvider);
+//            return createInsertBuilder(dto, ormTable, inProgressDtos, tableProvider);
         }
     }
 

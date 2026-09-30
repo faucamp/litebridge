@@ -71,7 +71,7 @@ public abstract sealed class UpdateSetStep<DTO,
      * @param value the value to set
      * @return the next update step
      */
-    public US to(final Object value) {
+    public US to(final @Nullable Object value) {
         return addSetNode(null, value);
     }
 
@@ -134,7 +134,7 @@ public abstract sealed class UpdateSetStep<DTO,
         return addSetNode(MathOperator.MOD, value);
     }
 
-    private US addSetNode(final @Nullable MathOperator mathOperator, final Object value) {
+    private US addSetNode(final @Nullable MathOperator mathOperator, final @Nullable Object value) {
         final SetNode setNode = new SetNode(node, column, expressionSpec, value, mathOperator);
         return updateStepCreator.apply(setNode);
     }

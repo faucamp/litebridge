@@ -381,7 +381,7 @@ public class DtoMapper {
             final Object[] values = new Object[pkColumnIndexes.length];
 
             for (int i = 0; i < pkColumnIndexes.length; i++) {
-                values[i] = row.value(pkColumnIndexes[i]);
+                values[i] = Objects.requireNonNull(row.value(pkColumnIndexes[i]));
             }
 
             return new CompositePk(values);
@@ -831,7 +831,7 @@ public class DtoMapper {
         }
 
         @Override
-        public @Nullable Object get(int index) {
+        public Object get(int index) {
             return values[index];
         }
 
@@ -1120,7 +1120,7 @@ public class DtoMapper {
             return dtoClass;
         }
 
-        public Class<?> contextDtoClass() {
+        public @Nullable Class<?> contextDtoClass() {
             return contextDtoClass;
         }
 

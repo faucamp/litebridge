@@ -3,6 +3,7 @@ package org.litebridge.orm.persistence;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
@@ -15,10 +16,10 @@ import java.util.List;
 /**
  * A builder class for constructing SQL INSERT statements.
  */
-final class InsertBuilder extends AbstractStatementBuilder {
+sealed class InsertBuilder extends AbstractStatementBuilder permits MergeBuilder {
 
-    private final List<LinkedHashMap<String, @Nullable Object>> rows = new ArrayList<>();
-    private final @Nullable Class<?> contextDtoClass;
+    protected final List<LinkedHashMap<String, @Nullable Object>> rows = new ArrayList<>();
+    protected final @Nullable Class<?> contextDtoClass;
 
     public InsertBuilder(final OrmTable table, final @Nullable Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
         super(table, litebridgeContext);
@@ -43,7 +44,7 @@ final class InsertBuilder extends AbstractStatementBuilder {
     }
 
     @Override
-    public Class<InsertResult> resultType() {
+    public Class<? extends UpdateResult> resultType() {
         return InsertResult.class;
     }
 

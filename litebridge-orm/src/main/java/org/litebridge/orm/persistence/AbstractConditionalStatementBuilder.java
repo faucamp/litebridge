@@ -1,14 +1,14 @@
 package org.litebridge.orm.persistence;
 
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
-import org.litebridge.orm.engine.LitebridgeContext;
 
 /**
  * Abstract base class for building SQL statements.
  */
 public abstract sealed class AbstractConditionalStatementBuilder extends AbstractStatementBuilder
-        permits UpdateBuilder, DeleteBuilder {
+        permits DeleteBuilder, UpdateBuilder {
 
     /**
      * Constructs a new {@code AbstractConditionalStatementBuilder}.

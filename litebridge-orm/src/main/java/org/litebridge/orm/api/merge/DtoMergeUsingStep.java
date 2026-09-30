@@ -1,11 +1,17 @@
 package org.litebridge.orm.api.merge;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
+import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.expression.select.DtoAliasSpec;
+import org.litebridge.orm.expression.select.FromTargetSpec;
+import org.litebridge.orm.expression.select.QueryAliasSpec;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -44,8 +50,20 @@ public final class DtoMergeUsingStep<DTO> extends MergeUsingStep<DTO, DtoMergeUp
      * @return the merge ON condition clause terminal
      */
     public DtoMergeOnStep<DTO> using(final Function<SelectApi, SelectTerminal<?>> subselect) {
+        return usingQueryImpl(subselect, null);
+    }
+
+    public DtoMergeOnStep<DTO> using(final FromTargetSpec fromTargetSpec) {
+        return switch (fromTargetSpec) {
+            case QueryAliasSpec queryAliasSpec -> usingQueryImpl(queryAliasSpec.query(), queryAliasSpec.alias());
+            case DtoAliasSpec dtoAliasSpec -> new DtoMergeOnStep<>(dtoAliasSpec.dtoClass(), dtoAliasSpec.alias(), mergeNode, litebridgeContext);
+            default -> throw new IllegalArgumentException("Unsupported DTO-mode FromTargetSpec: " + fromTargetSpec);
+        };
+    }
+
+    private @NonNull DtoMergeOnStep<DTO> usingQueryImpl(final Function<SelectApi, SelectTerminal<?>> subselect, final @Nullable String alias) {
         final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
         final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
-        return new DtoMergeOnStep<>(subselectNode, null, mergeNode, litebridgeContext);
+        return new DtoMergeOnStep<>(subselectNode, alias, mergeNode, litebridgeContext);
     }
 }

@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.insert;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -10,7 +9,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
  */
 public final class SqlInsertIntoStep extends InsertIntoStep {
 
-    private final @Nullable String tableName;
+    private final String tableName;
 
     /**
      * Creates a new {@code SqlInsertIntoStep} instance.

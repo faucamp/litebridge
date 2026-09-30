@@ -1133,6 +1133,60 @@ public class BasicE2eTest extends AbstractE2eTest {
         assertTrue(results.isPresent());
     }
 
+    @TestTemplate
+    @DisplayName("Save: merge/upsert DTO if not tracked yet")
+    void save_upsertIfNotTracked(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        // Store an existing (untracked) record in the databse
+        litebridge.insert(personTableName, i -> i
+                .into(personId, firstName, surname, age, eyeColour)
+                .values(1L, "Alice", "Smith", 20, "blue"));
+
+        assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
+        assertEquals(0, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+
+        // Setup DTO
+        final Person person = new Person();
+        person.setId(1L);
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(20);
+        person.setEyeColour("blue");
+
+        final Account account = new Account();
+        account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
+        account.setOwner(person);
+
+        person.setAccounts(List.of(account));
+
+        // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via a merge) the Account record
+        litebridge.save(person);
+
+        assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
+        assertEquals(1, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+
+        // Ensure the person record is still intact, and that the account was inserted
+        final Person result = litebridge.select(Person.class)
+                .join(Account.class).on(PersonMeta.accounts)
+                .oneOrThrow();
+        assertEquals(person.getId(), result.getId());
+        assertNotNull(person.getAccounts());
+        assertEquals(1, person.getAccounts().size());
+        final Account resultAccount = result.getAccounts().getFirst();
+        assertEquals(account, resultAccount);
+    }
+
+
     private void registerAddressTableMapping(final DbEnvDtoTableMapper tableMapper) {
         if (dbEnv.getName().equals("PostgreSQL")) {
             litebridge.register(Address.class, rc -> rc

@@ -35,7 +35,7 @@ public final class SubstringSpec extends AbstractColumnExpressionSpec implements
     }
 
     @Override
-    public void setTableAlias(final String tableAlias) {
+    public void setTableAlias(final @Nullable String tableAlias) {
         // Propagate the table alias to the lower level
         target.setTableAlias(tableAlias);
     }

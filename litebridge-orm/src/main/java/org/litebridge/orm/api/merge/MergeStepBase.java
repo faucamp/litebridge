@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 import java.util.Objects;
 
@@ -26,6 +27,10 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
      */
     protected final @Nullable QueryNode usingQueryNode;
     /**
+     * Using VALUES
+     */
+    protected final @Nullable ValuesSpec usingValues;
+    /**
      * The Litebridge context.
      */
     protected final LitebridgeContext litebridgeContext;
@@ -47,6 +52,7 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
         this.usingTable = null;
         this.usingDtoClass = usingDtoClass;
         this.usingQueryNode = null;
+        this.usingValues = null;
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -57,6 +63,18 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
         this.usingTable = null;
         this.usingDtoClass = null;
         this.usingQueryNode = usingQueryNode;
+        this.usingValues = null;
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    MergeStepBase(final ValuesSpec usingValues,
+                  final MergeNode mergeNode,
+                  final LitebridgeContext litebridgeContext) {
+        this.mergeNode = mergeNode;
+        this.usingTable = null;
+        this.usingDtoClass = null;
+        this.usingQueryNode = null;
+        this.usingValues = usingValues;
         this.litebridgeContext = litebridgeContext;
     }
 

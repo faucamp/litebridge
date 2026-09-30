@@ -1,5 +1,6 @@
 package org.litebridge.orm.expression.select;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.expression.AbstractAliasable;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 
@@ -7,13 +8,23 @@ import java.util.Objects;
 
 public final class LiteralExpressionSpec<T> extends AbstractAliasable implements TypeOverrideExpressionSpec<T> {
 
-    private final T value;
+    private final @Nullable T value;
     private final Class<T> returnType;
 
+    public LiteralExpressionSpec(final @Nullable T value) {
+        this(value, null);
+    }
+
     @SuppressWarnings("unchecked")
-    public LiteralExpressionSpec(final T value) {
+    public LiteralExpressionSpec(final @Nullable T value, final @Nullable String alias) {
         this.value = value;
-        this.returnType = (Class<T>) value.getClass();
+        this.alias = alias;
+
+        if (value != null) {
+            this.returnType = (Class<T>) value.getClass();
+        } else {
+            this.returnType = (Class<T>) Object.class;
+        }
     }
 
     public T value() {

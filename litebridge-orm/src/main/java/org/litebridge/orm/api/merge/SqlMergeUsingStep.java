@@ -9,6 +9,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.FromTargetSpec;
 import org.litebridge.orm.expression.select.QueryAliasSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -55,6 +56,8 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
             final SelectTerminal<?> selectTerminal = query.apply(new SelectApiImpl(litebridgeContext));
             final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
             return new MergeOnStep<>(subselectNode, alias, mergeNode, litebridgeContext);
+        } else if (fromTargetSpec instanceof ValuesSpec valuesSpec) {
+            return new MergeOnStep<>()
         } else {
             throw new UnsupportedOperationException("Unsupported from target spec: " + fromTargetSpec);
         }

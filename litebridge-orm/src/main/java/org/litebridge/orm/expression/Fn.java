@@ -25,6 +25,7 @@ import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SqlFromTargetSpec;
 import org.litebridge.orm.expression.select.TableAliasSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 import java.util.List;
 import java.util.function.Function;
@@ -84,6 +85,10 @@ public final class Fn {
      */
     public static SqlFromTargetSpec alias(final Function<SelectApi, SelectTerminal<?>> query, final String alias) {
         return new QueryAliasSpec(query, alias);
+    }
+
+    public static ValuesSpec values(final @Nullable Object... values) {
+        return new ValuesSpec(values);
     }
 
     // Field/column selectors
@@ -378,10 +383,22 @@ public final class Fn {
      * @param <T>   The type of the literal value.
      * @return A literal expression specification.
      */
-    public static <T> LiteralExpressionSpec<T> literal(final T value) {
+    public static <T> LiteralExpressionSpec<T> literal(final @Nullable T value) {
         return new LiteralExpressionSpec<>(value);
     }
 
+    /**
+     * Specifies a literal value.
+     * <p>
+     * This is used to specify a literal value in a query expression.
+     *
+     * @param value The literal value to wrap.
+     * @param <T>   The type of the literal value.
+     * @return A literal expression specification.
+     */
+    public static <T> LiteralExpressionSpec<T> literal(final @Nullable T value, final @Nullable String alias) {
+        return new LiteralExpressionSpec<>(value, alias);
+    }
     // Java helper functions
 
     /**
