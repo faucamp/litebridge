@@ -3,6 +3,8 @@ package org.litebridge.orm.engine.compiler;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -62,6 +64,9 @@ class MergeCompilationContextTest {
         final SelectExpressionMapper expressionMapper = mock(SelectExpressionMapper.class);
         final TypeConverter typeConverter = mock(TypeConverter.class);
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class, Mockito.RETURNS_DEEP_STUBS);
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
 
         when(context.tableRegistry()).thenReturn(tableRegistry);
         when(context.tableMetaDataCache()).thenReturn(metadataCache);
@@ -69,6 +74,7 @@ class MergeCompilationContextTest {
         when(context.typeConverter()).thenReturn(typeConverter);
         when(context.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
+        when(context.databaseProvider()).thenReturn(databaseProvider);
         return context;
     }
 

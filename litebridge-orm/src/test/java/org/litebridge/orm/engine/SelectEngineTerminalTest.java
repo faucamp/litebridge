@@ -221,7 +221,7 @@ class SelectEngineTerminalTest {
         final SelectExpression otherExpr = mock(SelectExpression.class);
 
         final Select selectOperation = mock(Select.class);
-        when(selectOperation.expressions()).thenReturn(List.of(otherExpr, convertExpr, colExprWithoutAlias));
+        when(selectOperation.expressions()).thenReturn((List) List.of(otherExpr, convertExpr, colExprWithoutAlias));
 
         final SelectNode selectNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], null);
         final PreparedOperation preparedOperation = new PreparedOperation(selectOperation, Collections.emptyList());

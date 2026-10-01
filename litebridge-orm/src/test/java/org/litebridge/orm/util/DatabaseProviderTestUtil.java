@@ -25,11 +25,14 @@ public final class DatabaseProviderTestUtil {
             throw new RuntimeException(e);
         }
 
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
+
         return databaseProvider;
     }
 
     public static DatabaseProviderMetaData createMetaData() {
-        return new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        return new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }
 
     public static DatabaseMetaData createDatabaseMetaData() {

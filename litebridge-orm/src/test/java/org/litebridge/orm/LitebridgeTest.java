@@ -7,6 +7,7 @@ import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
@@ -158,6 +159,8 @@ class LitebridgeTest {
         when(databaseProvider.tableMetaData(eq(table), any(ConnectionProvider.class))).thenReturn(tableMetaData);
         when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
 
         final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
@@ -868,6 +871,8 @@ class LitebridgeTest {
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(tableMetaData);
         final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
@@ -898,6 +903,8 @@ class LitebridgeTest {
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 

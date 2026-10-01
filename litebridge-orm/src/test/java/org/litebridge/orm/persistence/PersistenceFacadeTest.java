@@ -3,6 +3,8 @@ package org.litebridge.orm.persistence;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -892,6 +894,8 @@ class PersistenceFacadeTest {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);

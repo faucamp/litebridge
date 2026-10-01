@@ -1,6 +1,8 @@
 package org.litebridge.orm.engine.compiler;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -64,6 +66,11 @@ class MergeQueryCompilerTest {
         when(tableRegistry.getOrmTable("items")).thenReturn(null);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metaData);
+
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
+        when(context.databaseProvider()).thenReturn(databaseProvider);
 
         final MergeQueryCompiler compiler = new MergeQueryCompiler(context);
         final MergeNode mergeNode = new MergeNode("items", null, null, null);
