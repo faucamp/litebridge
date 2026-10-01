@@ -84,7 +84,7 @@ class MergeCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
 
-        final MergeNode mergeNode = new MergeNode("items", null, null);
+        final MergeNode mergeNode = new MergeNode("items", null, null, null);
 
         // When
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
@@ -108,7 +108,7 @@ class MergeCompilationContextTest {
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
-        final MergeNode mergeNode = new MergeNode(null, UserDto.class, null);
+        final MergeNode mergeNode = new MergeNode(null, UserDto.class, null, null);
 
         // When
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, litebridgeContext);
@@ -132,11 +132,11 @@ class MergeCompilationContextTest {
         final Table usingTable = new Table("incoming");
         when(context.tableRegistry().getOrCreateSpiTable("incoming")).thenReturn(usingTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null, null), context);
         final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, "c1", null, Operator.EQ, "c2");
 
         // When using table name
-        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null, null, conditionNode));
+        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null, null, null, conditionNode));
 
         // Then
         assertEquals(MergeCompilationContext.ConditionContext.ON, compilationContext.conditionContext());
@@ -147,7 +147,7 @@ class MergeCompilationContextTest {
         when(usingOrmTable.getMetaData()).thenReturn(usingMeta);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(usingOrmTable);
 
-        compilationContext.setUsingNode(new UsingNode(null, null, UserDto.class, null, null, conditionNode));
+        compilationContext.setUsingNode(new UsingNode(null, null, UserDto.class, null, null, null, conditionNode));
         assertEquals(MergeCompilationContext.ConditionContext.ON, compilationContext.conditionContext());
     }
 
@@ -164,8 +164,8 @@ class MergeCompilationContextTest {
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, "c1", null, Operator.EQ, "c2");
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
-        compilationContext.setUsingNode(new UsingNode(null, "items", null, null, null, conditionNode));
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null, null), context);
+        compilationContext.setUsingNode(new UsingNode(null, "items", null, null, null, null, conditionNode));
 
         // When addOnCondition
         final ConditionNode onCond = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1);
@@ -203,7 +203,7 @@ class MergeCompilationContextTest {
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), litebridgeContext);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null, null), litebridgeContext);
         compilationContext.addWhenMatchedSpec(true);
 
         // 1. Column by field name in DTO mode
@@ -253,7 +253,7 @@ class MergeCompilationContextTest {
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), litebridgeContext);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null, null), litebridgeContext);
         compilationContext.addWhenMatchedSpec(false);
 
         // 1. Column names in DTO mode
@@ -298,7 +298,7 @@ class MergeCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null, null), context);
         compilationContext.addWhenMatchedSpec(false);
         compilationContext.whenNotMatchedInsert(new InsertNode("items", null, new String[]{"id"}));
 
@@ -360,7 +360,7 @@ class MergeCompilationContextTest {
         when(context.tableRegistry().getOrmTableOrThrow(UserWithRoleDto.class)).thenReturn(userOrmTable);
         when(context.tableRegistry().getOrmTableOrThrow(userTable)).thenReturn(userOrmTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserWithRoleDto.class, null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserWithRoleDto.class, null, null), context);
         compilationContext.addWhenMatchedSpec(false);
 
         // When
@@ -391,7 +391,7 @@ class MergeCompilationContextTest {
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null), litebridgeContext);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null, null), litebridgeContext);
         compilationContext.addWhenMatchedSpec(false);
 
         // When & Then
@@ -423,9 +423,9 @@ class MergeCompilationContextTest {
         when(context.selectExpressionMapper().toSelectExpression(any(), anyMap())).thenReturn(colExpr);
         when(context.typeConverter().convert(any(), eq(Types.INTEGER))).thenAnswer(inv -> inv.getArgument(0));
 
-        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null), context);
+        final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null, null), context);
         final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, "c1", null, Operator.EQ, "c2");
-        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null, null, conditionNode));
+        compilationContext.setUsingNode(new UsingNode(null, "incoming", null, null, null, null, conditionNode));
         compilationContext.addOnCondition(new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1));
 
         // When matched: update val = 100
@@ -515,10 +515,10 @@ class MergeCompilationContextTest {
         when(context.selectExpressionMapper().toSelectExpression(eq(lhsResolved), anyMap())).thenReturn(lhsColExpr);
         when(context.selectExpressionMapper().toSelectExpression(eq(rhsResolved), anyMap())).thenReturn(rhsColExpr);
 
-        final MergeNode mergeNode = new MergeNode(null, UserDto.class, "a");
+        final MergeNode mergeNode = new MergeNode(null, UserDto.class, null, "a");
         final MergeCompilationContext compilationContext = new MergeCompilationContext(mergeNode, context);
         final ConditionNode onCondNode = new ConditionNode(null, LogicOperator.NOOP, null, lhsQueryField, Operator.EQ, rhsQueryField);
-        compilationContext.setUsingNode(new UsingNode(mergeNode, null, RoleDto.class, null, "p", onCondNode));
+        compilationContext.setUsingNode(new UsingNode(mergeNode, null, RoleDto.class, null, null, "p", onCondNode));
         compilationContext.addOnCondition(onCondNode);
 
         // When

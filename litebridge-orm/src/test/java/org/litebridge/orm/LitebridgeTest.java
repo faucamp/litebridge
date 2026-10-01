@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.Row;
@@ -11,6 +12,9 @@ import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.DefaultAliasTransformer;
+import org.litebridge.db.spi.expression.AliasReferenceExpressionFactory;
+import org.litebridge.db.spi.expression.ColumnExpressionFactory;
+import org.litebridge.db.spi.expression.LiteralExpressionFactory;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.impl.DefaultSequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
@@ -37,7 +41,10 @@ import org.litebridge.orm.engine.RegistrationEngine;
 import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
+import org.litebridge.orm.expression.TestAliasReference;
+import org.litebridge.orm.expression.TestColumnExpression;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
+import org.litebridge.orm.expression.TestLiteralExpression;
 import org.litebridge.orm.expression.function.aggregate.CountSpec;
 import org.litebridge.orm.expression.intent.ConvertIntent;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -67,6 +74,7 @@ import static org.litebridge.orm.util.DatabaseProviderTestUtil.mockDatabaseProvi
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -148,8 +156,30 @@ class LitebridgeTest {
         final TableMetaData tableMetaData = new TableMetaData(table, List.of("MY_ID"), List.of(columnMetaDataMyId, columnMetaDataMyVar));
         final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
         when(databaseProvider.tableMetaData(eq(table), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class))).thenReturn(new InsertResult(1, Collections.emptyMap()));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+
+        final LiteralExpressionFactory literalExpressionFactory = mock(LiteralExpressionFactory.class);
+        when(sqlFunctionRegistry.select().literal()).thenReturn(literalExpressionFactory);
+        when(literalExpressionFactory.create(nullable(Object.class), nullable(String.class)))
+                .then(i -> new TestLiteralExpression(i.getArgument(0), i.getArgument(1)));
+
+        final AliasReferenceExpressionFactory aliasReferenceExpressionFactory = mock(AliasReferenceExpressionFactory.class);
+        when(sqlFunctionRegistry.select().aliasReference()).thenReturn(aliasReferenceExpressionFactory);
+        when(aliasReferenceExpressionFactory.create(anyString(), nullable(String.class)))
+                .then(i -> new TestAliasReference(i.getArgument(0)));
+
+        final ColumnExpressionFactory colExprFactory = mock(ColumnExpressionFactory.class);
+        when(sqlFunctionRegistry.select().column()).thenReturn(colExprFactory);
+        when(colExprFactory.create(any(Column.class), nullable(String.class), nullable(String.class)))
+                .then(i -> new TestColumnExpression(i.getArgument(0, Column.class)));
+
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
 
         litebridge.register(dtoTableSpec);
@@ -162,7 +192,7 @@ class LitebridgeTest {
 
         // Then
         verify(databaseProvider).tableMetaData(eq(table), any(ConnectionProvider.class));
-        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any());
+        verify(databaseProvider).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any());
     }
 
     @Test

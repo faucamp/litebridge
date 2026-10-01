@@ -66,7 +66,7 @@ class MergeQueryCompilerTest {
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metaData);
 
         final MergeQueryCompiler compiler = new MergeQueryCompiler(context);
-        final MergeNode mergeNode = new MergeNode("items", null, null);
+        final MergeNode mergeNode = new MergeNode("items", null, null, null);
 
         // When
         final MergeCompilationContext compilationContext = compiler.createCompilationContext(mergeNode);
@@ -83,7 +83,7 @@ class MergeQueryCompilerTest {
         final MergeCompilationContext compilationContext = mock(MergeCompilationContext.class);
 
         // When
-        compiler.applyNode(new MergeNode("items", null, null), compilationContext);
+        compiler.applyNode(new MergeNode("items", null, null, null), compilationContext);
         compiler.applyNode(new UpdateNode(null, "items", null), compilationContext);
 
         // Then: no interaction on compilationContext
@@ -98,7 +98,7 @@ class MergeQueryCompilerTest {
         when(compilationContext.conditionContext()).thenReturn(MergeCompilationContext.ConditionContext.ON);
 
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1);
-        final UsingNode usingNode = new UsingNode(null, "incoming", null, null, null, onCondition);
+        final UsingNode usingNode = new UsingNode(null, "incoming", null, null, null, null, onCondition);
 
         // When
         compiler.applyNode(usingNode, compilationContext);
@@ -205,7 +205,7 @@ class MergeQueryCompilerTest {
 
         // When in ON context
         when(compilationContext.conditionContext()).thenReturn(MergeCompilationContext.ConditionContext.ON);
-        final UsingNode usingNode = new UsingNode(null, "incoming", null, null, null, groupNode);
+        final UsingNode usingNode = new UsingNode(null, "incoming", null, null, null, null, groupNode);
         compiler.applyNode(usingNode, compilationContext);
 
         // Then
@@ -248,7 +248,7 @@ class MergeQueryCompilerTest {
         when(compilationContext.conditionContext()).thenReturn(MergeCompilationContext.ConditionContext.ON);
 
         final SelectNode nonConditionNode = new SelectNode("items", null, null, new ExpressionSpec[0], null);
-        final UsingNode usingWithInvalidCond = new UsingNode(null, "incoming", null, null, null, nonConditionNode);
+        final UsingNode usingWithInvalidCond = new UsingNode(null, "incoming", null, null, null, null, nonConditionNode);
 
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> compiler.applyNode(usingWithInvalidCond, compilationContext));

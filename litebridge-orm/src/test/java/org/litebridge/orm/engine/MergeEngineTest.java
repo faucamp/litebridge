@@ -84,10 +84,10 @@ class MergeEngineTest {
         final UpdateResult updateResult = mock(UpdateResult.class);
         when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), eq(txManager))).thenReturn(updateResult);
 
-        final QueryNode mergeNode = new MergeNode(null, UserDto.class, null);
+        final QueryNode mergeNode = new MergeNode(null, UserDto.class, null, null);
 
         // When
-        final UpdateResult result = engine.mergeInto(UserDto.class, step -> new InsertValuesStep(mergeNode, context), context);
+        final UpdateResult result = engine.mergeInto(UserDto.class, null, step -> new InsertValuesStep(mergeNode, context), context);
 
         // Then
         assertSame(updateResult, result);
@@ -132,7 +132,7 @@ class MergeEngineTest {
         final UpdateResult updateResult = mock(UpdateResult.class);
         when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), eq(txManager))).thenReturn(updateResult);
 
-        final QueryNode mergeNode = new MergeNode("orders", null, null);
+        final QueryNode mergeNode = new MergeNode("orders", null, null, null);
 
         // When
         final UpdateResult result = engine.mergeInto("orders", step -> new InsertValuesStep(mergeNode, context), context);

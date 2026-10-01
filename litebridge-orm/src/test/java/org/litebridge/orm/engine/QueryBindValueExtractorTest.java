@@ -142,9 +142,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_mergeNode_sqlMode() {
         // Given
-        final MergeNode root = new MergeNode("target", null, null);
+        final MergeNode root = new MergeNode("target", null, null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, null, onCondition);
 
         final UpdateNode update = new UpdateNode(null, "target", null);
         final SetNode set = new SetNode(update, "balance", 500);
@@ -171,9 +171,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_mergeNode_dtoMode() {
         // Given
-        final MergeNode root = new MergeNode("target", null, null);
+        final MergeNode root = new MergeNode("target", null, null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, null, onCondition);
 
         final InsertNode insertNode = new InsertNode(null, AccountRecord.class, null, null, null);
         final InsertDtoValuesNode insertDto = new InsertDtoValuesNode(insertNode, new AccountRecord(456L, "Test", 100));
@@ -299,9 +299,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_whenNotMatchedWithAndClause() {
         // Given
-        final MergeNode root = new MergeNode("target", null, null);
+        final MergeNode root = new MergeNode("target", null, null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, null, onCondition);
 
         final ConditionNode andCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 777);
         final InsertNode insert = new InsertNode("target", null, new String[]{"id"});
@@ -366,9 +366,9 @@ class QueryBindValueExtractorTest {
     @Test
     void extractBindValues_whenNotMatchedWithInsertDtoValuesNode() {
         // Given
-        final MergeNode root = new MergeNode("target", null, null);
+        final MergeNode root = new MergeNode("target", null, null, null);
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
-        final UsingNode using = new UsingNode(root, "source", null, null, null, onCondition);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, null, onCondition);
 
         final InsertNode insert = new InsertNode("target", null, new String[]{"id"});
         final InsertDtoValuesNode insertDto = new InsertDtoValuesNode(insert, new AccountRecord(77L, "name", 10));

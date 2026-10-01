@@ -15,7 +15,7 @@ class MergeNodeTest {
         final Class<?> dtoClass = String.class;
 
         // When
-        final MergeNode node = new MergeNode(table, dtoClass, null);
+        final MergeNode node = new MergeNode(table, dtoClass, null, null);
 
         // Then
         assertNull(node.previous());
@@ -26,11 +26,11 @@ class MergeNodeTest {
     @Test
     void equals_hashCode() {
         // Given
-        final MergeNode node1 = new MergeNode("TARGET", String.class, null);
-        final MergeNode node2 = new MergeNode("TARGET", String.class, null);
+        final MergeNode node1 = new MergeNode("TARGET", String.class, null, null);
+        final MergeNode node2 = new MergeNode("TARGET", String.class, null, null);
 
-        final MergeNode diffTable = new MergeNode("OTHER", String.class, null);
-        final MergeNode diffDto = new MergeNode("TARGET", Integer.class, null);
+        final MergeNode diffTable = new MergeNode("OTHER", String.class, null, null);
+        final MergeNode diffDto = new MergeNode("TARGET", Integer.class, null, null);
 
         // When / Then
         assertEquals(node1, node1);

@@ -6,8 +6,10 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.AliasReferenceExpressionFactory;
 import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.DelegateExpressionFactory;
+import org.litebridge.db.spi.expression.LiteralExpressionFactory;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
@@ -21,7 +23,9 @@ import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.expression.TestAliasReference;
 import org.litebridge.orm.expression.TestColumnExpressionFactory;
+import org.litebridge.orm.expression.TestLiteralExpression;
 import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 import org.litebridge.orm.persistence.manytomany.HiddenJoinEntity;
 import org.litebridge.orm.persistence.manytomany.NoOpFieldAccessor;
@@ -48,6 +52,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -59,6 +64,7 @@ class PersistenceFacadeTest {
     private static final LabelGenerator labelGenerator = new LabelGenerator();
 
     private final Map<String, TableMetaData> metaDataMap = new HashMap<>();
+    private SqlFunctionRegistry sqlFunctionRegistry;
 
     private PersistenceFacade createFacade(TableRegistry tableRegistry, TransactionalDatabaseProvider databaseProvider, ChangeTracker changeTracker, DtoConstructor dtoConstructor) {
         final TransactionManager transactionManager = mock(TransactionManager.class);
@@ -94,7 +100,7 @@ class PersistenceFacadeTest {
             // Should not happen
         }
 
-        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
         final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
         when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
@@ -643,21 +649,32 @@ class PersistenceFacadeTest {
         fields.put("id", numeric("ID"));
         fields.put("name", new NoOpFieldAccessor());
 
-        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", fields, List.of("ID"));
-        table.trackDto(dto);
+        final OrmTable ormTable = createOrmTable(changeTracker, CustomerDto.class, "customers", fields, List.of("ID"));
+        ormTable.trackDto(dto);
         dto.id = 1L;
         dto.name = "test";
 
-        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(ormTable);
+        when(tableRegistry.getOrmTableOrThrow(any(Table.class))).thenReturn(ormTable);
         when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
+
+        final LiteralExpressionFactory literalExpressionFactory = mock(LiteralExpressionFactory.class);
+        when(sqlFunctionRegistry.select().literal()).thenReturn(literalExpressionFactory);
+        when(literalExpressionFactory.create(nullable(Object.class), nullable(String.class)))
+                .then(i -> new TestLiteralExpression(i.getArgument(0), i.getArgument(1)));
+
+        final AliasReferenceExpressionFactory aliasReferenceExpressionFactory = mock(AliasReferenceExpressionFactory.class);
+        when(sqlFunctionRegistry.select().aliasReference()).thenReturn(aliasReferenceExpressionFactory);
+        when(aliasReferenceExpressionFactory.create(anyString(), nullable(String.class)))
+                .then(i -> new TestAliasReference(i.getArgument(0)));
 
         // When
         facade.save(dto);
 
         // Then
-        verify(databaseProvider).executeUpdate(argThat(i -> i.bindValues().size() == 1), eq(InsertResult.class), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.bindValues().size() == 3), eq(UpdateResult.class), any());
     }
 
     @Test
