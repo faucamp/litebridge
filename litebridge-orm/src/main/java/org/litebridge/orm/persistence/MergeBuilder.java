@@ -55,7 +55,8 @@ final class MergeBuilder extends InsertBuilder {
         final LinkedHashMap<String, @Nullable Object> pkValues = new LinkedHashMap<>(pkFields.size());
 
         for (FieldAccessor pkField : pkFields) {
-            pkValues.put(pkField.name(), pkField.get(dto));
+            final String fieldName = pkField.name();
+            pkValues.put(fieldName, row.get(fieldName));
         }
 
         final DtoMergeOnStep<?> mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
