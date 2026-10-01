@@ -557,6 +557,259 @@ class PersistenceFacadeTest {
     }
 
     @Test
+    void updateOneToManyReverseMappings_immutableCollectionOnMutableClass() throws SQLException {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+
+        final ProductDto existingProduct = new ProductDto();
+        existingProduct.id = 1L;
+        existingProduct.name = "existing";
+
+        final CategoryDto category = new CategoryDto();
+        category.id = 10L;
+        category.name = "cat";
+        category.products = List.of(existingProduct);
+
+        final ProductDto newProduct = new ProductDto();
+        newProduct.name = "new_prod";
+        newProduct.category = category;
+
+        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
+        categoryTable.syncPersistedDto(category);
+        final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
+        productTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"));
+
+        when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+
+        // When
+        facade.save(newProduct);
+
+        // Then
+        assertNotNull(category.products);
+        assertTrue(category.products.contains(existingProduct));
+        assertTrue(category.products.contains(newProduct));
+    }
+
+    @Test
+    void updateOneToManyReverseMappings_recordWithNullCollection() throws SQLException {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        setupMockSqlFunctions(databaseProvider);
+        when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+
+        final DepartmentRecord department = new DepartmentRecord(100L, "Engineering", null);
+
+        final EmployeeDto employee = new EmployeeDto();
+        employee.name = "Alice";
+        employee.department = department;
+
+        final OrmTable departmentTable = createOrmTable(changeTracker, DepartmentRecord.class, "departments", Map.of("id", numeric("ID"), "name", varchar("NAME"), "employees", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"))), List.of("ID"));
+        departmentTable.syncPersistedDto(department);
+        final OrmTable employeeTable = createOrmTable(changeTracker, EmployeeDto.class, "employees", Map.of("id", numeric("ID"), "name", varchar("NAME"), "department", numeric("DEPT_ID")), List.of("ID"));
+        employeeTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"));
+
+        when(tableRegistry.getOrmTableOrThrow(DepartmentRecord.class)).thenReturn(departmentTable);
+        when(tableRegistry.getOrmTableOrThrow(EmployeeDto.class)).thenReturn(employeeTable);
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+
+        // When
+        facade.save(employee);
+
+        // Then
+        final Set<org.litebridge.tracking.TrackedDto<DepartmentRecord>> trackedDepts = changeTracker.getTrackedDtos(DepartmentRecord.class);
+        assertEquals(2, trackedDepts.size());
+        final DepartmentRecord updatedDept = trackedDepts.stream().map(org.litebridge.tracking.TrackedDto::dto).filter(d -> d.employees() != null).findFirst().orElseThrow();
+        assertNotNull(updatedDept.employees());
+        assertTrue(updatedDept.employees().contains(employee));
+    }
+
+    @Test
+    void updateOneToManyReverseMappings_recordWithImmutableCollection() throws SQLException {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        setupMockSqlFunctions(databaseProvider);
+        when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+
+        final EmployeeDto emp1 = new EmployeeDto();
+        emp1.id = 1L;
+        emp1.name = "Alice";
+
+        final DepartmentRecord department = new DepartmentRecord(100L, "Engineering", List.of(emp1));
+
+        final EmployeeDto emp2 = new EmployeeDto();
+        emp2.name = "Bob";
+        emp2.department = department;
+
+        final OrmTable departmentTable = createOrmTable(changeTracker, DepartmentRecord.class, "departments", Map.of("id", numeric("ID"), "name", varchar("NAME"), "employees", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"))), List.of("ID"));
+        departmentTable.syncPersistedDto(department);
+        final OrmTable employeeTable = createOrmTable(changeTracker, EmployeeDto.class, "employees", Map.of("id", numeric("ID"), "name", varchar("NAME"), "department", numeric("DEPT_ID")), List.of("ID"));
+        employeeTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"));
+
+        when(tableRegistry.getOrmTableOrThrow(DepartmentRecord.class)).thenReturn(departmentTable);
+        when(tableRegistry.getOrmTableOrThrow(EmployeeDto.class)).thenReturn(employeeTable);
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+
+        // When
+        facade.save(emp2);
+
+        // Then
+        final Set<org.litebridge.tracking.TrackedDto<DepartmentRecord>> trackedDepts = changeTracker.getTrackedDtos(DepartmentRecord.class);
+        final DepartmentRecord updatedDept = trackedDepts.stream().map(org.litebridge.tracking.TrackedDto::dto).filter(d -> d.employees() != null && d.employees().size() == 2).findFirst().orElseThrow();
+        assertTrue(updatedDept.employees().contains(emp1));
+        assertTrue(updatedDept.employees().contains(emp2));
+    }
+
+    @Test
+    void updateOneToManyReverseMappings_childAlreadyPresent_noOp() throws SQLException {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        setupMockSqlFunctions(databaseProvider);
+        when(databaseProvider.transactionManager()).thenReturn(mock(TransactionManager.class));
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+
+        final EmployeeDto emp1 = new EmployeeDto();
+        emp1.name = "Alice";
+
+        final DepartmentRecord department = new DepartmentRecord(100L, "Engineering", List.of(emp1));
+        emp1.department = department;
+
+        final OrmTable departmentTable = createOrmTable(changeTracker, DepartmentRecord.class, "departments", Map.of("id", numeric("ID"), "name", varchar("NAME"), "employees", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"))), List.of("ID"));
+        departmentTable.syncPersistedDto(department);
+        final OrmTable employeeTable = createOrmTable(changeTracker, EmployeeDto.class, "employees", Map.of("id", numeric("ID"), "name", varchar("NAME"), "department", numeric("DEPT_ID")), List.of("ID"));
+        employeeTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"));
+
+        when(tableRegistry.getOrmTableOrThrow(DepartmentRecord.class)).thenReturn(departmentTable);
+        when(tableRegistry.getOrmTableOrThrow(EmployeeDto.class)).thenReturn(employeeTable);
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+
+        // When
+        facade.save(emp1);
+
+        // Then
+        final Set<org.litebridge.tracking.TrackedDto<DepartmentRecord>> trackedDepts = changeTracker.getTrackedDtos(DepartmentRecord.class);
+        assertEquals(1, trackedDepts.size());
+        assertEquals(department, trackedDepts.iterator().next().dto());
+    }
+
+    @Test
+    void updateOneToManyReverseMappings_rollbackForImmutableCollection() throws SQLException {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        setupMockSqlFunctions(databaseProvider);
+        final TransactionManager transactionManager = mock(TransactionManager.class);
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+
+        final ProductDto existingProduct = new ProductDto();
+        existingProduct.id = 1L;
+        existingProduct.name = "existing";
+
+        final List<ProductDto> initialList = List.of(existingProduct);
+        final CategoryDto category = new CategoryDto();
+        category.id = 10L;
+        category.name = "cat";
+        category.products = initialList;
+
+        final ProductDto newProduct = new ProductDto();
+        newProduct.name = "new_prod";
+        newProduct.category = category;
+
+        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories", Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"))), List.of("ID"));
+        categoryTable.syncPersistedDto(category);
+        final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
+        productTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"));
+
+        when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
+        when(tableRegistry.getOrmTableOrThrow(ProductDto.class)).thenReturn(productTable);
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+
+        final List<Runnable> rollbackCallbacks = new ArrayList<>();
+        org.mockito.Mockito.doAnswer(invocation -> {
+            rollbackCallbacks.add(invocation.getArgument(0));
+            return null;
+        }).when(transactionManager).addRollbackCallback(any());
+
+        // When
+        facade.save(newProduct);
+        rollbackCallbacks.forEach(Runnable::run);
+
+        // Then
+        assertEquals(initialList, category.products);
+    }
+
+    @Test
+    void updateOneToManyReverseMappings_rollbackForRecord() throws SQLException {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final TransactionalDatabaseProvider databaseProvider = mock(TransactionalDatabaseProvider.class);
+        setupMockSqlFunctions(databaseProvider);
+        final TransactionManager transactionManager = mock(TransactionManager.class);
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+        final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final PersistenceFacade facade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
+
+        final EmployeeDto emp1 = new EmployeeDto();
+        emp1.id = 1L;
+        emp1.name = "Alice";
+
+        final DepartmentRecord initialDepartment = new DepartmentRecord(100L, "Engineering", List.of(emp1));
+
+        final EmployeeDto emp2 = new EmployeeDto();
+        emp2.name = "Bob";
+        emp2.department = initialDepartment;
+
+        final OrmTable departmentTable = createOrmTable(changeTracker, DepartmentRecord.class, "departments", Map.of("id", numeric("ID"), "name", varchar("NAME"), "employees", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"))), List.of("ID"));
+        departmentTable.syncPersistedDto(initialDepartment);
+        final OrmTable employeeTable = createOrmTable(changeTracker, EmployeeDto.class, "employees", Map.of("id", numeric("ID"), "name", varchar("NAME"), "department", numeric("DEPT_ID")), List.of("ID"));
+        employeeTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(DepartmentRecord.class, "employees"));
+
+        when(tableRegistry.getOrmTableOrThrow(DepartmentRecord.class)).thenReturn(departmentTable);
+        when(tableRegistry.getOrmTableOrThrow(EmployeeDto.class)).thenReturn(employeeTable);
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+
+        final List<Runnable> rollbackCallbacks = new ArrayList<>();
+        org.mockito.Mockito.doAnswer(invocation -> {
+            rollbackCallbacks.add(invocation.getArgument(0));
+            return null;
+        }).when(transactionManager).addRollbackCallback(any());
+
+        // When
+        facade.save(emp2);
+        rollbackCallbacks.forEach(Runnable::run);
+
+        // Then
+        assertTrue(departmentTable.isPersistedDto(initialDepartment));
+    }
+
+    @Test
     void delete_withNullPk() throws SQLException {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
@@ -804,6 +1057,15 @@ class PersistenceFacadeTest {
     }
 
     public record PersonRecord(Long id, String name) {
+    }
+
+    public record DepartmentRecord(Long id, String name, List<EmployeeDto> employees) {
+    }
+
+    public static class EmployeeDto {
+        private Long id;
+        private String name;
+        private DepartmentRecord department;
     }
 
     private record TestCol(String name, int type) {

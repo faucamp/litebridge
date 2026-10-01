@@ -167,7 +167,7 @@ public class PersistenceFacade {
 
             if (result instanceof InsertResult insertResult
                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-                updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst(), tableProvider);
+                dtoUpdateResult.setDto(updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst(), tableProvider));
             } else {
                 tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
             }
@@ -557,15 +557,12 @@ public class PersistenceFacade {
     }
 
     private Object updateDtoPrimaryKey(final Object dto, final Map<ColumnMetaData, Object> generatedKeys, final TableProvider tableProvider) {
-        Object currentDto = dto;
         final OrmTable embeddedDtoTable = tableProvider.getTableOrThrow(dto.getClass());
-        final Map<FieldAccessor, @Nullable Object> currentPkValues = new HashMap<>();
-        final Map<FieldAccessor, Object> generatedPkValues = new HashMap<>();
+        final Map<FieldAccessor, @Nullable Object> generatedPkValues = new HashMap<>();
 
         for (ColumnMetaData pkColumn : generatedKeys.keySet()) {
             final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
             final Object currentPkValue = field.get(dto);
-            currentPkValues.put(field, currentPkValue);
 
             if (Objects.equals(currentPkValue, ClassUtils.getDefaultValue(field.type()))) {
                 final Object generatedKey = generatedKeys.get(pkColumn);
@@ -576,12 +573,22 @@ public class PersistenceFacade {
             }
         }
 
+        return updateDtoFields(dto, generatedPkValues, embeddedDtoTable);
+    }
+
+    private Object updateDtoFields(final Object dto, final Map<FieldAccessor, @Nullable Object> updatedValues, final OrmTable ormTable) {
+        if (updatedValues.isEmpty()) {
+            ormTable.syncPersistedDto(dto);
+            return dto;
+        }
+
+        final Object currentDto;
         if (dto instanceof Record) {
             // Can't set a record's field - recreate the record
             final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = classFieldAccessorCache.fieldAccessors(dto.getClass()).stream()
                     .map(fieldAccessor -> {
-                        if (generatedPkValues.containsKey(fieldAccessor)) {
-                            return new DtoConstructor.FieldAccessorValue(fieldAccessor, generatedPkValues.get(fieldAccessor));
+                        if (updatedValues.containsKey(fieldAccessor)) {
+                            return new DtoConstructor.FieldAccessorValue(fieldAccessor, updatedValues.get(fieldAccessor));
                         } else {
                             return new DtoConstructor.FieldAccessorValue(fieldAccessor, fieldAccessor.get(dto));
                         }
@@ -589,19 +596,29 @@ public class PersistenceFacade {
                     .toList();
 
             currentDto = DtoMapper.constructDto(dto.getClass(), fieldAccessorValues, dtoConstructor);
+            transactionManager.addRollbackCallback(() -> {
+                LOGGER.trace("Rolling back updated fields for Record DTO '{}'", dto);
+                ormTable.syncPersistedDto(dto);
+            });
         } else {
             // Normal class
-            generatedPkValues.forEach((field, value) -> {
+            final Map<FieldAccessor, @Nullable Object> originalValues = new HashMap<>();
+
+            updatedValues.forEach((field, value) -> {
+                originalValues.put(field, field.get(dto));
                 field.set(dto, value);
-                transactionManager.addRollbackCallback(() -> {
-                    LOGGER.trace("Rolling back generated key for DTO '{}'", dto);
-                    field.set(dto, currentPkValues.get(field));
-                    embeddedDtoTable.syncPersistedDto(dto);
-                });
             });
+
+            transactionManager.addRollbackCallback(() -> {
+                LOGGER.trace("Rolling back updated fields for DTO '{}'", dto);
+                originalValues.forEach((field, val) -> field.set(dto, val));
+                ormTable.syncPersistedDto(dto);
+            });
+
+            currentDto = dto;
         }
 
-        embeddedDtoTable.syncPersistedDto(currentDto);
+        ormTable.syncPersistedDto(currentDto);
         return currentDto;
     }
 
@@ -627,40 +644,40 @@ public class PersistenceFacade {
             final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
 
             if (!CollectionUtils.isEmpty(ormTable.getOneToManyReverseMappings())) {
-                ormTable.getOneToManyReverseMappings().forEach(collectionField ->
-                        changeTracker.getTrackedDtos(collectionField.dtoClass())
-                                .forEach(trackedDto -> {
-                                    final Collection<Object> collection = (Collection<Object>) collectionField.get(trackedDto.dto());
-                                    final Collection<Object> mutableCollection;
+                ormTable.getOneToManyReverseMappings().forEach(collectionField -> {
+                    final OrmTable parentOrmTable = tableProvider.getTableOrThrow(collectionField.dtoClass());
+                    changeTracker.getTrackedDtos(collectionField.dtoClass())
+                            .forEach(trackedDto -> {
+                                final Collection<Object> collection = (Collection<Object>) collectionField.get(trackedDto.dto());
 
+                                if (collection != null && collection.contains(dto)) {
+                                    // Nested DTO already present; skip it
+                                    return;
+                                }
+
+                                if (CollectionUtils.isMutable(collection)) {
+                                    LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
+                                    collection.add(dto);
+                                    transactionManager.addRollbackCallback(() -> {
+                                        LOGGER.trace("Rolling back added DTO from reverse mapping collection '{}': {}", collectionField.name(), dto);
+                                        collection.remove(dto);
+                                    });
+                                } else {
                                     // If the collection does not exist yet (or is immutable), initialise it
-                                    if (!CollectionUtils.isMutable(collection)) {
-                                        mutableCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
-                                        collectionField.set(trackedDto.dto(), mutableCollection);
-                                    } else if (collection.contains(dto)) {
-                                        // Nested DTO already present; skip it
-                                        return;
-                                    } else {
-                                        mutableCollection = collection;
+                                    final Collection<Object> mutableCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
+                                    if (collection != null) {
+                                        mutableCollection.addAll(collection);
                                     }
 
                                     LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
                                     mutableCollection.add(dto);
-                                    transactionManager.addRollbackCallback(() -> {
-                                        if (mutableCollection != collection) {
-                                            // Replace the mutable collection with the original one
-                                            collectionField.set(trackedDto.dto(), collection);
-                                        } else {
-                                            mutableCollection.remove(dto);
-                                        }
-                                    });
 
-                                    if (mutableCollection != collection) {
-                                        // Replace the collection with the mutable one
-                                        collectionField.set(trackedDto.dto(), mutableCollection);
-                                    }
-
-                                }));
+                                    final Map<FieldAccessor, @Nullable Object> updatedFields = new HashMap<>();
+                                    updatedFields.put(collectionField, mutableCollection);
+                                    updateDtoFields(trackedDto.dto(), updatedFields, parentOrmTable);
+                                }
+                            });
+                });
             }
         } finally {
             tableProvider.popContext();
