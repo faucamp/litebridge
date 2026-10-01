@@ -22,7 +22,7 @@ public final class PostgresDatabaseProvider extends AbstractDatabaseProvider {
     private static DatabaseProviderContext databaseProviderContext() {
         final DatabaseProviderMetaData databaseProviderMetaData =
                 new DatabaseProviderMetaData(true,
-                        true,
+                        DatabaseProviderMetaData.MergeCapability.USING_VALUES,
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
 
         final ContextBuilder contextBuilder = ContextBuilder.newContext()

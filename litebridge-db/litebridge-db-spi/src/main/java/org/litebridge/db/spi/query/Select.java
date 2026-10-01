@@ -22,13 +22,17 @@ import java.util.List;
  * @param limit       Optional pagination settings for limiting the number of rows in the result set.
  */
 public record Select(SelectTarget from,
-                     List<SelectExpression> expressions,
+                     List<? extends SelectExpression> expressions,
                      @Nullable List<Join> joins,
                      @Nullable ConditionGroup where,
                      @Nullable List<SelectExpression> groupBy,
                      @Nullable ConditionGroup having,
                      @Nullable List<OrderBy> orderBy,
                      @Nullable Limit limit) implements Operation, SelectTarget {
+
+    public Select(final SelectTarget from, final List<? extends SelectExpression> expressions) {
+        this(from, expressions, null, null, null, null, null, null);
+    }
 
     @Override
     public SelectTarget table() {

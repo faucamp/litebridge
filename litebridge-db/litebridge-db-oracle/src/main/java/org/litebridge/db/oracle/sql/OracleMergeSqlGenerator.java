@@ -45,10 +45,10 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
     @Override
     public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = new StringBuilder("MERGE INTO ");
-        appendSelectTarget(sql, merge.table(), ClauseType.SELECT, merge, connectionProvider);
+        appendSelectTarget(sql, merge.table(), merge, connectionProvider);
 
         sql.append(" USING ");
-        appendSelectTarget(sql, merge.using(), ClauseType.SELECT, merge, connectionProvider);
+        appendSelectTarget(sql, merge.using(), merge, connectionProvider);
 
         sql.append(" ON (");
         appendConditionsAndSubgroups(sql, merge.on(), ClauseType.JOIN, merge, connectionProvider);

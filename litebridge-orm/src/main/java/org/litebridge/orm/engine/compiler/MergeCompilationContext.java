@@ -3,14 +3,17 @@ package org.litebridge.orm.engine.compiler;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.alias.AliasedQuery;
 import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.LiteralExpressionFactory;
 import org.litebridge.db.spi.query.ConditionGroup;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.query.Values;
 import org.litebridge.db.spi.sql.BindValue;
@@ -48,6 +51,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     private final List<WhenMatchedSpec> whenMatchedSpecs = new ArrayList<>();
     private @Nullable SelectTarget using;
     private @Nullable ConditionContext conditionContext;
+    private final boolean mergeUsingValuesSupported;
 
     MergeCompilationContext(final MergeNode mergeNode,
                             final LitebridgeContext litebridgeContext) {
@@ -79,6 +83,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         }
 
         target = new AliasedTable(targetAlias, targetTable);
+        mergeUsingValuesSupported = litebridgeContext.databaseProvider().metaData().mergeCapability() == DatabaseProviderMetaData.MergeCapability.USING_VALUES;
     }
 
     /**
@@ -109,7 +114,15 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 literalExpressions.add(literalExpressionFactory.create(value, labels[i]));
             }
 
-            using = new Values(literalExpressions, valuesSpec.tableAlias());
+            // Substitute a subselect if necessary
+            if (mergeUsingValuesSupported) {
+                // Use VALUES clause directly
+                using = new Values(literalExpressions, valuesSpec.tableAlias());
+            } else {
+                // Use a subquery instead
+                using = new AliasedQuery(valuesSpec.tableAlias(), new Select(SelectTarget.voidTarget(), literalExpressions));
+            }
+
             return;
         }
 

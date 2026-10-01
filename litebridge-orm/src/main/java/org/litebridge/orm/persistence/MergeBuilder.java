@@ -1,6 +1,7 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.merge.DtoMergeInsertStep;
 import org.litebridge.orm.api.merge.DtoMergeOnStep;
@@ -12,6 +13,7 @@ import org.litebridge.orm.api.merge.MergeTerminalInspector;
 import org.litebridge.orm.api.update.DtoUpdateStep;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -29,7 +31,11 @@ final class MergeBuilder extends InsertBuilder {
 
     private final Object dto;
 
-    public MergeBuilder(final Object dto, final OrmTable table, final @Nullable Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
+
+    public MergeBuilder(final Object dto,
+                        final OrmTable table,
+                        final @Nullable Class<?> contextDtoClass,
+                        final LitebridgeContext litebridgeContext) {
         super(table, contextDtoClass, litebridgeContext);
         this.dto = dto;
     }
@@ -59,19 +65,10 @@ final class MergeBuilder extends InsertBuilder {
             pkValues.put(fieldName, row.get(fieldName));
         }
 
-        final DtoMergeOnStep<?> mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
-                .using(Fn.values(tableAlias, pkValues));
-        MergeOnConditionClauseTerminal<?, DtoMergeUpdateStep<?>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;
-
-        for (FieldAccessor pkField : pkFields) {
-            final SelectColumnSpec pkColumn = new SelectColumnSpec(ormTable.columnMetaDataForField(pkField).column());
-            final AliasReferenceSpec aliasRef = Fn.aliasRef(tableAlias, pkField.name());
-            mergeOnConditionClauseTerminal = (MergeOnConditionClauseTerminal) mergeOnStep.on(pkColumn).eq(aliasRef);
-        }
-
         final int columnCount = row.size();
         final String[] fieldNames = new String[columnCount];
         final @Nullable Object[] values = new Object[columnCount];
+        final ExpressionSpec[] literalExpressions = new ExpressionSpec[columnCount];
 
         {
             int i = 0;
@@ -82,8 +79,32 @@ final class MergeBuilder extends InsertBuilder {
 
                 fieldNames[i] = fieldName;
                 values[i] = value;
+                literalExpressions[i] = Fn.literal(value, fieldName);
                 i++;
             }
+        }
+
+        final DtoMergeOnStep<?> mergeOnStep;
+        final boolean mergeUsingValuesSupported = litebridgeContext.databaseProvider().metaData()
+                .mergeCapability() == DatabaseProviderMetaData.MergeCapability.USING_VALUES;
+
+        if (mergeUsingValuesSupported) {
+            // Merge using VALUES clause
+            mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
+                    .using(Fn.values(tableAlias, pkValues));
+        } else {
+            // Merge using selecting literals
+            mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
+                    .using(Fn.alias(q -> q.select(literalExpressions).from(dtoClass),
+                            tableAlias));
+        }
+
+        MergeOnConditionClauseTerminal<?, DtoMergeUpdateStep<?>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;
+
+        for (FieldAccessor pkField : pkFields) {
+            final SelectColumnSpec pkColumn = new SelectColumnSpec(ormTable.columnMetaDataForField(pkField).column());
+            final AliasReferenceSpec aliasRef = Fn.aliasRef(tableAlias, pkField.name());
+            mergeOnConditionClauseTerminal = (MergeOnConditionClauseTerminal) mergeOnStep.on(pkColumn).eq(aliasRef);
         }
 
         final MergeTerminal mergeTerminal = Objects.requireNonNull(mergeOnConditionClauseTerminal)

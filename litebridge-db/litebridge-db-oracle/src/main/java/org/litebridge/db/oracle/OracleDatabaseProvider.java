@@ -36,7 +36,7 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
     private static DatabaseProviderContext databaseProviderContext() {
         final DatabaseProviderMetaData databaseProviderMetaData =
                 new DatabaseProviderMetaData(true,
-                        true,
+                        DatabaseProviderMetaData.MergeCapability.USING_VALUES_SUBQUERY,
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
         final LabelGenerator labelGenerator = new OracleLabelGenerator();
         final MathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);

@@ -54,10 +54,10 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
      */
     public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = new StringBuilder("MERGE INTO ");
-        appendSelectTarget(sql, merge.table(), ClauseType.SELECT, merge, connectionProvider);
+        appendSelectTarget(sql, merge.table(), merge, connectionProvider);
 
         sql.append(" USING ");
-        appendSelectTarget(sql, merge.using(), ClauseType.SELECT, merge, connectionProvider);
+        appendSelectTarget(sql, merge.using(), merge, connectionProvider);
 
         sql.append(" ON (");
         appendConditionsAndSubgroups(sql, merge.on(), ClauseType.WHERE, merge, connectionProvider);
@@ -171,7 +171,6 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
     protected void appendSelectTarget(final StringBuilder sql,
                                       final SelectTarget selectTarget,
-                                      final ClauseType clauseType,
                                       final Operation operation,
                                       final ConnectionProvider connectionProvider) {
         switch (selectTarget) {
@@ -184,7 +183,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
                     .append(labelGenerator.createAliasAs(aliasedQuery.alias()));
             case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
                     .append(labelGenerator.createAliasAs(aliasedTable.alias()));
-            case Values values -> appendValues(sql, values, clauseType, operation);
+            case Values values -> appendValues(sql, values, operation);
             case Table table -> appendTable(sql, table);
             case SelectTarget.Void voidTarget -> { /* Ignore */ }
         }

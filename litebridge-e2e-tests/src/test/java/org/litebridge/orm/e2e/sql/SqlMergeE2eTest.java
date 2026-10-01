@@ -228,7 +228,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
         int prevCacheSize = queryPlanCache.size();
 
-        // Insert a row that does not exist by selecting literals in the USING clause
+        // Insert a row that does not exist using direct values (or selecting literals if the database provider doesn't support the VALUES clause)
         {
             final UpdateResult insertResult = litebridge.mergeInto(personTable, m -> m
                     .using(Fn.values("newPerson", "id", 123))

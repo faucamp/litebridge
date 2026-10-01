@@ -183,6 +183,13 @@ class SqlE2eTest extends AbstractE2eTest {
             final String result = litebridge.select(Fn.literal("Robert'); DROP TABLE Students;")).oneOrThrow();
             assertEquals("Robert'); DROP TABLE Students;", result);
         }
+
+        // Multiple literals
+        {
+            final Row result = litebridge.select(Fn.literal("Hello"), Fn.literal("World!")).oneOrThrow();
+            assertEquals("Hello", result.value(0));
+            assertEquals("World!", result.value(1));
+        }
     }
 
     @TestTemplate

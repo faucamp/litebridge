@@ -78,7 +78,7 @@ public abstract class AbstractSqlGenerator {
             sql = "%s %s".formatted(lhs, mapOperator(operator));
         } else if (operator == Operator.IN || operator == Operator.NOT_IN) {
             if (condition.rhs() instanceof LiteralExpressionImpl literalExpression) {
-                sql = "%s %s (%s)".formatted(lhs, mapOperator(operator), literalExpression.toBindValueSql(operation));
+                sql = "%s %s (%s)".formatted(lhs, mapOperator(operator), literalExpression.toBindValueSql(clauseType));
             } else {
                 final String sqlFragment;
 
@@ -161,14 +161,14 @@ public abstract class AbstractSqlGenerator {
         return sql;
     }
 
-    protected StringBuilder appendValues(final StringBuilder sql, final Values values, final ClauseType clauseType, final Operation operation) {
+    protected StringBuilder appendValues(final StringBuilder sql, final Values values, final Operation operation) {
         sql.append("(VALUES ");
 
         final StringJoiner valuesStrings = new StringJoiner(", ", "(", ")");
         final StringJoiner labels = new StringJoiner(", ", "(", ")");
 
         for (final LiteralExpression literal : values.values()) {
-            valuesStrings.add(literal.toSql(operation, clauseType));
+            valuesStrings.add(literal.toSql(operation, ClauseType.VALUES));
             labels.add(labelGenerator.quoteAlias(Objects.requireNonNull(literal.alias(), "No label value in VALUES clause")));
         }
 

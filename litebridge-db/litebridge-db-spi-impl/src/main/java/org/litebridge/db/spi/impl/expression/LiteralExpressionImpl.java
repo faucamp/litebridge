@@ -48,22 +48,25 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         final String valueStr;
 
-        if (clause == ClauseType.SELECT || clause == ClauseType.JOIN) {
-            return toBindValueSql(operation);
-        } else if (value == null) {
-            valueStr = "NULL";
-        } else if (value instanceof Collection<?> collection) {
-            final StringJoiner joiner = new StringJoiner(", ");
-
-            for (final Object element : collection) {
-                joiner.add(element.toString());
+        switch (clause) {
+            case SELECT, JOIN, VALUES -> {
+                return toBindValueSql(clause);
             }
+        }
 
-            valueStr = joiner.toString();
-        } else if (value instanceof String string) {
-            valueStr = "'" + string.replace("'", "''") + "'";
-        } else {
-            valueStr = value.toString();
+        switch (value) {
+            case null -> valueStr = "NULL";
+            case Collection<?> collection -> {
+                final StringJoiner joiner = new StringJoiner(", ");
+
+                for (final Object element : collection) {
+                    joiner.add(element.toString());
+                }
+
+                valueStr = joiner.toString();
+            }
+            case String string -> valueStr = "'" + string.replace("'", "''") + "'";
+            default -> valueStr = value.toString();
         }
 
         return addAliasAs(valueStr, clause);
@@ -72,23 +75,25 @@ public class LiteralExpressionImpl extends AbstractAliasedExpression implements 
     /**
      * Generates a SQL fragment with a placeholder for a bind value.
      *
-     * @param operation the database operation context
+     * @param clause the query clause type
      * @return the SQL fragment with bind placeholders
      */
-    public String toBindValueSql(final Operation operation) {
-        if (value == null) {
-            return "?";
-        } else if (value instanceof Collection<?> collection) {
+    public String toBindValueSql(final ClauseType clause) {
+        String valueStr;
+
+        if (value instanceof Collection<?> collection) {
             final StringJoiner joiner = new StringJoiner(", ");
 
             for (int i = 0; i < collection.size(); i++) {
                 joiner.add("?");
             }
 
-            return joiner.toString();
+            valueStr = joiner.toString();
         } else {
-            return "?";
+            valueStr = "?";
         }
+
+        return clause != ClauseType.SELECT ? valueStr : addAliasAs(valueStr, clause);
     }
 
     @Override

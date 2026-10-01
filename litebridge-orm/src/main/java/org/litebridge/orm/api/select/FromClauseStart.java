@@ -1,13 +1,17 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.api.select.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.exception.NonUniqueResultException;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 import org.litebridge.orm.expression.select.DtoAliasSpec;
@@ -15,13 +19,18 @@ import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.litebridge.orm.expression.select.SqlFromTargetSpec;
 import org.litebridge.orm.expression.select.TableAliasSpec;
 
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Entry point for the "FROM" clause of a query.
  */
-public final class FromClauseStart {
+public final class FromClauseStart extends DelegatingSelectTerminal<Row> {
 
     private final String @Nullable [] columns;
     private final ExpressionSpec @Nullable [] expressionSpecs;
@@ -39,6 +48,7 @@ public final class FromClauseStart {
                            final SelectEngineTerminal selectEngineTerminal,
                            final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
         this(null, expressionSpecs, selectEngineTerminal, litebridgeContextCreator);
+        this.pendingNode = () -> new SelectNode(null, expressionSpecs, null);
     }
 
     /**
@@ -66,10 +76,12 @@ public final class FromClauseStart {
                             final ExpressionSpec @Nullable [] expressionSpecs,
                             final SelectEngineTerminal selectEngineTerminal,
                             final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        super(selectEngineTerminal, () -> litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
         this.columns = columns;
         this.expressionSpecs = expressionSpecs;
         this.selectEngineTerminal = selectEngineTerminal;
         this.litebridgeContextCreator = litebridgeContextCreator;
+        this.pendingNode = () -> new SelectNode(null, expressionSpecs, null);
     }
 
     /**

@@ -45,7 +45,7 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider imple
     private static DatabaseProviderContext databaseProviderContext() {
         final DatabaseProviderMetaData databaseProviderMetaData =
                 new DatabaseProviderMetaData(false,
-                        false,
+                        DatabaseProviderMetaData.MergeCapability.NOT_SUPPORTED,
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
 
         final TypeConverter typeConverter = new DefaultTypeConverter();

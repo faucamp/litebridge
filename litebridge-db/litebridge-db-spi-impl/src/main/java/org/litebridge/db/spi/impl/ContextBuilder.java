@@ -94,7 +94,7 @@ public final class ContextBuilder {
     }
 
     public DatabaseProviderMetaData ensureDatabaseProviderMetaData() {
-        databaseProviderMetaData = Objects.requireNonNullElseGet(databaseProviderMetaData, () -> new DatabaseProviderMetaData(true, true, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW));
+        databaseProviderMetaData = Objects.requireNonNullElseGet(databaseProviderMetaData, () -> new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW));
         return databaseProviderMetaData;
     }
 
