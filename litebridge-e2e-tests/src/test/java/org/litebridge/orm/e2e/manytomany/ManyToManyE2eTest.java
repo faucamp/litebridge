@@ -244,7 +244,7 @@ class ManyToManyE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Annoted entities: Select entity and join fetch related entities")
+    @DisplayName("Annotated entities: Select entity and join fetch related entities")
     void nestedEntities_fetchRelatedEntities(final DbEnvDtoTableMapper tableMapper) {
         // Test entities specify the "LB" schema in the @Table annotation, so skip SQLite (no schema) and Postgres (lowercase)
         assumeTrue(!dbEnv.getName().equals("SQLite") && !dbEnv.getName().equals("PostgreSQL"));

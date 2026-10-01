@@ -26,7 +26,7 @@ public class LimitClauseTerminalImpl<DTO>
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    public LimitClauseTerminalImpl(final QueryNode node,
+    public LimitClauseTerminalImpl(final @Nullable QueryNode node,
                                    final SelectEngineTerminal selectEngineTerminal,
                                    final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);

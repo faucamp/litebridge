@@ -19,10 +19,12 @@ import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A builder class for constructing SQL INSERT statements.
@@ -95,15 +97,17 @@ final class MergeBuilder extends InsertBuilder {
         } else {
             // Merge using selecting literals
             mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
-                    .using(Fn.alias(q -> q.select(literalExpressions).from(dtoClass),
-                            tableAlias));
+                    .using(Fn.alias(q -> q.select(literalExpressions), tableAlias));
         }
 
+        final Set<String> pkFieldNames = new HashSet<>(pkFields.size());
         MergeOnConditionClauseTerminal<?, DtoMergeUpdateStep<?>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;
 
         for (FieldAccessor pkField : pkFields) {
-            final SelectColumnSpec pkColumn = new SelectColumnSpec(ormTable.columnMetaDataForField(pkField).column());
-            final AliasReferenceSpec aliasRef = Fn.aliasRef(tableAlias, pkField.name());
+            final String fieldName = pkField.name();
+            pkFieldNames.add(fieldName);
+            final SelectColumnSpec pkColumn = new SelectColumnSpec(ormTable.columnMetaDataForField(fieldName).column());
+            final AliasReferenceSpec aliasRef = Fn.aliasRef(tableAlias, fieldName);
             mergeOnConditionClauseTerminal = (MergeOnConditionClauseTerminal) mergeOnStep.on(pkColumn).eq(aliasRef);
         }
 
@@ -112,6 +116,13 @@ final class MergeBuilder extends InsertBuilder {
                     DtoUpdateStep<?> dtoUpdateStep = null;
 
                     for (Map.Entry<String, @Nullable Object> entry : row.sequencedEntrySet()) {
+                        final String fieldName = entry.getKey();
+
+                        if (pkFieldNames.contains(fieldName)) {
+                            // Don't update primary key fields
+                            continue;
+                        }
+
                         if (dtoUpdateStep == null) {
                             dtoUpdateStep = u.set(entry.getKey()).to(entry.getValue());
                         } else {

@@ -35,7 +35,7 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    protected DelegatingSelectTerminal(final QueryNode node,
+    protected DelegatingSelectTerminal(final @Nullable QueryNode node,
                                        final SelectEngineTerminal selectEngineTerminal,
                                        final LitebridgeContext litebridgeContext) {
         this.node = node;

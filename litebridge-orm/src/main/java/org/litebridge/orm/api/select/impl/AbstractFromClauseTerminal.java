@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select.impl;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.FromClauseTerminal;
 import org.litebridge.orm.api.select.GroupByClauseTerminal;
 import org.litebridge.orm.api.select.HavingConditionClause;
@@ -52,7 +53,7 @@ public abstract class AbstractFromClauseTerminal<DTO,
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    public AbstractFromClauseTerminal(final QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
+    public AbstractFromClauseTerminal(final @Nullable QueryNode node, final SelectEngineTerminal selectEngineTerminal, final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);
     }
 }

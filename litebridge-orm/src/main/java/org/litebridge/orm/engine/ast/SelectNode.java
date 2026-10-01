@@ -73,6 +73,10 @@ public record SelectNode(@Nullable String table,
         return null;
     }
 
+    public SelectNode alias(final String alias) {
+        return new SelectNode(table, dtoClass, contextDtoClass, fromQueryNode, alias, columns, expressions, resultTypes);
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof SelectNode(

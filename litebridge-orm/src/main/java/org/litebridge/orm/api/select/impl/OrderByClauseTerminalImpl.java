@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select.impl;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -22,7 +23,7 @@ public class OrderByClauseTerminalImpl<DTO>
      * @param selectEngineTerminal the terminal select engine
      * @param litebridgeContext    the Litebridge context
      */
-    public OrderByClauseTerminalImpl(final QueryNode node,
+    public OrderByClauseTerminalImpl(final @Nullable QueryNode node,
                                      final SelectEngineTerminal selectEngineTerminal,
                                      final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);

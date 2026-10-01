@@ -6,7 +6,6 @@ import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
-import org.litebridge.orm.api.spec.TableSpec;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.DtoAliasSpec;

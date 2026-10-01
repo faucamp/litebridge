@@ -2,7 +2,6 @@ package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
@@ -11,7 +10,6 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
-import org.litebridge.orm.exception.NonUniqueResultException;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 import org.litebridge.orm.expression.select.DtoAliasSpec;
@@ -19,13 +17,8 @@ import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.litebridge.orm.expression.select.SqlFromTargetSpec;
 import org.litebridge.orm.expression.select.TableAliasSpec;
 
-import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /**
  * Entry point for the "FROM" clause of a query.
