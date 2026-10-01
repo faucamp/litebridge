@@ -450,7 +450,8 @@ public class PersistenceFacade {
         addPrimaryKeyConditions(dto, table, deleteBuilder);
     }
 
-    private <DTO> void processOneToManyUpdate(final DTO dto, final OrmTable table,
+    private <DTO> void processOneToManyUpdate(final DTO dto,
+                                              final OrmTable table,
                                               final Set<Object> inProgressDtos,
                                               final MappedOneToMany mappedOneToMany,
                                               final StatementChain statementChain,
