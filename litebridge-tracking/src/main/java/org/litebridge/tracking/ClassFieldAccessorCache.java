@@ -1,5 +1,6 @@
 package org.litebridge.tracking;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
@@ -10,6 +11,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -80,15 +82,17 @@ public class ClassFieldAccessorCache {
      * @param field    the field path (can be dot-separated for nested fields)
      * @return the field accessor, or {@code null} if not found
      */
-    public @org.jspecify.annotations.Nullable FieldAccessor fieldAccessorOrNull(final Class<?> dtoClass, final String field) {
-        if (field.indexOf('.') != -1) {
-            final String[] subFieldAndRestOfPath = StringUtils.splitOnce(field, '.');
+    public @Nullable FieldAccessor fieldAccessorOrNull(final Class<?> dtoClass, final String field) {
+        final String fieldName = Objects.requireNonNull(field, "'field' must not be null");
+
+        if (fieldName.indexOf('.') != -1) {
+            final String[] subFieldAndRestOfPath = StringUtils.splitOnce(fieldName, '.');
             final Map<String, FieldAccessor> accessors = ensureFieldAccessors(dtoClass);
             final FieldAccessor subFieldAccessor = accessors.get(subFieldAndRestOfPath[0]);
             if (subFieldAccessor == null) return null;
-            return chain(new FieldAccessorChain(subFieldAccessor, field, this), subFieldAndRestOfPath[1]);
+            return chain(new FieldAccessorChain(subFieldAccessor, fieldName, this), subFieldAndRestOfPath[1]);
         } else {
-            return ensureFieldAccessors(dtoClass).get(field);
+            return ensureFieldAccessors(dtoClass).get(fieldName);
         }
     }
 

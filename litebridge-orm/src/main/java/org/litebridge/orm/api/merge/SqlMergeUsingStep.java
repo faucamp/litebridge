@@ -57,7 +57,7 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
             final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
             return new MergeOnStep<>(subselectNode, alias, mergeNode, litebridgeContext);
         } else if (fromTargetSpec instanceof ValuesSpec valuesSpec) {
-            return new MergeOnStep<>()
+            return new MergeOnStep<>(valuesSpec, mergeNode, litebridgeContext);
         } else {
             throw new UnsupportedOperationException("Unsupported from target spec: " + fromTargetSpec);
         }

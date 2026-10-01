@@ -2,7 +2,10 @@ package org.litebridge.commons;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -109,5 +112,23 @@ public final class CollectionUtils {
         } else {
             return collection;
         }
+    }
+
+    /**
+     * Checks if the specified collection is mutable.
+     * <p>
+     * This is a limited check and recognises {@link ArrayList}, {@link LinkedList}, and {@link HashSet}.
+     *
+     * @param collection The collection to check.
+     * @return {@code true} if the collection is mutable, {@code false} otherwise (or if the collection is null).
+     */
+    public static boolean isMutable(final @Nullable Object collection) {
+        if (collection == null) {
+            return false;
+        }
+
+        return (collection instanceof ArrayList<?>
+                || collection instanceof LinkedList<?>
+                || collection instanceof HashSet<?>);
     }
 }

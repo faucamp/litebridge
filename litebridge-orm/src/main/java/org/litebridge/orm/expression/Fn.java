@@ -27,7 +27,9 @@ import org.litebridge.orm.expression.select.SqlFromTargetSpec;
 import org.litebridge.orm.expression.select.TableAliasSpec;
 import org.litebridge.orm.expression.select.ValuesSpec;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -87,10 +89,185 @@ public final class Fn {
         return new QueryAliasSpec(query, alias);
     }
 
-    public static ValuesSpec values(final @Nullable Object... values) {
-        return new ValuesSpec(values);
+    /**
+     * Creates a SQL {@code VALUES} clause for a single column of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param label      the value's column label
+     * @param value      the value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias, final String label, final @Nullable Object value) {
+        return new ValuesSpec(tableAlias, new String[]{label}, new @Nullable Object[]{value});
     }
 
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2}, new @Nullable Object[]{v1, v2});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3}, new @Nullable Object[]{v1, v2, v3});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @param l4         the fourth value's column label
+     * @param v4         the fourth value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3,
+                                    final String l4, final @Nullable Object v4) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3, l4}, new @Nullable Object[]{v1, v2, v3, v4});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @param l4         the fourth value's column label
+     * @param v4         the fourth value; can be {@code null}
+     * @param l5         the fifth value's column label
+     * @param v5         the fifth value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3,
+                                    final String l4, final @Nullable Object v4,
+                                    final String l5, final @Nullable Object v5) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3, l4, l5}, new @Nullable Object[]{v1, v2, v3, v4, v5});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @param l4         the fourth value's column label
+     * @param v4         the fourth value; can be {@code null}
+     * @param l5         the fifth value's column label
+     * @param v5         the fifth value; can be {@code null}
+     * @param l6         the sixth value's column label
+     * @param v6         the sixth value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3,
+                                    final String l4, final @Nullable Object v4,
+                                    final String l5, final @Nullable Object v5,
+                                    final String l6, final @Nullable Object v6) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3, l4, l5, l6}, new @Nullable Object[]{v1, v2, v3, v4, v5, v6});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param labels     array of column labels
+     * @param values     array of nullable values
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias, final String[] labels, final @Nullable Object[] values) {
+        return new ValuesSpec(tableAlias, labels, values);
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param values     A map of column labels to nullable values. To preserve ordering, consider using a {@link LinkedHashMap}.
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias, final Map<String, @Nullable Object> values) {
+        final int size = values.size();
+        final String[] labels = new String[size];
+        final @Nullable Object[] valueArray = new Object[size];
+        int i = 0;
+
+        for (Map.Entry<String, @Nullable Object> entry : values.entrySet()) {
+            labels[i] = entry.getKey();
+            valueArray[i] = entry.getValue();
+            i++;
+        }
+
+        return new ValuesSpec(tableAlias, labels, valueArray);
+    }
     // Field/column selectors
 
     /**

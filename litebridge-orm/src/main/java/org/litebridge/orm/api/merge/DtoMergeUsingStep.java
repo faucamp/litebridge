@@ -12,6 +12,7 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.DtoAliasSpec;
 import org.litebridge.orm.expression.select.FromTargetSpec;
 import org.litebridge.orm.expression.select.QueryAliasSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -56,7 +57,8 @@ public final class DtoMergeUsingStep<DTO> extends MergeUsingStep<DTO, DtoMergeUp
     public DtoMergeOnStep<DTO> using(final FromTargetSpec fromTargetSpec) {
         return switch (fromTargetSpec) {
             case QueryAliasSpec queryAliasSpec -> usingQueryImpl(queryAliasSpec.query(), queryAliasSpec.alias());
-            case DtoAliasSpec dtoAliasSpec -> new DtoMergeOnStep<>(dtoAliasSpec.dtoClass(), dtoAliasSpec.alias(), mergeNode, litebridgeContext);
+            case DtoAliasSpec<?> dtoAliasSpec -> new DtoMergeOnStep<>(dtoAliasSpec.dtoClass(), dtoAliasSpec.alias(), mergeNode, litebridgeContext);
+            case ValuesSpec valuesSpec -> new DtoMergeOnStep<>(valuesSpec, mergeNode, litebridgeContext);
             default -> throw new IllegalArgumentException("Unsupported DTO-mode FromTargetSpec: " + fromTargetSpec);
         };
     }

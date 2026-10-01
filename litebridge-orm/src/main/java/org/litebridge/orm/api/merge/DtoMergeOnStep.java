@@ -6,6 +6,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 import java.util.Objects;
 
@@ -17,7 +18,7 @@ import java.util.Objects;
 public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateStep<DTO>, DtoMergeInsertStep> {
 
     /**
-     * Creates a new {@code DtoMergeOnStep} instance.
+     * Creates a new {@code DtoMergeOnStep} instance using an entity/mapped DTO class.
      *
      * @param usingDtoClass     the DTO/entity class used in the {@code USING} clause
      * @param mergeNode         the current merge node
@@ -30,11 +31,32 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateSt
         super(usingDtoClass, usingAlias, mergeNode, litebridgeContext);
     }
 
+    /**
+     * Creates a new {@code DtoMergeOnStep} instance using a subquery.
+     *
+     * @param subselectNode     the subquery node
+     * @param usingAlias        the alias for the subquery
+     * @param mergeNode         the root merge node
+     * @param litebridgeContext the Litebridge context
+     */
     public DtoMergeOnStep(final QueryNode subselectNode,
                           final @Nullable String usingAlias,
                           final MergeNode mergeNode, final
                           LitebridgeContext litebridgeContext) {
         super(subselectNode, usingAlias, mergeNode, litebridgeContext);
+    }
+
+    /**
+     * Creates a new {@code DtoMergeOnStep} instance using VALUES.
+     *
+     * @param valuesSpec        Values from target specification
+     * @param mergeNode         the root merge node
+     * @param litebridgeContext the Litebridge context
+     */
+    public DtoMergeOnStep(final ValuesSpec valuesSpec,
+                          final MergeNode mergeNode,
+                          final LitebridgeContext litebridgeContext) {
+        super(valuesSpec, mergeNode, litebridgeContext);
     }
 
     /**

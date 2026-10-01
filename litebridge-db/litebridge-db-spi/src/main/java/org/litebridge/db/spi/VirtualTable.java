@@ -1,11 +1,13 @@
 package org.litebridge.db.spi;
 
+import org.litebridge.db.spi.query.Values;
+
 import java.util.StringJoiner;
 
 /**
  * Virtual table
  */
-public final class VirtualTable extends Table {
+public sealed class VirtualTable extends Table permits Values {
 
     private static final VirtualTable EMPTY_INSTANCE = new VirtualTable("");
 

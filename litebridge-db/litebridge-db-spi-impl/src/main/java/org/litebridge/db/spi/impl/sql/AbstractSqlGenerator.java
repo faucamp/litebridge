@@ -21,11 +21,13 @@ import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.Values;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.UpdateColumn;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.BiFunction;
 
 /**
@@ -149,22 +151,34 @@ public abstract class AbstractSqlGenerator {
      * @param table The table to append.
      */
     protected StringBuilder appendTable(final StringBuilder sql, final Table table) {
-        return appendTable(sql, table.schema(), table.name());
-    }
+        final String schema = table.schema();
 
-    /**
-     * Appends a table name to the SQL builder, quoting identifiers.
-     *
-     * @param sql    The SQL builder.
-     * @param schema The schema name.
-     * @param table  The table name.
-     */
-    protected StringBuilder appendTable(final StringBuilder sql, final @Nullable String schema, final String table) {
         if (!StringUtils.isBlank(schema)) {
             sql.append(labelGenerator.quoteIdentifier(schema)).append('.');
         }
 
-        sql.append(labelGenerator.quoteIdentifier(table));
+        sql.append(labelGenerator.quoteIdentifier(table.name()));
+        return sql;
+    }
+
+    protected StringBuilder appendValues(final StringBuilder sql, final Values values) {
+        sql.append("VALUES ");
+
+        final StringJoiner valuesStrings = new StringJoiner(", ", "(", ")");
+
+        for (@Nullable Object value : values.values()) {
+            valuesStrings.add(value == null ? "NULL" : value.toString());
+        }
+
+        sql.append(valuesStrings).append(" AS ").append(labelGenerator.quoteAlias(values.name())).append(' ');
+        final StringJoiner labels = new StringJoiner("), (", "(", ")");
+
+        for (String label : values.labels()) {
+            labels.add(labelGenerator.quoteAlias(label));
+        }
+
+        sql.append(labels);
+
         return sql;
     }
 

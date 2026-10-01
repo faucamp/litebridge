@@ -9,6 +9,7 @@ import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 /**
  * Terminal step for a MERGE ON condition clause.
@@ -30,6 +31,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
     private final @Nullable String usingTable;
     private final @Nullable Class<?> usingDtoClass;
     private final @Nullable QueryNode usingQueryNode;
+    private final @Nullable ValuesSpec usingValues;
     private final @Nullable String usingAlias;
     private @Nullable UsingNode usingNode;
 
@@ -43,6 +45,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
     public MergeOnConditionClauseTerminal(final @Nullable String usingTable,
                                           final @Nullable Class<?> usingDtoClass,
                                           final @Nullable QueryNode usingQueryNode,
+                                          final @Nullable ValuesSpec usingValues,
                                           final @Nullable String usingAlias,
                                           final QueryNode on,
                                           final MergeNode mergeNode,
@@ -51,6 +54,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
         this.usingTable = usingTable;
         this.usingDtoClass = usingDtoClass;
         this.usingQueryNode = usingQueryNode;
+        this.usingValues = usingValues;
         this.usingAlias = usingAlias;
     }
 
@@ -135,7 +139,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
     @Override
     QueryNode node() {
         if (usingNode == null) {
-            usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, usingQueryNode, usingAlias, node);
+            usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, usingQueryNode, usingValues, usingAlias, node);
             return usingNode;
         } else {
             return node;

@@ -14,6 +14,7 @@ import org.litebridge.db.spi.query.LogicCondition;
 import org.litebridge.db.spi.query.LogicConditionGroup;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.query.SelectTarget;
+import org.litebridge.db.spi.query.Values;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -169,7 +170,6 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
     protected void appendSelectTarget(final StringBuilder sql, final SelectTarget selectTarget, final ConnectionProvider connectionProvider) {
         switch (selectTarget) {
-            case Table table -> appendTable(sql, table);
             case Select subselect -> sql.append('(')
                     .append(selectSqlGenerator.generateSql(subselect, connectionProvider))
                     .append(')');
@@ -179,6 +179,8 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
                     .append(labelGenerator.createAliasAs(aliasedQuery.alias()));
             case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
                     .append(labelGenerator.createAliasAs(aliasedTable.alias()));
+            case Values values -> appendValues(sql, values);
+            case Table table -> appendTable(sql, table);
             case SelectTarget.Void voidTarget -> { /* Ignore */ }
         }
     }

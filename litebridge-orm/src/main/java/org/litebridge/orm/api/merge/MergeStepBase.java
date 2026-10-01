@@ -42,6 +42,7 @@ abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
         this.usingTable = usingTable;
         this.usingDtoClass = null;
         this.usingQueryNode = null;
+        this.usingValues = null;
         this.litebridgeContext = litebridgeContext;
     }
 

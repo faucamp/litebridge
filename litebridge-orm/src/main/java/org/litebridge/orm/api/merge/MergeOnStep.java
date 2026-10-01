@@ -5,9 +5,9 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.Aliasable;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 /**
  * Merge step for setting up the {@code MERGE INTO ... USING ... ON} condition.
@@ -61,6 +61,20 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
     }
 
     /**
+     * Creates a new {@code MergeOnStep} instance for DTO mode.
+     *
+     * @param valuesSpec        Values from target specification
+     * @param mergeNode         the root merge node
+     * @param litebridgeContext the Litebridge context
+     */
+    protected MergeOnStep(final ValuesSpec valuesSpec,
+                          final MergeNode mergeNode,
+                          final LitebridgeContext litebridgeContext) {
+        super(valuesSpec, mergeNode, litebridgeContext);
+        this.usingAlias = valuesSpec.tableAlias();
+    }
+
+    /**
      * Creates a {@code MERGE INTO ... USING ... ON} condition targeting the specified column.
      *
      * @param column the LHS column of the {@code ON} condition
@@ -94,6 +108,6 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
                 column,
                 expression,
                 null,
-                conditionNode -> new MergeOnConditionClauseTerminal<>(usingTable, usingDtoClass, usingQueryNode, alias, conditionNode, mergeNode, litebridgeContext));
+                conditionNode -> new MergeOnConditionClauseTerminal<>(usingTable, usingDtoClass, usingQueryNode, usingValues, alias, conditionNode, mergeNode, litebridgeContext));
     }
 }

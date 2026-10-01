@@ -128,9 +128,9 @@ public sealed class Table implements SelectTarget permits VirtualTable {
     }
 
     /**
-     * Retrieve the name of the aliased entity.
+     * Retrieve the database table name.
      *
-     * @return the name of the aliased entity
+     * @return The name of the table.
      */
     public String name() {
         return name;

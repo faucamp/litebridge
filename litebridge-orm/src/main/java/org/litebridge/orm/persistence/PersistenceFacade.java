@@ -7,8 +7,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.UpdateMetaData;
@@ -324,11 +322,7 @@ public class PersistenceFacade {
 
                         if (existingStatement == null) {
                             // Check if the nested DTO's PK is set
-                            final boolean dtoPkSet = nestedDtoTable.getMetaData().primaryKey().stream().anyMatch(pkColumn -> {
-                                final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
-                                final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                                return !Objects.equals(embeddedDtoPkValue, ClassUtils.getDefaultValue(embeddedDtoPkAccessor.type()));
-                            });
+                            final boolean dtoPkSet = isDtoPkSet(value, nestedDtoTable);
 
                             if (!inProgressDtos.contains(value)) {
                                 // First time we're encountering this nested DTO; create an insert/update statement for it
@@ -632,23 +626,33 @@ public class PersistenceFacade {
             final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
 
             if (!CollectionUtils.isEmpty(ormTable.getOneToManyReverseMappings())) {
-                ormTable.getOneToManyReverseMappings().forEach(collectionField -> changeTracker.getTrackedDtos(collectionField.dtoClass())
-                        .forEach(trackedDto -> {
-                            final Collection<Object> collection = (Collection<Object>) collectionField.get(trackedDto.dto());
+                ormTable.getOneToManyReverseMappings().forEach(collectionField ->
+                        changeTracker.getTrackedDtos(collectionField.dtoClass())
+                                .forEach(trackedDto -> {
+                                    final Collection<Object> collection = (Collection<Object>) collectionField.get(trackedDto.dto());
+                                    final Collection<Object> mutableCollection;
 
-                            // If the collection does not exist yet, initialise it
-                            if (collection == null) {
-                                final Collection<Object> newCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
-                                collectionField.set(trackedDto.dto(), newCollection);
-                                newCollection.add(dto);
-                                transactionManager.addRollbackCallback(() -> collectionField.set(trackedDto.dto(), null));
-                            } else if (!collection.contains(dto)) {
-                                // Add the updated value to the collection
-                                LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
-                                collection.add(dto);
-                                transactionManager.addRollbackCallback(() -> collection.remove(dto));
-                            }
-                        }));
+                                    // If the collection does not exist yet (or is immutable), initialise it
+                                    if (!CollectionUtils.isMutable(collection)) {
+                                        mutableCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
+                                        collectionField.set(trackedDto.dto(), mutableCollection);
+                                    } else if (collection.contains(dto)) {
+                                        // Nested DTO already present; skip it
+                                        return;
+                                    } else {
+                                        mutableCollection = collection;
+                                    }
+
+                                    LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
+                                    mutableCollection.add(dto);
+                                    transactionManager.addRollbackCallback(() -> collection.remove(dto));
+
+                                    if (mutableCollection != collection) {
+                                        // Replace the collection with the mutable one
+                                        collectionField.set(trackedDto.dto(), mutableCollection);
+                                    }
+
+                                }));
             }
         } finally {
             tableProvider.popContext();
@@ -665,9 +669,16 @@ public class PersistenceFacade {
         if (ormTable.isPersistedDto(dto)) {
             return createUpdateBuilder(dto, ormTable, inProgressDtos, tableProvider);
         } else {
-            // Do an upsert. If the database provider supports MERGE, use that, else use an update, inserting if no records were updated
-            return createMergeBuilder(dto, ormTable, inProgressDtos, tableProvider);
-//            return createInsertBuilder(dto, ormTable, inProgressDtos, tableProvider);
+            // Untracked DTO instance; check if its primary key is set to determine whether to do an upsert or insert
+            final boolean dtoPkSet = isDtoPkSet(dto, tableProvider.getTableOrThrow(dto.getClass()));
+
+            if (dtoPkSet) {
+                // Upsert via MERGE
+                return createMergeBuilder(dto, ormTable, inProgressDtos, tableProvider);
+            } else {
+                // Insert since we do not have an explicit primary key (likely auto-generated)
+                return createInsertBuilder(dto, ormTable, inProgressDtos, tableProvider);
+            }
         }
     }
 
@@ -850,20 +861,11 @@ public class PersistenceFacade {
         }
     }
 
-    private BindValue createBindValue(final @Nullable Object rawValue, final ColumnMetaData columnMetaData, final TypeConverter typeConverter) {
-        final Object convertedValue = typeConverter.convert(rawValue, columnMetaData.getDataType());
-        return new BindValue(convertedValue, columnMetaData.getDataType());
-    }
-
-    private static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
-        final int valueSize;
-
-        if (value instanceof Collection<?> collection) {
-            valueSize = collection.size();
-        } else {
-            valueSize = 1;
-        }
-
-        return new BindValueExpression(index, valueSize);
+    private static boolean isDtoPkSet(final Object dto, final OrmTable dtoTable) {
+        return dtoTable.getMetaData().primaryKey().stream().anyMatch(pkColumn -> {
+            final FieldAccessor embeddedDtoPkAccessor = dtoTable.getFieldForColumnName(pkColumn.name());
+            final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(dto);
+            return !Objects.equals(embeddedDtoPkValue, ClassUtils.getDefaultValue(embeddedDtoPkAccessor.type()));
+        });
     }
 }

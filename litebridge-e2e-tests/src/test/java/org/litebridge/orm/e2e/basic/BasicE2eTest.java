@@ -1134,7 +1134,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Save: merge/upsert DTO if not tracked yet")
+    @DisplayName("Save: merge/upsert DTO with PK if not tracked yet")
     void save_upsertIfNotTracked(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final String personTableName = tableMapper.qualifyName("PERSON");
         final String personId = tableMapper.transformColumnName("PERSON_ID");
@@ -1149,41 +1149,97 @@ public class BasicE2eTest extends AbstractE2eTest {
         // Store an existing (untracked) record in the databse
         litebridge.insert(personTableName, i -> i
                 .into(personId, firstName, surname, age, eyeColour)
-                .values(1L, "Alice", "Smith", 20, "blue"));
+                .values(123L, "Alice", "Smith", 20, "blue"));
 
         assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
         assertEquals(0, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
 
-        // Setup DTO
-        final Person person = new Person();
-        person.setId(1L);
-        person.setName("Alice");
-        person.setSurname("Smith");
-        person.setAge(20);
-        person.setEyeColour("blue");
+        final Person referencePerson = litebridge.select(Person.class).oneOrThrow();
 
-        final Account account = new Account();
-        account.setName("Account 1");
-        account.setBalance(BigInteger.valueOf(1000));
-        account.setOwner(person);
+        // Upsert a Person and related Account record. The Person record already exists, so it will be updated,
+        // while the Account record will be inserted, both via MERGE operations
+        {
+            // Create new, untracked DTO
+            final Person person = new Person();
+            person.setId(referencePerson.getId());
+            person.setName(referencePerson.getName());
+            person.setSurname(referencePerson.getSurname());
+            person.setAge(referencePerson.getAge());
+            person.setEyeColour(referencePerson.getEyeColour());
 
-        person.setAccounts(List.of(account));
+            final Account account = new Account();
+            account.setId(123L);
+            account.setName("Account 1");
+            account.setBalance(BigInteger.valueOf(1000));
+            account.setOwner(person);
 
-        // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via a merge) the Account record
-        litebridge.save(person);
+            person.setAccounts(List.of(account));
 
-        assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
-        assertEquals(1, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+            // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via a merge) the Account record
+            litebridge.save(person);
 
-        // Ensure the person record is still intact, and that the account was inserted
-        final Person result = litebridge.select(Person.class)
-                .join(Account.class).on(PersonMeta.accounts)
-                .oneOrThrow();
-        assertEquals(person.getId(), result.getId());
-        assertNotNull(person.getAccounts());
-        assertEquals(1, person.getAccounts().size());
-        final Account resultAccount = result.getAccounts().getFirst();
-        assertEquals(account, resultAccount);
+            assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
+            assertEquals(1, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+
+            // Ensure the person record is still intact, and that the account was inserted
+            final Person result = litebridge.select(Person.class)
+                    .join(Account.class).on(PersonMeta.accounts)
+                    .oneOrThrow();
+            assertEquals(referencePerson.getId(), result.getId());
+            assertEquals(referencePerson.getName(), result.getName());
+            assertEquals(referencePerson.getSurname(), result.getSurname());
+            assertEquals(referencePerson.getAge(), result.getAge());
+            assertEquals(referencePerson.getEyeColour(), result.getEyeColour());
+            assertNotNull(person.getAccounts());
+            assertEquals(1, person.getAccounts().size());
+            final Account resultAccount = result.getAccounts().getFirst();
+            assertEquals(account, resultAccount);
+        }
+
+        // Do the same with a new untracked person DTO instance with the same ID as the existing record (upsert),
+        // but use an INSERT to store the new account by omitting its PK and don't set "owner" on the account explicitly
+        {
+            // Create new, untracked DTO
+            final Person person = new Person();
+            person.setId(referencePerson.getId());
+            person.setName(referencePerson.getName());
+            person.setSurname(referencePerson.getSurname());
+            person.setAge(referencePerson.getAge());
+            person.setEyeColour(referencePerson.getEyeColour());
+
+            final Account account2 = new Account();
+            account2.setName("Account 2 (auto-generated ID)");
+            account2.setBalance(BigInteger.valueOf(1000));
+
+            person.setAccounts(List.of(account2));
+
+            // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via an INSERT) the Account record
+            litebridge.save(person);
+
+            assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
+            assertEquals(2, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+
+            // Ensure the second account was inserted & linked
+            final Person result = litebridge.select(Person.class)
+                    .join(Account.class).on(PersonMeta.accounts)
+                    .oneOrThrow();
+            assertEquals(referencePerson.getId(), result.getId());
+            assertEquals(referencePerson.getName(), result.getName());
+            assertEquals(referencePerson.getSurname(), result.getSurname());
+            assertEquals(referencePerson.getAge(), result.getAge());
+            assertEquals(referencePerson.getEyeColour(), result.getEyeColour());
+            assertNotNull(person.getAccounts());
+            assertEquals(2, result.getAccounts().size());
+            final Account resultAccount1 = result.getAccounts().stream()
+                    .filter(a -> a.getId() == 123L)
+                    .findFirst().orElseThrow();
+            assertEquals("Account 1", resultAccount1.getName());
+
+            final Account resultAccount2 = result.getAccounts().stream()
+                    .filter(a -> a.getId() == 1L)
+                    .findFirst().orElseThrow();
+            assertEquals("Account 2 (auto-generated ID)", resultAccount2.getName());
+        }
     }
 
 

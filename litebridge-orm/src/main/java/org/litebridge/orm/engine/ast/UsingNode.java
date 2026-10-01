@@ -1,6 +1,7 @@
 package org.litebridge.orm.engine.ast;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.expression.select.ValuesSpec;
 
 import java.util.Objects;
 
@@ -16,19 +17,30 @@ public record UsingNode(MergeNode previous,
                         @Nullable String table,
                         @Nullable Class<?> dtoClass,
                         @Nullable QueryNode query,
+                        @Nullable ValuesSpec values,
                         @Nullable String alias,
                         QueryNode on) implements QueryNode {
 
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof UsingNode(
-                MergeNode previous1, String table1, Class<?> aClass, QueryNode query1, String alias1, QueryNode on1
+                MergeNode oPrevious,
+                String oTable,
+                Class<?> oDtoClass,
+                QueryNode oQuery,
+                ValuesSpec oValues,
+                String oAlias, QueryNode oOn
         ))) return false;
-        return Objects.equals(table, table1) && Objects.equals(alias, alias1) && Objects.equals(on, on1) && Objects.equals(query, query1) && Objects.equals(dtoClass, aClass) && Objects.equals(previous, previous1);
+        return Objects.equals(table, oTable) && Objects.equals(alias, oAlias)
+                && Objects.equals(on, oOn)
+                && Objects.equals(query, oQuery)
+                && Objects.equals(dtoClass, oDtoClass)
+                && Objects.equals(values, oValues)
+                && Objects.equals(previous, oPrevious);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(previous, table, dtoClass, query, alias, on);
+        return Objects.hash(previous, table, dtoClass, query, values, alias, on);
     }
 }

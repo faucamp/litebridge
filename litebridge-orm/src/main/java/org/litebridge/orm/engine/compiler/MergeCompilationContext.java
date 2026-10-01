@@ -10,6 +10,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.SelectTarget;
+import org.litebridge.db.spi.query.Values;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -24,6 +25,7 @@ import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
 import org.litebridge.orm.persistence.OrmTable;
@@ -77,8 +79,14 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         this.conditionContext = ConditionContext.ON;
 
         if (usingNode.query() != null) {
+            // Using a subquery
             final String queryAlias = usingNode.alias() != null ? usingNode.alias() : aliasGenerator.newAlias("using");
             using = getSelectTargetQuery(Objects.requireNonNull(usingNode.query()), queryAlias);
+            return;
+        } else if (usingNode.values() != null) {
+            // Using values
+            final ValuesSpec valuesSpec = Objects.requireNonNull(usingNode.values(), "No USING <table>/<DTO class>/<subquery>/<values> specified");
+            using = new Values(valuesSpec.tableAlias(), valuesSpec.labels(), valuesSpec.values());
             return;
         }
 
@@ -89,7 +97,8 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             usingTable = tableRegistry.getOrCreateSpiTable(usingNode.table());
         } else {
             // Using table identified by mapped DTO class
-            final OrmTable usingOrmTable = tableRegistry.getOrmTableOrThrow(Objects.requireNonNull(usingNode.dtoClass()));
+            final Class<?> dtoClass = Objects.requireNonNull(usingNode.dtoClass(), "No USING <table>/<DTO class>/<subquery>/<values> specified");
+            final OrmTable usingOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
             usingTable = usingOrmTable.getMetaData().table();
         }
 
