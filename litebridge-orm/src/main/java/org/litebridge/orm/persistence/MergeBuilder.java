@@ -113,7 +113,7 @@ final class MergeBuilder extends InsertBuilder {
         }
 
         // Don't update primary key fields
-        final Map<String, @Nullable Object> nonPkFields = new LinkedHashMap<>(row.size());
+        final LinkedHashMap<String, @Nullable Object> nonPkFields = new LinkedHashMap<>(row.size());
 
         for (Map.Entry<String, @Nullable Object> entry : row.sequencedEntrySet()) {
             final String fieldName = entry.getKey();
@@ -131,10 +131,7 @@ final class MergeBuilder extends InsertBuilder {
                     .whenMatched(m -> m.update(u -> {
                         DtoUpdateStep<?> dtoUpdateStep = null;
 
-                        for (Map.Entry<String, @Nullable Object> entry : row.sequencedEntrySet()) {
-                            final String fieldName = entry.getKey();
-
-
+                        for (Map.Entry<String, @Nullable Object> entry : nonPkFields.sequencedEntrySet()) {
                             if (dtoUpdateStep == null) {
                                 dtoUpdateStep = u.set(entry.getKey()).to(entry.getValue());
                             } else {
