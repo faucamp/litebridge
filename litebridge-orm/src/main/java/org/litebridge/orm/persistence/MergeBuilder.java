@@ -58,7 +58,7 @@ final class MergeBuilder extends InsertBuilder {
             pkValues.put(pkField.name(), pkField.get(dto));
         }
 
-        final DtoMergeOnStep<?> mergeOnStep = new DtoMergeUsingStep<>(dtoClass, litebridgeContext)
+        final DtoMergeOnStep<?> mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
                 .using(Fn.values(tableAlias, pkValues));
         MergeOnConditionClauseTerminal<?, DtoMergeUpdateStep<?>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;
 

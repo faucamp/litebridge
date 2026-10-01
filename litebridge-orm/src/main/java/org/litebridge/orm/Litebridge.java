@@ -130,13 +130,27 @@ public class Litebridge extends LitebridgeCore {
     /**
      * Performs a {@code MERGE INTO} operation targeting the specified mapped DTO type.
      *
-     * @param dtoClass the class of the DTO/entity to merge
+     * @param dtoClass the target class of the DTO/entity to merge
      * @param merge    a function that takes an instance of {@link DtoMergeUsingStep} and returns a {@code MergeTerminal},
      *                 specifying the conditions and actions for merging records
      * @param <DTO>    the type of the DTO
      * @return the result of the merge operation
      */
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
-        return mergeEngine.mergeInto(dtoClass, merge, createDtoLitebridgeContext());
+        return mergeEngine.mergeInto(dtoClass, null, merge, createDtoLitebridgeContext());
+    }
+
+    /**
+     * Performs a {@code MERGE INTO} operation targeting the specified mapped DTO type.
+     *
+     * @param dtoClass        the target class of the DTO/entity to merge
+     * @param contextDtoClass The context DTO class for determining the table mapping.
+     * @param merge           a function that takes an instance of {@link DtoMergeUsingStep} and returns a {@code MergeTerminal},
+     *                        specifying the conditions and actions for merging records
+     * @param <DTO>           the type of the DTO
+     * @return the result of the merge operation
+     */
+    public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass, final Class<?> contextDtoClass, final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge) {
+        return mergeEngine.mergeInto(dtoClass, contextDtoClass, merge, createDtoLitebridgeContext());
     }
 }

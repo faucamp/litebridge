@@ -28,10 +28,11 @@ public final class DtoMergeUsingStep<DTO> extends MergeUsingStep<DTO, DtoMergeUp
      * Creates a new {@code DtoMergeUsingStep} instance.
      *
      * @param dtoClass          the DTO/entity class to use for the {@code USING} clause
+     * @param contextDtoClass   the parent context DTO/entity class to use for the {@code USING} clause
      * @param litebridgeContext the Litebridge context
      */
-    public DtoMergeUsingStep(final Class<DTO> dtoClass, final LitebridgeContext litebridgeContext) {
-        super(dtoClass, litebridgeContext);
+    public DtoMergeUsingStep(final Class<DTO> dtoClass, final @Nullable Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
+        super(dtoClass, contextDtoClass, litebridgeContext);
     }
 
     /**

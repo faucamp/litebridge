@@ -1,5 +1,6 @@
 package org.litebridge.orm.engine;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.merge.DtoMergeUsingStep;
@@ -30,9 +31,10 @@ public final class MergeEngine extends AbstractInsertEngine {
      * @return the result of the merge operation
      */
     public <DTO> UpdateResult mergeInto(final Class<DTO> dtoClass,
+                                        final @Nullable Class<?> contextDtoClass,
                                         final Function<DtoMergeUsingStep<DTO>, MergeTerminal> merge,
                                         final LitebridgeContext litebridgeContext) {
-        final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, litebridgeContext);
+        final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext);
         final MergeTerminal mergeTerminal = merge.apply(mergeUsingStep);
         return execute(mergeTerminal,
                 () -> litebridgeContext.tableRegistry().getOrmTableOrThrow(dtoClass).getMetaData().table(),

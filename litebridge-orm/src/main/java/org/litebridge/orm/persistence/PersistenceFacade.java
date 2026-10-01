@@ -645,7 +645,14 @@ public class PersistenceFacade {
 
                                     LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
                                     mutableCollection.add(dto);
-                                    transactionManager.addRollbackCallback(() -> collection.remove(dto));
+                                    transactionManager.addRollbackCallback(() -> {
+                                        if (mutableCollection != collection) {
+                                            // Replace the mutable collection with the original one
+                                            collectionField.set(trackedDto.dto(), collection);
+                                        } else {
+                                            mutableCollection.remove(dto);
+                                        }
+                                    });
 
                                     if (mutableCollection != collection) {
                                         // Replace the collection with the mutable one

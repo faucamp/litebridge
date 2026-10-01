@@ -8,6 +8,8 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasedTable;
+import org.litebridge.db.spi.expression.LiteralExpression;
+import org.litebridge.db.spi.expression.LiteralExpressionFactory;
 import org.litebridge.db.spi.query.ConditionGroup;
 import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.query.Values;
@@ -53,7 +55,9 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         final Table targetTable;
 
         if (mergeNode.dtoClass() != null) {
-            final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(mergeNode.dtoClass());
+            final OrmTable targetOrmTable = mergeNode.contextDtoClass() != null ?
+                    tableRegistry.getOrmTableInContextOrThrow(mergeNode.dtoClass(), mergeNode.contextDtoClass())
+                    : tableRegistry.getOrmTableOrThrow(mergeNode.dtoClass());
             targetTable = targetOrmTable.getMetaData().table();
         } else {
             targetTable = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(mergeNode.table()));
@@ -86,7 +90,19 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         } else if (usingNode.values() != null) {
             // Using values
             final ValuesSpec valuesSpec = Objects.requireNonNull(usingNode.values(), "No USING <table>/<DTO class>/<subquery>/<values> specified");
-            using = new Values(valuesSpec.tableAlias(), valuesSpec.labels(), valuesSpec.values());
+            final LiteralExpressionFactory literalExpressionFactory = litebridgeContext.sqlFunctionRegistry().select().literal();
+            final String[] labels = valuesSpec.labels();
+            final @Nullable Object[] values = valuesSpec.values();
+
+            final List<LiteralExpression> literalExpressions = new ArrayList<>(labels.length);
+
+            for (int i = 0; i < labels.length; i++) {
+                final Object value = values[i];
+                bindValues.add(new BindValue(value));
+                literalExpressions.add(literalExpressionFactory.create(value, labels[i]));
+            }
+
+            using = new Values(literalExpressions, valuesSpec.tableAlias());
             return;
         }
 

@@ -6,6 +6,8 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.Values;
+import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
@@ -24,11 +26,13 @@ import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -84,10 +88,17 @@ public final class QueryBindValueExtractor {
                         extractDtoValues(insertDtoValuesNode, bindValues, litebridgeContext);
                 // Merge
                 case UsingNode usingNode -> {
+                    // Extract bind variables from a USING query
                     if (usingNode.query() != null) {
                         extractBindValuesAtLevel(usingNode.query(), bindValues, litebridgeContext);
                     }
 
+                    // Extract bind variables from a USING VALUES clause
+                    if (usingNode.values() != null) {
+                        bindValues.addAll(Arrays.asList(usingNode.values().values()));
+                    }
+
+                    // Extract bind variables from the USING ON clause
                     extractBindValuesAtLevel(usingNode.on(), bindValues, litebridgeContext);
                 }
                 case WhenMatchedNode whenMatchedNode -> {

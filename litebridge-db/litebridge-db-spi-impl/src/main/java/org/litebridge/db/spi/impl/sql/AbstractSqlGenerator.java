@@ -1,6 +1,5 @@
 package org.litebridge.db.spi.impl.sql;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
@@ -11,6 +10,7 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.AliasedExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
+import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.impl.expression.LiteralExpressionImpl;
@@ -161,25 +161,20 @@ public abstract class AbstractSqlGenerator {
         return sql;
     }
 
-    protected StringBuilder appendValues(final StringBuilder sql, final Values values) {
+    protected StringBuilder appendValues(final StringBuilder sql, final Values values, final ClauseType clauseType, final Operation operation) {
         sql.append("VALUES ");
 
         final StringJoiner valuesStrings = new StringJoiner(", ", "(", ")");
+        final StringJoiner labels = new StringJoiner(", ", "(", ")");
 
-        for (@Nullable Object value : values.values()) {
-            valuesStrings.add(value == null ? "NULL" : value.toString());
+        for (final LiteralExpression literal : values.values()) {
+            valuesStrings.add(literal.toSql(operation, clauseType));
+            labels.add(labelGenerator.quoteAlias(Objects.requireNonNull(literal.alias(), "No label value in VALUES clause")));
         }
 
-        sql.append(valuesStrings).append(" AS ").append(labelGenerator.quoteAlias(values.name())).append(' ');
-        final StringJoiner labels = new StringJoiner("), (", "(", ")");
-
-        for (String label : values.labels()) {
-            labels.add(labelGenerator.quoteAlias(label));
-        }
-
-        sql.append(labels);
-
-        return sql;
+        return sql.append(valuesStrings)
+                .append(" AS ").append(labelGenerator.quoteAlias(values.name()))
+                .append(' ').append(labels);
     }
 
     /**

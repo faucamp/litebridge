@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.merge;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 
@@ -29,7 +30,7 @@ public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep, MI
      * @param litebridgeContext the Litebridge context
      */
     protected MergeUsingStep(final String destinationTable, final LitebridgeContext litebridgeContext) {
-        this.mergeNode = new MergeNode(destinationTable, null, null);
+        this.mergeNode = new MergeNode(destinationTable, null, null, null);
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -37,10 +38,11 @@ public abstract sealed class MergeUsingStep<DTO, MUS extends MergeUpdateStep, MI
      * Creates a new {@code MergeUsingStep} targeting a DTO class.
      *
      * @param dtoClass          the destination DTO class
+     * @param contextDtoClass   the parent context DTO class
      * @param litebridgeContext the Litebridge context
      */
-    protected MergeUsingStep(final Class<DTO> dtoClass, final LitebridgeContext litebridgeContext) {
-        this.mergeNode = new MergeNode(null, dtoClass, null);
+    protected MergeUsingStep(final Class<DTO> dtoClass, final @Nullable Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
+        this.mergeNode = new MergeNode(null, dtoClass, contextDtoClass, null);
         this.litebridgeContext = litebridgeContext;
     }
 }
