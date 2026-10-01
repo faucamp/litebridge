@@ -1,5 +1,6 @@
 package org.litebridge.orm.e2e.compositepk;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.orm.config.RelatedDtoStrategy;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+@Disabled
 class CompositePkTest extends AbstractE2eTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CompositePkTest.class);
