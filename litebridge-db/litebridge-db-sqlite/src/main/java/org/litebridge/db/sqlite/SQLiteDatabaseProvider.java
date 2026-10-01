@@ -51,7 +51,7 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider imple
         final TypeConverter typeConverter = new DefaultTypeConverter();
         final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
         final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter, aliasTransformer);
-        final MetaDataEngine metaDataEngine = new SQLiteMetaDataEngine();
+        final MetaDataEngine metaDataEngine = new SQLiteMetaDataEngine(databaseProviderMetaData);
         final LabelGenerator labelGenerator = new LabelGenerator();
         final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
         final SQLiteSqlGenerator sqlGenerator = new SQLiteSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);

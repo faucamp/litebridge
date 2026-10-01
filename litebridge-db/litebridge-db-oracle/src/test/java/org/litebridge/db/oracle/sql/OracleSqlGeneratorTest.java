@@ -3,6 +3,7 @@ package org.litebridge.db.oracle.sql;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
@@ -33,7 +34,11 @@ class OracleSqlGeneratorTest {
 
     @BeforeEach
     void setUp() {
-        final MetaDataEngine metaDataEngine = new DefaultMetaDataEngine();
+        final DatabaseProviderMetaData metadata =
+                new DatabaseProviderMetaData(true,
+                        DatabaseProviderMetaData.MergeCapability.USING_VALUES_SUBQUERY,
+                        DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+        final MetaDataEngine metaDataEngine = new DefaultMetaDataEngine(metadata);
         final LabelGenerator labelGenerator = new LabelGenerator();
         final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
         sqlGenerator = new OracleSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);

@@ -1,6 +1,7 @@
 package org.litebridge.db.sqlite.engine;
 
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.impl.engine.DefaultMetaDataEngine;
@@ -13,6 +14,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 public final class SQLiteMetaDataEngine extends DefaultMetaDataEngine {
+
+    public SQLiteMetaDataEngine(final DatabaseProviderMetaData databaseProviderMetaData) {
+        super(databaseProviderMetaData);
+    }
 
     @Override
     protected TableMetaData fetchTableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {

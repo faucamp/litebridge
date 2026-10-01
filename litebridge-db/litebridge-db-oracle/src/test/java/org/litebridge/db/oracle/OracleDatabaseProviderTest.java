@@ -72,7 +72,7 @@ class OracleDatabaseProviderTest {
 
         // Then
         assertEquals(DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS, metaData.insertCapability());
-        assertTrue(metaData.supportsMerge());
+        assertEquals(DatabaseProviderMetaData.MergeCapability.USING_VALUES_SUBQUERY, metaData.mergeCapability());
         assertTrue(metaData.supportsSequenceColumnValueGenerator());
     }
 

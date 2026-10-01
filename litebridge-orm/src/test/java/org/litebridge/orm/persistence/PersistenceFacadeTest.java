@@ -130,6 +130,11 @@ class PersistenceFacadeTest {
 
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
 
+        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true,
+                DatabaseProviderMetaData.MergeCapability.USING_VALUES,
+                DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(databaseProvider.metaData()).thenReturn(providerMetaData);
+
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
         final LitebridgeConfig litebridgeConfig = new LitebridgeConfig();
 
@@ -931,7 +936,7 @@ class PersistenceFacadeTest {
         facade.save(dto);
 
         // Then
-        verify(databaseProvider).executeUpdate(argThat(i -> i.bindValues().size() == 3), eq(UpdateResult.class), any());
+        verify(databaseProvider).executeUpdate(argThat(i -> i.bindValues().size() == 2), eq(UpdateResult.class), any());
     }
 
     @Test

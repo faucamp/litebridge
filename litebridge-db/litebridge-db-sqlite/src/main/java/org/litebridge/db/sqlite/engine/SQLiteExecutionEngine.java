@@ -22,7 +22,7 @@ public final class SQLiteExecutionEngine extends ExecutionEngineReturnedKeysAuto
 
     public SQLiteExecutionEngine(final TypeConverter typeConverter,
                                  final AliasTransformer aliasTransformer) {
-        super(typeConverter, aliasTransformer, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        super(typeConverter, aliasTransformer, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
     }
 
     @Override

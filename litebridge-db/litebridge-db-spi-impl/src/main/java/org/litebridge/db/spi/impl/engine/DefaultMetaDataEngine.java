@@ -36,10 +36,6 @@ public class DefaultMetaDataEngine implements MetaDataEngine {
         this.databaseProviderMetaData = databaseProviderMetaData;
     }
 
-    public DefaultMetaDataEngine() {
-        databaseProviderMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
-    }
-
     @Override
     public DatabaseProviderMetaData metaData() {
         return databaseProviderMetaData;

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A builder class for constructing SQL INSERT statements.
@@ -111,28 +112,43 @@ final class MergeBuilder extends InsertBuilder {
             mergeOnConditionClauseTerminal = (MergeOnConditionClauseTerminal) mergeOnStep.on(pkColumn).eq(aliasRef);
         }
 
-        final MergeTerminal mergeTerminal = Objects.requireNonNull(mergeOnConditionClauseTerminal)
-                .whenMatched(m -> m.update(u -> {
-                    DtoUpdateStep<?> dtoUpdateStep = null;
+        // Don't update primary key fields
+        final Map<String, @Nullable Object> nonPkFields = new LinkedHashMap<>(row.size());
 
-                    for (Map.Entry<String, @Nullable Object> entry : row.sequencedEntrySet()) {
-                        final String fieldName = entry.getKey();
+        for (Map.Entry<String, @Nullable Object> entry : row.sequencedEntrySet()) {
+            final String fieldName = entry.getKey();
 
-                        if (pkFieldNames.contains(fieldName)) {
-                            // Don't update primary key fields
-                            continue;
+            if (!pkFieldNames.contains(fieldName)) {
+                nonPkFields.put(fieldName, entry.getValue());
+            }
+        }
+
+        mergeOnConditionClauseTerminal = Objects.requireNonNull(mergeOnConditionClauseTerminal);
+        final MergeTerminal mergeTerminal;
+
+        if (!nonPkFields.isEmpty()) {
+            mergeTerminal = mergeOnConditionClauseTerminal
+                    .whenMatched(m -> m.update(u -> {
+                        DtoUpdateStep<?> dtoUpdateStep = null;
+
+                        for (Map.Entry<String, @Nullable Object> entry : row.sequencedEntrySet()) {
+                            final String fieldName = entry.getKey();
+
+
+                            if (dtoUpdateStep == null) {
+                                dtoUpdateStep = u.set(entry.getKey()).to(entry.getValue());
+                            } else {
+                                dtoUpdateStep = dtoUpdateStep.set(entry.getKey()).to(entry.getValue());
+                            }
                         }
 
-                        if (dtoUpdateStep == null) {
-                            dtoUpdateStep = u.set(entry.getKey()).to(entry.getValue());
-                        } else {
-                            dtoUpdateStep = dtoUpdateStep.set(entry.getKey()).to(entry.getValue());
-                        }
-                    }
-
-                    return Objects.requireNonNull(dtoUpdateStep);
-                }))
-                .whenNotMatched(i -> i.insert(fieldNames).values(values));
+                        return Objects.requireNonNull(dtoUpdateStep);
+                    }))
+                    .whenNotMatched(i -> i.insert(fieldNames).values(values));
+        } else {
+            // Insert only
+            mergeTerminal = mergeOnConditionClauseTerminal.whenNotMatched(i -> i.insert(fieldNames).values(values));
+        }
 
         return MergeTerminalInspector.getNode(mergeTerminal);
     }

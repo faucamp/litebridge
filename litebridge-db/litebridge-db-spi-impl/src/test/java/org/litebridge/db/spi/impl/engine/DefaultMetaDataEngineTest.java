@@ -23,24 +23,25 @@ import static org.mockito.Mockito.when;
 
 class DefaultMetaDataEngineTest {
 
+    private static final DatabaseProviderMetaData metadata =
+            new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+
     @Test
-    void metaData_cachedValue() {
+    void metaData() {
         // Given
-        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine();
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
 
         // When
-        final var first = engine.metaData();
-        final var second = engine.metaData();
+        final DatabaseProviderMetaData result = engine.metaData();
 
         // Then
-        assertSame(first, second);
-        assertEquals(new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW), first);
+        assertSame(metadata, result);
     }
 
     @Test
     void databaseMetaData_cachedValue() throws Exception {
         // Given
-        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine();
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
         final ConnectionProvider provider = mock(ConnectionProvider.class);
         final Connection connection = mock(Connection.class);
         final java.sql.DatabaseMetaData jdbcMetaData = mock(java.sql.DatabaseMetaData.class);
@@ -68,7 +69,7 @@ class DefaultMetaDataEngineTest {
     @Test
     void databaseMetaData_sqlException() throws Exception {
         // Given
-        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine();
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
         final ConnectionProvider provider = mock(ConnectionProvider.class);
         when(provider.connection()).thenThrow(new SQLException("connection"));
 
@@ -82,7 +83,7 @@ class DefaultMetaDataEngineTest {
     @Test
     void ensureTableMetaData_cachedValue() throws Exception {
         // Given
-        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine();
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
         final Table table = new Table("CATALOG", "SCHEMA", "TEST_TABLE");
         final ConnectionProvider provider = configuredProvider(table);
 
@@ -102,7 +103,7 @@ class DefaultMetaDataEngineTest {
     @Test
     void ensureTableMetaData_schemaNotFound() throws Exception {
         // Given
-        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine();
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
         final Table table = new Table("CATALOG", "SCHEMA", "TEST_TABLE");
         final Connection connection = mock(Connection.class);
         final java.sql.DatabaseMetaData metadata = mock(java.sql.DatabaseMetaData.class);
@@ -123,7 +124,7 @@ class DefaultMetaDataEngineTest {
     @Test
     void ensureTableMetaData_tableNotFound() throws Exception {
         // Given
-        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine();
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
         final Table table = new Table("CATALOG", "SCHEMA", "TEST_TABLE");
         final Connection connection = mock(Connection.class);
         final java.sql.DatabaseMetaData metadata = mock(java.sql.DatabaseMetaData.class);

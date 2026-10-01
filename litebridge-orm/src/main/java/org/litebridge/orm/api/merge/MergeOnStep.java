@@ -9,8 +9,6 @@ import org.litebridge.orm.expression.Aliasable;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.ValuesSpec;
 
-import java.util.Objects;
-
 /**
  * Merge step for setting up the {@code MERGE INTO ... USING ... ON} condition.
  *
@@ -99,8 +97,8 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
     private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         final String alias;
 
-        if (expression instanceof Aliasable aliasable) {
-            alias = Objects.requireNonNullElse(aliasable.getAlias(), usingAlias);
+        if (expression instanceof Aliasable aliasable && aliasable.getAlias() != null) {
+            alias = aliasable.getAlias();
         } else {
             alias = usingAlias;
         }

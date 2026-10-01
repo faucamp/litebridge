@@ -5,6 +5,7 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.LogicOperator;
@@ -74,6 +75,7 @@ public class PersistenceFacade {
     private final ClassFieldAccessorCache classFieldAccessorCache;
     private final DtoConstructor dtoConstructor;
     private final LitebridgeContext litebridgeContext;
+    private final boolean mergeSupported;
 
     /**
      * Constructs a new {@code PersistenceFacade} instance.
@@ -96,6 +98,7 @@ public class PersistenceFacade {
         this.classFieldAccessorCache = changeTracker.classFieldAccessorCache();
         this.dtoConstructor = dtoConstructor;
         this.litebridgeContext = litebridgeContext;
+        this.mergeSupported = databaseProvider.metaData().mergeCapability() != DatabaseProviderMetaData.MergeCapability.NOT_SUPPORTED;
     }
 
     /**
@@ -726,7 +729,7 @@ public class PersistenceFacade {
             // Untracked DTO instance; check if its primary key is set to determine whether to do an upsert or insert
             final boolean dtoPkSet = isDtoPkSet(dto, tableProvider.getTableOrThrow(dto.getClass()));
 
-            if (dtoPkSet) {
+            if (dtoPkSet && mergeSupported) {
                 // Upsert via MERGE
                 return createMergeBuilder(dto, ormTable, inProgressDtos, tableProvider);
             } else {

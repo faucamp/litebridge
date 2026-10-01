@@ -2,6 +2,7 @@ package org.litebridge.db.sqlite.engine;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -25,10 +26,14 @@ import static org.mockito.Mockito.when;
 
 class SQLiteMetaDataEngineTest {
 
+    private static final DatabaseProviderMetaData metadata = new DatabaseProviderMetaData(false,
+            DatabaseProviderMetaData.MergeCapability.NOT_SUPPORTED,
+            DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+
     @Test
     void fetchTableMetaData_whenTableExists_returnsSqliteCompatibleMetadata() throws SQLException {
         // Given
-        final SQLiteMetaDataEngine sqLiteMetaDataEngine = new SQLiteMetaDataEngine();
+        final SQLiteMetaDataEngine sqLiteMetaDataEngine = new SQLiteMetaDataEngine(metadata);
         final Table table = new Table("catalog", "schema", "test");
 
         final ConnectionProvider mockConnectionProvider = mock(ConnectionProvider.class);
@@ -95,7 +100,7 @@ class SQLiteMetaDataEngineTest {
     @Test
     void fetchTableMetaData_whenTableDoesNotExist_throwsIllegalArgumentException() throws SQLException {
         // Given
-        final SQLiteMetaDataEngine sqLiteMetaDataEngine = new SQLiteMetaDataEngine();
+        final SQLiteMetaDataEngine sqLiteMetaDataEngine = new SQLiteMetaDataEngine(metadata);
         final Table table = new Table("catalog", "schema", "missing_table");
 
         final ConnectionProvider mockConnectionProvider = mock(ConnectionProvider.class);
@@ -123,7 +128,7 @@ class SQLiteMetaDataEngineTest {
     @Test
     void getColumnMetaData_whenNoColumns_returnsEmptyList() throws SQLException {
         // Given
-        final SQLiteMetaDataEngine sqLiteMetaDataEngine = new SQLiteMetaDataEngine();
+        final SQLiteMetaDataEngine sqLiteMetaDataEngine = new SQLiteMetaDataEngine(metadata);
         final Table table = new Table("catalog", "schema", "empty_table");
 
         final DatabaseMetaData mockDatabaseMetaData = mock(DatabaseMetaData.class);
