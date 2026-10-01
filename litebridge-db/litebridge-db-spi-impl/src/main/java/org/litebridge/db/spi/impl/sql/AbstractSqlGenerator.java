@@ -162,7 +162,7 @@ public abstract class AbstractSqlGenerator {
     }
 
     protected StringBuilder appendValues(final StringBuilder sql, final Values values, final ClauseType clauseType, final Operation operation) {
-        sql.append("VALUES ");
+        sql.append("(VALUES ");
 
         final StringJoiner valuesStrings = new StringJoiner(", ", "(", ")");
         final StringJoiner labels = new StringJoiner(", ", "(", ")");
@@ -173,7 +173,7 @@ public abstract class AbstractSqlGenerator {
         }
 
         return sql.append(valuesStrings)
-                .append(" AS ").append(labelGenerator.quoteAlias(values.name()))
+                .append(") AS ").append(labelGenerator.quoteAlias(values.name()))
                 .append(' ').append(labels);
     }
 
