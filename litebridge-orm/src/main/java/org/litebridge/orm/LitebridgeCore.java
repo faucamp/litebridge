@@ -88,11 +88,11 @@ public class LitebridgeCore implements SelectApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LitebridgeCore.class);
 
+    protected final PersistenceFacade persistenceFacade;
     private final TableRegistry tableRegistry = new TableRegistry();
     private final TransactionalDatabaseProvider databaseProvider;
     private final TransactionContext transactionContext;
     private final NativeSqlContext nativeSqlContext;
-    private final PersistenceFacade persistenceFacade;
     private final ChangeTracker changeTracker;
     private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
     private final RegistrationEngine registrationEngine;

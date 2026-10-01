@@ -192,6 +192,35 @@ public class PersistenceFacade {
     }
 
     /**
+     * Merges/upserts the specified Data Transfer Object (DTO) into the database.
+     * <p>
+     * This method constructs an SQL `MERGE INTO` statement based on the provided DTO
+     * and executes it.
+     *
+     * @param dto the Data Transfer Object to be inserted into the database.
+     *            It must correspond to a registered ORM table.
+     * @throws SQLException if a database access error occurs during the insertion process.
+     */
+    public void merge(final Object dto) throws SQLException {
+        final TableProvider tableProvider = new TableProvider(tableRegistry);
+        final StatementBuilder statementBuilder = createMergeBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>(), tableProvider);
+        final CompositeUpdateResult compositeUpdateResult = new CompositeUpdateResult();
+        executeUpdateStatement(dto, null, statementBuilder, compositeUpdateResult);
+
+        compositeUpdateResult.results().forEach(dtoUpdateResult -> {
+            updateOneToManyReverseMappings(dtoUpdateResult, tableProvider);
+            final Result result = dtoUpdateResult.getResult();
+
+            if (result instanceof InsertResult insertResult
+                    && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+                dtoUpdateResult.setDto(updateDtoPrimaryKey(dtoUpdateResult.getDto(), insertResult.generatedKeys().getFirst(), tableProvider));
+            } else {
+                tableProvider.getTableOrThrow(dtoUpdateResult.getDto().getClass()).syncPersistedDto(dtoUpdateResult.getDto());
+            }
+        });
+    }
+
+    /**
      * Deletes the specified Data Transfer Object (DTO) from the corresponding database table.
      *
      * @param dto the Data Transfer Object to be deleted from the database

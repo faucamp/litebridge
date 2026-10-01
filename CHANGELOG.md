@@ -9,6 +9,7 @@
     - `BooleanUtils.requireTrue` and `BooleanUtils.requireFalse` methods for asserting boolean conditions.
 - ORM:
     - `MERGE INTO` support: Implement `Litebridge.mergeInto()` method for performing SQL `MERGE` operations.
+    - Implement `Litebridge.merge()` method for upserting entities/DTOs.
     - New `saveAll()` overloads in `Litebridge` class for persisting multiple DTOs.
     - New query-based `insert()` API in `Litebridge` class, returning `InsertResult`.
     - Return `UpdateResult` and `InsertResult` classes for mutating operations, providing details on rows affected and
@@ -54,6 +55,8 @@
     - Reimplement the default DTO mapper (now called `DtoMapper`) to be simpler and more performant and handle non-ORM
       generated query results better.
     - `Litebridge.save()` now accepts a single DTO instead of varargs to improve clarity and type safety.
+    - `Litebridge.save()` now defaults to a `MERGE` operation (if available) to upsert entities/DTOs if their
+      persistence state is unknown, and they do not require PK value generation.
     - Query-based `update()` and `delete()` APIs now return a result instead of `void`.
     - `UpdateResult` class hierarchy extended; update results can now be `BatchUpdateResult`.
     - `InsertResult` now supports multi-row insert operation results by default; this changes how generated keys are

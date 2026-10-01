@@ -12,6 +12,7 @@ import org.litebridge.orm.engine.MergeEngine;
 
 import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
+import java.sql.SQLException;
 import java.util.function.Function;
 
 /**
@@ -113,6 +114,24 @@ public class Litebridge extends LitebridgeCore {
      */
     public Litebridge(final DatabaseProvider databaseProvider, final TransactionManager transactionManager, final @Nullable LitebridgeConfig litebridgeConfig, final MethodHandles.Lookup lookup) {
         super(databaseProvider, transactionManager, litebridgeConfig, lookup);
+    }
+
+    /**
+     * Merges/upserts the specified entity/mapped DTO into the database.
+     * <p>
+     * This method constructs an SQL `MERGE INTO` statement based on the provided DTO
+     * and executes it.
+     *
+     * @param dto the entity/mapped DTO to be merged into the database.
+     *            It must correspond to a registered ORM table.
+     * @throws SQLException if a database access error occurs during the merge process.
+     */
+    public void merge(final Object dto) {
+        try {
+            persistenceFacade.merge(dto);
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to merge DTO: " + dto, ex);
+        }
     }
 
     /**

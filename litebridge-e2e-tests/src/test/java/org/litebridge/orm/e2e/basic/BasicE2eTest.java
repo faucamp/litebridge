@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.sql.PreparedSql;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.e2e.AbstractE2eTest;
@@ -1242,6 +1243,87 @@ public class BasicE2eTest extends AbstractE2eTest {
         }
     }
 
+    @TestTemplate
+    @DisplayName("Merge: insert and upsert DTO")
+    void merge_upsertIfNotTracked(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        assumeTrue(litebridge instanceof Litebridge);
+        final Litebridge litebridge = (Litebridge) this.litebridge;
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        // Create new, untracked DTO
+        final Person person = new Person();
+        person.setId(123L);
+        person.setName("Alice");
+        person.setSurname("Smith");
+        person.setAge(30);
+        person.setEyeColour("blue");
+
+        final Account account = new Account();
+        account.setId(123L);
+        account.setName("Account 1");
+        account.setBalance(BigInteger.valueOf(1000));
+        account.setOwner(person);
+
+        person.setAccounts(new ArrayList<>());
+        person.getAccounts().add(account);
+
+        // Insert a Person and related Account record, both via MERGE operations
+        {
+            // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via a merge) the Account record
+            litebridge.merge(person);
+
+            assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
+            assertEquals(1, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+
+            // Ensure the person record is still intact, and that the account was inserted
+            final Person result = litebridge.select(Person.class)
+                    .join(Account.class).on(PersonMeta.accounts)
+                    .oneOrThrow();
+            assertEquals(person, result);
+            assertNotNull(person.getAccounts());
+            assertEquals(1, person.getAccounts().size());
+            final Account resultAccount = result.getAccounts().getFirst();
+            assertEquals(account, resultAccount);
+        }
+
+        // Add an account and merge
+        {
+            final Account account2 = new Account();
+            account2.setName("Account 2 (auto-generated ID)");
+            account2.setBalance(BigInteger.valueOf(1000));
+            person.getAccounts().add(account2);
+
+            // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via an INSERT) the Account record
+            litebridge.save(person);
+
+            assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
+            assertEquals(2, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+
+            // Ensure the second account was inserted & linked
+            final Person result = litebridge.select(Person.class)
+                    .join(Account.class).on(PersonMeta.accounts)
+                    .oneOrThrow();
+            assertEquals(person, result);
+            assertEquals(2, result.getAccounts().size());
+            final Account resultAccount1 = result.getAccounts().stream()
+                    .filter(a -> a.getId() == 123L)
+                    .findFirst().orElseThrow();
+            assertEquals("Account 1", resultAccount1.getName());
+
+            final Account resultAccount2 = result.getAccounts().stream()
+                    .filter(a -> a.getId() == 1L)
+                    .findFirst().orElseThrow();
+            assertEquals("Account 2 (auto-generated ID)", resultAccount2.getName());
+        }
+    }
 
     private void registerAddressTableMapping(final DbEnvDtoTableMapper tableMapper) {
         if (dbEnv.getName().equals("PostgreSQL")) {
