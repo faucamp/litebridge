@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.VirtualTable;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -332,27 +333,16 @@ class AbstractSqlGeneratorTest {
     }
 
     @Test
-    void appendTable_withSchemaAndName() throws Exception {
+    void appendTable() throws Exception {
         // Given
         final StringBuilder sql = new StringBuilder("SELECT * FROM ");
+        final Table table = new Table("TEST_SCHEMA.TEST_TABLE");
 
         // When
-        sqlGenerator.appendTable(sql, "TEST_SCHEMA", "TEST_TABLE");
+        sqlGenerator.appendTable(sql, table);
 
         // Then
         assertEquals("SELECT * FROM TEST_SCHEMA.TEST_TABLE", sql.toString());
-    }
-
-    @Test
-    void appendTable_withoutSchema() throws Exception {
-        // Given
-        final StringBuilder sql = new StringBuilder("SELECT * FROM ");
-
-        // When
-        sqlGenerator.appendTable(sql, "", "TEST_TABLE");
-
-        // Then
-        assertEquals("SELECT * FROM TEST_TABLE", sql.toString());
     }
 
     @Test
