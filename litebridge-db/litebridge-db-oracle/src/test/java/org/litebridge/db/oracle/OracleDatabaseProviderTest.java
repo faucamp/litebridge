@@ -5,6 +5,7 @@ import org.litebridge.db.oracle.api.LitebridgeOracle;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
+import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.LitebridgeBuilder;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class OracleDatabaseProviderTest {
 
@@ -48,11 +50,10 @@ class OracleDatabaseProviderTest {
     void createLitebridge_withValidArgs_returnsInitializedInstance() {
         // Given
         final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
-        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionManager transactionManager = mock(TransactionManager.class);
         final LitebridgeConfig config = new LitebridgeConfig();
         final MethodHandles.Lookup lookup = MethodHandles.lookup();
-        final LitebridgeBuilder.ConstructorArgs args = new LitebridgeBuilder.ConstructorArgs(databaseProvider, transactionManager, config, lookup);
+        final LitebridgeBuilder.ConstructorArgs args = new LitebridgeBuilder.ConstructorArgs(oracleDatabaseProvider, transactionManager, config, lookup);
 
         // When
         final LitebridgeOracle litebridge = oracleDatabaseProvider.createLitebridge(args);
