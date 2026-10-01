@@ -1143,6 +1143,7 @@ public class BasicE2eTest extends AbstractE2eTest {
         final String surname = tableMapper.transformColumnName("SURNAME");
         final String age = tableMapper.transformColumnName("AGE");
         final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+        final Long expectedAccountId2 = dbEnv.getName().equals("SQLite") ? 124L : 1L;
 
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
@@ -1176,7 +1177,7 @@ public class BasicE2eTest extends AbstractE2eTest {
 
             person.setAccounts(List.of(account));
 
-            // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via a merge) the Account record
+            // This will upsert the Person record, skipping its insert (since it already exists), but will insert (via a merge or manual UPDATE/INSERT upsert) the Account record
             litebridge.save(person);
 
             assertEquals(1, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
@@ -1237,7 +1238,7 @@ public class BasicE2eTest extends AbstractE2eTest {
             assertEquals("Account 1", resultAccount1.getName());
 
             final Account resultAccount2 = result.getAccounts().stream()
-                    .filter(a -> a.getId() == 1L)
+                    .filter(a -> a.getId() == expectedAccountId2)
                     .findFirst().orElseThrow();
             assertEquals("Account 2 (auto-generated ID)", resultAccount2.getName());
         }

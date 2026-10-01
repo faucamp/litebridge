@@ -270,6 +270,8 @@ class LitebridgeTest {
         litebridge.track(testDto);
         testDto.myVar = "updatedValue";
 
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class))).thenReturn(new UpdateResult(0));
+
         // When
         litebridge.update(testDto);
 
@@ -449,6 +451,8 @@ class LitebridgeTest {
 
         final TestDto testDto = new TestDto();
         testDto.myId = 1L;
+
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class))).thenReturn(new UpdateResult(0));
 
         // When
         litebridge.delete(testDto);

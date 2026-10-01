@@ -17,7 +17,6 @@ import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.Result;
 import org.litebridge.db.spi.update.Update;
-import org.litebridge.db.spi.update.UpdateOpResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.QueryBindValueExtractor;
@@ -65,7 +64,7 @@ import java.util.stream.Collectors;
 public class PersistenceFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PersistenceFacade.class);
-    private static final UpdateOpResult EMPTY_UPDATE_RESULT = new UpdateResult(0);
+    private static final UpdateResult EMPTY_UPDATE_RESULT = new UpdateResult(0);
     private static final NoOpStatementBuilder NO_OP_STATEMENT_BUILDER = new NoOpStatementBuilder();
 
     private final TableRegistry tableRegistry;
@@ -729,9 +728,16 @@ public class PersistenceFacade {
             // Untracked DTO instance; check if its primary key is set to determine whether to do an upsert or insert
             final boolean dtoPkSet = isDtoPkSet(dto, tableProvider.getTableOrThrow(dto.getClass()));
 
-            if (dtoPkSet && mergeSupported) {
-                // Upsert via MERGE
-                return createMergeBuilder(dto, ormTable, inProgressDtos, tableProvider);
+            if (dtoPkSet) {
+                if (mergeSupported) {
+                    // Upsert via MERGE
+                    return createMergeBuilder(dto, ormTable, inProgressDtos, tableProvider);
+                } else {
+                    // Mock an upsert by attempting an UPDATE, followed by an INSERT if the UPDATE fails
+                    final UpdateBuilder updateBuilder = (UpdateBuilder) createUpdateBuilder(dto, ormTable, inProgressDtos, tableProvider);
+                    final InsertBuilder insertBuilder = (InsertBuilder) createInsertBuilder(dto, ormTable, inProgressDtos, tableProvider);
+                    return new ManualUpsert(updateBuilder, insertBuilder);
+                }
             } else {
                 // Insert since we do not have an explicit primary key (likely auto-generated)
                 return createInsertBuilder(dto, ormTable, inProgressDtos, tableProvider);
@@ -782,19 +788,37 @@ public class PersistenceFacade {
             }
         }
 
+        UpdateResult updateResult = executeUpdateStatement(statementBuilder);
+
+        if (updateResult.rowsAffected() == 0 && statementBuilder instanceof ManualUpsert manualUpsert) {
+            updateResult = executeUpdateStatement(manualUpsert.insertBuilder());
+        }
+
+        dtoUpdateResult.setResult(updateResult);
+        result.add(dtoUpdateResult);
+
+        for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependants().entrySet()) {
+            final PipedStatement pipedStatement = entry.getValue();
+            pipedStatement.valuePipe().accept(dtoUpdateResult.getResult());
+            executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder(), result);
+        }
+    }
+
+    private UpdateResult executeUpdateStatement(final StatementBuilder statementBuilder) throws SQLException {
         final QueryNode node = statementBuilder.node();
         final int nodeHash = node.hashCode();
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
+        final UpdateResult updateResult;
 
         if (cachedOperation != null) {
             final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node, litebridgeContext);
             final PreparedSql preparedSql = cachedOperation.preparedSql(rawBindValues);
-            dtoUpdateResult.setResult(databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager));
+            updateResult = (UpdateResult) databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager);
         } else {
             final PreparedOperation preparedOperation = statementBuilder.build();
 
             if (preparedOperation.operation() instanceof Update update && update.columns().isEmpty()) {
-                dtoUpdateResult.setResult(new UpdateResult(0));
+                updateResult = EMPTY_UPDATE_RESULT;
             } else {
                 // Generate SQL and create type conversion metadata
                 final String sql = databaseProvider.toSql(preparedOperation.operation(), databaseProvider.transactionManager());
@@ -807,19 +831,11 @@ public class PersistenceFacade {
 
                 // Execute SQL query
                 final PreparedSql preparedSql = new PreparedSql(sql, preparedOperation.bindValues(), null, updateMetaData);
-                final Result updateResult = databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager);
-                dtoUpdateResult.setResult(updateResult);
+                updateResult = (UpdateResult) databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager);
             }
         }
 
-        result.add(dtoUpdateResult);
-
-        for (Map.Entry<Object, PipedStatement> entry : statementBuilder.statementChain().getDependants().entrySet()) {
-            final PipedStatement pipedStatement = entry.getValue();
-            pipedStatement.valuePipe().accept(dtoUpdateResult.getResult());
-            executeUpdateStatement(pipedStatement.dto(), dtoUpdateResult, pipedStatement.statementBuilder(), result);
-        }
-
+        return updateResult;
     }
 
     private static class TableProvider {

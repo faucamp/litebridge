@@ -10,7 +10,7 @@ import org.litebridge.orm.engine.ast.QueryNode;
 /**
  * Interface for building SQL execution/update statements.
  */
-public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpStatementBuilder {
+public sealed interface StatementBuilder permits AbstractStatementBuilder, ManualUpsert, NoOpStatementBuilder {
 
     /**
      * Returns the current query node.
