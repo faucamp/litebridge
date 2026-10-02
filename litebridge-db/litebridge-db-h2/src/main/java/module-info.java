@@ -6,6 +6,7 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 @SuppressWarnings("module")
 module litebridge.db.h2 {
+    requires java.sql;
     requires org.jspecify;
     requires litebridge.converter;
     requires litebridge.db.spi;

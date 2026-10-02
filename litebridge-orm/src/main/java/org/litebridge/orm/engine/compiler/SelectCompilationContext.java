@@ -12,7 +12,6 @@ import org.litebridge.db.spi.expression.AliasedExpression;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
@@ -45,7 +44,6 @@ import org.litebridge.orm.persistence.MappedManyToMany;
 import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -696,12 +694,9 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
             if (selectExpression instanceof LiteralExpression literalExpression) {
                 final Object value = literalExpression.value();
-                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
+                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size(), literalExpression.alias());
                 bindValues.addAll(createBindValues(literalExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));
-                final int dataType = value != null ? litebridgeContext.typeConverter().getSqlDataType(value.getClass()) : Types.NULL;
-                final Integer size = value instanceof String string ? string.length() : null;
-                final DelegateExpression castExpression = litebridgeContext.sqlFunctionRegistry().cast().create(bindValueExpression, literalExpression.alias(), dataType, size);
-                selectExpressions.add(castExpression);
+                selectExpressions.add(bindValueExpression);
             } else {
                 selectExpressions.add(selectExpression);
             }

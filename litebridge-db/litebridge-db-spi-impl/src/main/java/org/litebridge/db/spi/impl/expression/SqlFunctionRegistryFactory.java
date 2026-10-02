@@ -2,6 +2,7 @@ package org.litebridge.db.spi.impl.expression;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnType;
 import org.litebridge.db.spi.expression.AliasReference;
 import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.DelegateExpression;
@@ -63,7 +64,7 @@ public class SqlFunctionRegistryFactory {
                         this::createSelectColumn,
                         this::createSubselect,
                         this::createLiteral,
-                        this::createSelectReference,
+                        this::createBindValue,
                         this::createAliasReference
                 ),
                 new SqlFunctionRegistry.Aggregate(
@@ -113,6 +114,18 @@ public class SqlFunctionRegistryFactory {
      */
     protected LiteralExpressionImpl createLiteral(final @Nullable Object value, final @Nullable String alias) {
         return new LiteralExpressionImpl(value, alias, labelGenerator);
+    }
+
+    /**
+     * Creates a bind value expression.
+     *
+     * @param index Bind value index.
+     * @param size  Size of the bind value.
+     * @param alias Alias for the bind value.
+     * @return The bind value expression.
+     */
+    protected BindValueExpressionImpl createBindValue(final int index, final int size, final ColumnType columnType, final @Nullable String alias) {
+        return new BindValueExpressionImpl(index, size, columnType, alias, labelGenerator);
     }
 
     /**

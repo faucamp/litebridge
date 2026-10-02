@@ -3,6 +3,7 @@ package org.litebridge.orm.engine.compiler;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.ColumnType;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -15,7 +16,6 @@ import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SubselectExpression;
 import org.litebridge.db.spi.query.Condition;
@@ -141,8 +141,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         } else if (value instanceof Column referencedColumn) {
             // Reference to a selected column
             //TODO: alias regression
-            final ColumnReference columnReference = litebridgeContext.sqlFunctionRegistry().select().reference().create(referencedColumn, null, null);
-            return new Condition(lhsSelectExpression, operator, columnReference);
+            throw new UnsupportedOperationException("Deprecated");
+//            final ColumnReference columnReference = litebridgeContext.sqlFunctionRegistry().select().reference().create(referencedColumn, null, null);
+//            return new Condition(lhsSelectExpression, operator, columnReference);
         }
 
         // Store bind values and return condition
@@ -154,7 +155,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             }
             case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);
             default -> {
-                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size());
+                final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size(), null);
                 bindValues.addAll(createBindValues(lhsSelectExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));
                 yield new Condition(lhsSelectExpression, operator, bindValueExpression);
             }
@@ -335,7 +336,9 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return null;
     }
 
-    protected static BindValueExpression createBindValueExpression(final @Nullable Object value, final int index) {
+    protected BindValueExpression createBindValueExpression(final @Nullable Object value,
+                                                            final int index,
+                                                            final @Nullable String alias) {
         final int valueSize;
 
         if (value instanceof Collection<?> collection) {
@@ -344,7 +347,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             valueSize = 1;
         }
 
-        return new BindValueExpression(index, valueSize);
+        return litebridgeContext.sqlFunctionRegistry().select().bindValue().create(index, valueSize, getColumnType(value), alias);
     }
 
     private TargetResolution resolveSelectTarget(final ExpressionSpec expressionSpec,
@@ -406,34 +409,16 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return new TargetResolution(selectTarget, table, ormTable, tableAlias);
     }
 
-    protected final boolean matchesSelectTarget(final ExpressionSpec expressionSpec, final SelectTarget selectTarget) {
-        return switch (expressionSpec) {
-            case QueryField queryField -> {
-                final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
-                final OrmTable ormTable = tableRegistry.getOrmTable(dtoClass);
+    protected final ColumnType getColumnType(final @Nullable Object value) {
+        if (value instanceof Collection<?> collection) {
+            return new ColumnType(Types.JAVA_OBJECT, collection.size());
+        } else if (value instanceof Map<?, ?> map) {
+            return new ColumnType(Types.JAVA_OBJECT, map.size());
+        }
 
-                if (ormTable != null) {
-                    final Table table = ormTable.getMetaData().table();
-                    yield table.equals(getTable(selectTarget));
-                } else {
-                    final Table table = getTable(selectTarget);
-                    final OrmTable stOrm = tableRegistry.getOrmTable(table);
-                    yield stOrm != null && dtoClass.equals(stOrm.dtoClass());
-                }
-            }
-            case ColumnExpressionSpec columnExpressionSpec -> {
-                final String tableAlias = columnExpressionSpec.getTableAlias();
-
-                if (tableAlias == null) {
-                    yield matchesSelectTarget(columnExpressionSpec.getColumn().name(), selectTarget);
-                }
-
-                yield tableAlias.equals(getAlias(selectTarget));
-            }
-            case Resolvable resolvable -> matchesSelectTarget(resolvable.column(), selectTarget);
-            // Default to the FROM clause (first target)
-            default -> true;
-        };
+        final int dataType = value != null ? litebridgeContext.typeConverter().getSqlDataType(value.getClass()) : Types.NULL;
+        final Integer size = value instanceof String string ? string.length() : null;
+        return new ColumnType(dataType, size);
     }
 
     protected final @Nullable SelectTarget findSelectTargetOrNull(final ExpressionSpec expressionSpec, final List<SelectTarget> selectTargets) {

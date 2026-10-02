@@ -1,49 +1,31 @@
 package org.litebridge.db.spi.expression;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Operation;
-
-import java.util.Objects;
-import java.util.StringJoiner;
+import org.litebridge.db.spi.ColumnType;
 
 /**
- * An encapsulated literal value in a query expression.
- *
- * @param index the index of the bind value
- * @param size  the size of the bind value (e.g. for collection expressions)
+ * A bind value in a query expression.
  */
-public record BindValueExpression(int index, int size) implements SelectExpression {
+public interface BindValueExpression extends AliasedExpression {
 
-    @Override
-    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        if (size > 1) {
-            final StringJoiner joiner = new StringJoiner(", ");
+    /**
+     * Gets the bind value index.
+     *
+     * @return The index of the bind value.
+     */
+    int index();
 
-            for (int i = 0; i < size; i++) {
-                joiner.add("?");
-            }
 
-            return joiner.toString();
-        } else {
-            return "?";
-        }
-    }
+    /**
+     * Gets the length/number of bind values (e.g. for collection expressions).
+     *
+     * @return The length/size of the bind value.
+     */
+    int size();
 
-    @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof final BindValueExpression that)) return false;
-        return index == that.index;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(index);
-    }
-
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", BindValueExpression.class.getSimpleName() + "[", "]")
-                .add("index=" + index)
-                .toString();
-    }
+    /**
+     * Gets the data type and size of the bind value data type.
+     *
+     * @return The data type and size of the bind value data type.
+     */
+    ColumnType columnType();
 }

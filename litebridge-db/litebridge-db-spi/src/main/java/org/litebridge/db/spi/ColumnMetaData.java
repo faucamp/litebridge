@@ -18,12 +18,10 @@ import java.util.StringJoiner;
  * Instances of this class are immutable except for specific mutable fields like auto-increment, sequence,
  * and joinColumn, which can be modified after initialization.
  */
-public final class ColumnMetaData implements MappedFieldTarget {
+public final class ColumnMetaData extends ColumnType implements MappedFieldTarget {
 
     private final Column column;
     private final boolean nullable;
-    private final int dataType;
-    private final int size;
     private final int decimalDigits;
     private final boolean autoIncrement;
     private final @Nullable String defaultValue;
@@ -54,10 +52,9 @@ public final class ColumnMetaData implements MappedFieldTarget {
                           final boolean autoIncrement,
                           @Nullable final String defaultValue,
                           final @Nullable ColumnValueGenerator generator) {
+        super(dataType, size);
         this.column = new Column(table, name);
         this.nullable = nullable;
-        this.dataType = dataType;
-        this.size = size;
         this.decimalDigits = decimalDigits;
         this.autoIncrement = autoIncrement;
         this.defaultValue = defaultValue;
@@ -261,7 +258,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
         return Objects.equals(column, that.column)
                 && nullable == that.nullable
                 && dataType == that.dataType
-                && size == that.size
+                && Objects.equals(size, that.size)
                 && decimalDigits == that.decimalDigits
                 && autoIncrement == that.autoIncrement
                 && Objects.equals(generator, that.generator)
