@@ -252,6 +252,18 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         return ormTable;
     }
 
+    protected OrmTable getOrmTablePermissiveContext(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
+        if (contextDtoClass != null) {
+            OrmTable ormTable = tableRegistry.getOrmTableInContext(dtoClass, contextDtoClass);
+
+            if (ormTable != null) {
+                return ormTable;
+            }
+        }
+
+        return tableRegistry.getOrmTableOrThrow(dtoClass);
+    }
+
     protected final Table getTable(final SelectTarget selectTarget) {
         return switch (selectTarget) {
             case Table spiTable -> spiTable;

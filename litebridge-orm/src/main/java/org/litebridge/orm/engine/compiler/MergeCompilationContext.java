@@ -59,16 +59,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         final Table targetTable;
 
         if (mergeNode.dtoClass() != null) {
-            OrmTable targetOrmTable = null;
-
-            if (mergeNode.contextDtoClass() != null) {
-                targetOrmTable = tableRegistry.getOrmTableInContext(mergeNode.dtoClass(), mergeNode.contextDtoClass());
-            }
-
-            if (targetOrmTable == null) {
-                targetOrmTable = tableRegistry.getOrmTableOrThrow(mergeNode.dtoClass());
-            }
-
+            final OrmTable targetOrmTable = getOrmTablePermissiveContext(mergeNode.dtoClass(), mergeNode.contextDtoClass());
             targetTable = targetOrmTable.getMetaData().table();
         } else {
             targetTable = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(mergeNode.table()));

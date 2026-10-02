@@ -39,17 +39,7 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
         super(litebridgeContext);
 
         if (updateNode.dtoClass() != null) {
-            OrmTable targetOrmTable = null;
-
-            if (updateNode.contextDtoClass() != null) {
-                targetOrmTable = tableRegistry.getOrmTableInContext(updateNode.dtoClass(), updateNode.contextDtoClass());
-            }
-
-            if (targetOrmTable == null) {
-                targetOrmTable = tableRegistry.getOrmTableOrThrow(updateNode.dtoClass());
-            }
-
-            this.ormTable = targetOrmTable;
+            this.ormTable = getOrmTablePermissiveContext(updateNode.dtoClass(), updateNode.contextDtoClass());
             this.tableMetaData = ormTable.getMetaData();
             this.table = tableMetaData.table();
         } else {
