@@ -21,12 +21,13 @@
       to specify what Litebridge APIs are available at compile time,
       thus making the `Litebridge` instance database-specific. This allows future expansion to expose unique database
       vendor capabilities via the main Litebridge API.
-    - Selecting literal values are now fully supported.
+    - Selecting literal values are now fully supported; added `Fn.literal()` factory method.
     - Support added for select statements without from clauses.
     - Table, DTO, and subquery aliasing support in `from()` and `join()` clauses via `Fn.aliasTable()`, `Fn.alias()`,
       and `FromClauseStart.from(DtoAliasSpec)`.
     - Add `Fn.aliasRef()` helper methods for referencing aliased columns, tables, and subqueries in query conditions
       and clauses.
+    - Add `Fn.exists()` helper method for referencing subqueries in query conditions and clauses.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
@@ -34,6 +35,7 @@
     - `VirtualTable` class added to encapsulate SELECT sources other than tables.
     - Add `tableAlias()` method to `AliasedExpression` to retrieve parent or source table aliases.
     - Support added for SQL `CAST` function.
+    - Support added for SQL `EXISTS` keyword.
 - Oracle Database Provider:
     - Add custom mathematical operation SQL generator
     - Multi-row inserts are now supported via batched insert statements
