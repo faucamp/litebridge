@@ -219,14 +219,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
     }
 
-    protected final @Nullable OrmTable getOrmTableIfNotNull(final @Nullable Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
-        if (dtoClass != null) {
-            return getOrmTable(dtoClass, contextDtoClass);
-        } else {
-            return null;
-        }
-    }
-
     protected final OrmTable getOrmTable(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
         return getOrmTable(dtoClass, contextDtoClass, null);
     }

@@ -230,7 +230,7 @@ public class PersistenceFacade {
      */
     public void delete(final Object dto) throws SQLException {
         final TableProvider tableProvider = new TableProvider(tableRegistry);
-        final StatementBuilder statementBuilder = createDeleteBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>());
+        final StatementBuilder statementBuilder = createDeleteBuilder(dto, tableProvider.getTableOrThrow(dto.getClass()), new HashSet<>(), tableProvider);
         executeUpdateStatement(dto, null, statementBuilder, new CompositeUpdateResult());
     }
 
@@ -264,9 +264,9 @@ public class PersistenceFacade {
         return updateBuilder;
     }
 
-    private StatementBuilder createDeleteBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos) {
+    private StatementBuilder createDeleteBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
         final DeleteBuilder deleteBuilder = new DeleteBuilder(table, litebridgeContext);
-        prepareDeleteStatement(dto, table, deleteBuilder, inProgressDtos);
+        prepareDeleteStatement(dto, table, deleteBuilder, inProgressDtos, tableProvider);
         return deleteBuilder;
     }
 
@@ -337,9 +337,11 @@ public class PersistenceFacade {
                 } else {
                     insertValues.put(fieldAccessor.name(), value);
                 }
+
                 columnsAdded = true;
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
+                //FNA: from
                 tableProvider.pushContext(ormTable);
                 final MappedFieldTarget target = entry.getValue();
                 final ColumnMetaData columnMetaData = target instanceof ColumnAndInlineTable cit ? cit.column() : (ColumnMetaData) target;
@@ -444,7 +446,6 @@ public class PersistenceFacade {
                         nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
                             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                            final Column joinColumn = ormTable.columnMetaDataForField(fieldAccessor.name()).column();
 
                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                 updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
@@ -470,15 +471,18 @@ public class PersistenceFacade {
             }
 
             final UpdateBuilder updateBuilder = (UpdateBuilder) statementBuilder;
-            addPrimaryKeyConditions(dto, ormTable, updateBuilder);
+            addPrimaryKeyConditions(dto, ormTable, updateBuilder, tableProvider);
         }
 
         return statementChain;
     }
 
-    private <DTO> void prepareDeleteStatement(final DTO dto, final OrmTable table, final DeleteBuilder deleteBuilder, final Set<Object> inProgressDtos) {
+    private <DTO> void prepareDeleteStatement(final DTO dto, final OrmTable table,
+                                              final DeleteBuilder deleteBuilder,
+                                              final Set<Object> inProgressDtos,
+                                              final TableProvider tableProvider) {
         inProgressDtos.add(dto);
-        addPrimaryKeyConditions(dto, table, deleteBuilder);
+        addPrimaryKeyConditions(dto, table, deleteBuilder, tableProvider);
     }
 
     private <DTO> void processOneToManyUpdate(final DTO dto,
@@ -904,24 +908,38 @@ public class PersistenceFacade {
      * Adds primary key conditions for the given DTO and table to an {@link UpdateBuilder} or {@link DeleteBuilder}.
      *
      * @param dto              the DTO to add primary key conditions for
-     * @param table            the table corresponding to the DTO
+     * @param ormTable            the ORM table corresponding to the DTO
      * @param statementBuilder the statement builder to add conditions to. Must be an {@link UpdateBuilder} or {@link DeleteBuilder}.
      * @param <DTO>            class of the DTO
      */
-    private <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable table, final AbstractConditionalStatementBuilder statementBuilder) {
+    private <DTO> void addPrimaryKeyConditions(final DTO dto, final OrmTable ormTable, final AbstractConditionalStatementBuilder statementBuilder, final TableProvider tableProvider) {
         QueryNode conditionNode = null;
         boolean first = true;
 
-        for (ColumnMetaData columnMetaData : table.getMetaData().primaryKey()) {
+        for (ColumnMetaData columnMetaData : ormTable.getMetaData().primaryKey()) {
             final Column pkColumn = columnMetaData.column();
-            final FieldAccessor field = table.getFieldForColumnName(pkColumn.name());
+            final FieldAccessor field = ormTable.getFieldForColumnName(pkColumn.name());
             final Object pkValue = field.get(dto);
             final SelectColumnSpec pkColumnSpec = new SelectColumnSpec(pkColumn);
 
             final LogicOperator logicOperator = first ? LogicOperator.NOOP : LogicOperator.AND;
 
             if (pkValue != null) {
-                conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, pkValue);
+                //FNA: here
+                if (ClassUtils.isBasicType(field.type())) {
+                    conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, pkValue);
+                    continue;
+                }
+
+                // Dealing with an embedded DTO - add the context to the table provider
+                tableProvider.pushContext(ormTable);
+                final OrmTable relatedDtoTable = tableProvider.getTableOrThrow(pkValue.getClass());
+
+                for (ColumnMetaData relatedDtoPkColumn : relatedDtoTable.getMetaData().primaryKey()) {
+                    final FieldAccessor embeddedDtoPkAccessor = relatedDtoTable.getFieldForColumnName(relatedDtoPkColumn.name());
+                    final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(pkValue);
+                    conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, embeddedDtoPkValue);
+                }
             } else {
                 conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.IS_NULL, null);
             }
