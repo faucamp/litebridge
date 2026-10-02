@@ -19,11 +19,18 @@ import java.util.List;
 sealed class InsertBuilder extends AbstractStatementBuilder permits MergeBuilder {
 
     protected final List<LinkedHashMap<String, @Nullable Object>> rows = new ArrayList<>();
-    protected final @Nullable Class<?> contextDtoClass;
 
-    public InsertBuilder(final OrmTable table, final @Nullable Class<?> contextDtoClass, final LitebridgeContext litebridgeContext) {
-        super(table, litebridgeContext);
-        this.contextDtoClass = contextDtoClass;
+    /**
+     * Constructs a new {@code InsertBuilder}.
+     *
+     * @param ormTable          The ORM table.
+     * @param contextDtoClass   The parent/context DTO class.
+     * @param litebridgeContext Litebridge context.
+     */
+    public InsertBuilder(final OrmTable ormTable,
+                         final @Nullable Class<?> contextDtoClass,
+                         final LitebridgeContext litebridgeContext) {
+        super(ormTable, contextDtoClass, litebridgeContext);
     }
 
     public void addRow(final LinkedHashMap<String, @Nullable Object> fieldValues) {

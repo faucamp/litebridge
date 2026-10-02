@@ -28,7 +28,7 @@ public final class SqlUpdateStart extends UpdateStepBase
     public SqlUpdateStart(final String table,
                           final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
-        this.updateNode = new UpdateNode(null, table, null);
+        this.updateNode = new UpdateNode(table);
         this.tableName = table;
     }
 

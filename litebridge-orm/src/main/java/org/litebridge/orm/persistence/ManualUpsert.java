@@ -24,6 +24,7 @@ public record ManualUpsert(UpdateBuilder updateBuilder, InsertBuilder insertBuil
 
     @Override
     public void setField(final String fieldName, @Nullable final Object value) {
+        insertBuilder.setField(fieldName, value);
     }
 
     @Override

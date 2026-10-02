@@ -28,7 +28,7 @@ public final class DtoUpdateStart<DTO> extends UpdateStepBase
     public DtoUpdateStart(final Class<DTO> dtoClass,
                           final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
-        this.updateNode = new UpdateNode(null, null, dtoClass);
+        this.updateNode = new UpdateNode(dtoClass, null);
     }
 
     @Override

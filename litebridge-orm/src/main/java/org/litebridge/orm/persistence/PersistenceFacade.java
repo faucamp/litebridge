@@ -255,7 +255,7 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createUpdateBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final UpdateBuilder updateBuilder = new UpdateBuilder(table, litebridgeContext);
+        final UpdateBuilder updateBuilder = new UpdateBuilder(table, tableProvider.getContextDtoClass(), litebridgeContext);
 
         if (prepareUpdateStatement(dto, table, updateBuilder, inProgressDtos, tableProvider) == null) {
             return NO_OP_STATEMENT_BUILDER;
@@ -265,7 +265,7 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createDeleteBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final DeleteBuilder deleteBuilder = new DeleteBuilder(table, litebridgeContext);
+        final DeleteBuilder deleteBuilder = new DeleteBuilder(table, tableProvider.getContextDtoClass(), litebridgeContext);
         prepareDeleteStatement(dto, table, deleteBuilder, inProgressDtos, tableProvider);
         return deleteBuilder;
     }

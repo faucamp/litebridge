@@ -21,6 +21,7 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
      * The ORM table associated with the statement.
      */
     protected final OrmTable ormTable;
+    protected final @Nullable Class<?> contextDtoClass;
     private final StatementChain statementChain = new StatementChain();
 
     /**
@@ -36,12 +37,15 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
     /**
      * Constructs a new {@code AbstractStatementBuilder}.
      *
-     * @param ormTable          The ORM table.
-     * @param litebridgeContext The ORM context.
+     * @param ormTable          The ORM table for the target DTO.
+     * @param contextDtoClass   The parent/context DTO class.
+     * @param litebridgeContext Litebridge context.
      */
     protected AbstractStatementBuilder(final OrmTable ormTable,
+                                       final @Nullable Class<?> contextDtoClass,
                                        final LitebridgeContext litebridgeContext) {
         this.ormTable = ormTable;
+        this.contextDtoClass = contextDtoClass;
         this.litebridgeContext = litebridgeContext;
     }
 

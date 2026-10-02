@@ -22,10 +22,18 @@ import java.util.Objects;
  */
 final class UpdateBuilder extends AbstractConditionalStatementBuilder {
 
+    /**
+     * Creates a new {@code UpdateBuilder} instance.
+     *
+     * @param ormTable          The ORM table for the target DTO.
+     * @param contextDtoClass   The parent/context DTO class.
+     * @param litebridgeContext Litebridge context.
+     */
     public UpdateBuilder(final OrmTable ormTable,
+                         final @Nullable Class<?> contextDtoClass,
                          final LitebridgeContext litebridgeContext) {
-        super(ormTable, litebridgeContext);
-        this.node = new UpdateNode(null, null, ormTable.dtoClass());
+        super(ormTable, contextDtoClass, litebridgeContext);
+        this.node = new UpdateNode(ormTable.dtoClass(), contextDtoClass);
     }
 
     /**
