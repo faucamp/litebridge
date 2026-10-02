@@ -11,14 +11,14 @@ const saveExamples = [
     {
         id: 'dtoMode',
         title: 'DTO mode',
-        description: `The save() method is the primary mechanism for storing entities/mapped DTOs in Litebridge. It automatically executes an INSERT or UPDATE as needed.`,
+        description: `The save() method is the primary mechanism for storing entities/mapped DTOs in Litebridge. It automatically executes an INSERT, UPDATE or MERGE as needed.`,
         code: `// Create a new Person object
 Person person = new Person();
 person.setId(1);
 person.setName("Alice");
 person.setSurname("Smith");
 
-// Executes INSERT INTO LB.PERSON (FIRST_NAME, SURNAME) VALUES (?, ?)
+// Executes an upsert, using MERGE if supported, or UPDATE->INSERT if not
 litebridge.save(person);
 
 // Update a field in the DTO
@@ -39,7 +39,7 @@ person.setId(1);
 person.setName("Alice");
 person.setSurname("Smith");
 
-// Similar to save(), but forces an INSERT
+// Executes INSERT INTO LB.PERSON (FIRST_NAME, SURNAME) VALUES (?, ?)
 litebridge.insert(person);`
     },
     {
@@ -48,9 +48,9 @@ litebridge.insert(person);`
         description: 'Insert records into a table using entity mapping metadata.',
         code: `// Insert columns into a mapped table directly
 litebridge.insert(Person.class, i -> i
-  .into(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
-  .values(1, "Alice", "Smith")
-  .values(2, "Bob", "Jones"));`
+    .into(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
+    .values(1, "Alice", "Smith")
+    .values(2, "Bob", "Jones"));`
     },
     {
         id: 'sqlMode',
@@ -58,8 +58,8 @@ litebridge.insert(Person.class, i -> i
         description: 'Insert records into a table directly, without entity mapping.',
         code: `// Insert columns into a table directly
 litebridge.insert("LB.PERSON", i -> i
-  .into("PERSON_ID", "FIRST_NAME", "SURNAME")
-  .values(1, "Alice", "Smith")
+    .into("PERSON_ID", "FIRST_NAME", "SURNAME")
+    .values(1, "Alice", "Smith")
   .values(2, "Bob", "Jones"));`
     },
     {
@@ -90,7 +90,7 @@ person.setId(1);
 person.setName("Alice");
 person.setSurname("Smith");
 
-// Similar to save(), but forces an UPDATE
+// Executes UPDATE LB.PERSON SET FIRST_NAME = ?, SURNAME = ? WHERE PERSON_ID = ?
 litebridge.update(person);`
     },
     {
@@ -127,9 +127,9 @@ litebridge.nativeSql()
 litebridge.nativeSql()
     .execute("UPDATE LB.PERSON "
         + "SET FIRST_NAME = :name, SURNAME = :surname WHERE PERSON_ID = :id", 
-            Map.of("id", 1, 
-                   "name", "Bob",
-                   "surname", "Jones"));`
+        Map.of("id", 1, 
+               "name", "Bob",
+               "surname", "Jones"));`
     },
 ];
 ---

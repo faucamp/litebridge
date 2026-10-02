@@ -1,9 +1,12 @@
 package org.litebridge.orm.e2e.basic;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
@@ -11,6 +14,7 @@ import org.litebridge.orm.e2e.basic.meta.AccountMeta;
 import org.litebridge.orm.e2e.basic.meta.PersonMeta;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.e2e.setup.MultiDbTestExtension;
+import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.Fn;
 
 import java.math.BigInteger;
@@ -110,6 +114,58 @@ public class MergeE2eTest extends AbstractE2eTest {
 
             assertEquals(isOracle ? 1 : 6, result.rowsAffected());
             assertEquals(11, litebridge.select(Fn.count()).from(Account.class).oneOrThrow());
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Merge: upsert using VALUES")
+    public void merge_upsert_values(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Don't run test for databases that do not support MERGE INTO
+        assumeTrue(litebridge instanceof Litebridge);
+        final Litebridge litebridge = (Litebridge) this.litebridge;
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+        final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        int prevCacheSize = queryPlanCache.size();
+
+        // Insert a row that does not exist using direct values (or selecting literals if the database provider doesn't support the VALUES clause)
+        {
+            final UpdateResult insertResult = litebridge.mergeInto(Person.class, m -> m
+                    .using(Fn.values("newPerson", "id", 123L))
+                    .on(PersonMeta.id).eq(Fn.aliasRef("newPerson", "id"))
+                    .whenMatched(u -> u
+                            .update(person -> person
+                                    .set(PersonMeta.name).to("Alice")
+                                    .set(PersonMeta.surname).to("Smith")))
+                    .whenNotMatched(i -> i
+                            .insert(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
+                            .values(123L, "Alice", "Smith")));
+
+            assertEquals(1, insertResult.rowsAffected());
+            assertEquals(prevCacheSize + 1, queryPlanCache.size());
+            final Person result = litebridge.select().from(Person.class).withIdOrThrow(123L);
+            assertEquals("Alice", result.getName());
+            assertEquals("Smith", result.getSurname());
+            prevCacheSize = queryPlanCache.size();
+        }
+
+        // Update an existing row with the same merge statement
+        {
+            final UpdateResult updateResult = litebridge.mergeInto(Person.class, m -> m
+                    .using(Fn.values("newPerson", "id", 123L))
+                    .on(PersonMeta.id).eq(Fn.aliasRef("newPerson", "id"))
+                    .whenMatched(u -> u
+                            .update(person -> person
+                                    .set(PersonMeta.name).to("Updated Name")
+                                    .set(PersonMeta.surname).to("Updated Surname")))
+                    .whenNotMatched(i -> i
+                            .insert(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
+                            .values(123L, "Alice", "Smith")));
+
+            assertEquals(1, updateResult.rowsAffected());
+            assertEquals(prevCacheSize, queryPlanCache.size());
+            final Person result = litebridge.select().from(Person.class).withIdOrThrow(123L);
+            assertEquals("Updated Name", result.getName());
+            assertEquals("Updated Surname", result.getSurname());
         }
     }
 }
