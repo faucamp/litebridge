@@ -61,6 +61,7 @@ import java.util.stream.Stream;
 final class SelectCompilationContext extends AbstractCompilationContext {
 
     private final SelectNode selectNode;
+    private final @Nullable List<SelectTarget> contextSelectTargets;
     private @Nullable List<JoinSpec> joinSpecs;
     private @Nullable ConditionWithIdNode whereConditionWithIdNode;
     private @Nullable ConditionGroupSpecStack whereConditionGroupSpecStack;
@@ -71,9 +72,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     private @Nullable List<SelectExpressions> joinSelectExpressions;
 
     SelectCompilationContext(final SelectNode selectNode,
+                             final @Nullable List<SelectTarget> contextSelectTargets,
                              final LitebridgeContext litebridgeContext) {
         super(litebridgeContext);
         this.selectNode = selectNode;
+        this.contextSelectTargets = contextSelectTargets;
     }
 
     public ConditionGroupSpecStack addJoin(final JoinNode joinNode) {
@@ -165,11 +168,24 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
     private List<SelectTarget> addJoinSelectTargets(final SelectTarget from) {
         if (joinSpecs == null) {
-            return Collections.singletonList(from);
+            if (contextSelectTargets != null) {
+                final List<SelectTarget> selectTargets = new ArrayList<>(contextSelectTargets.size() + 1);
+                selectTargets.add(from);
+                selectTargets.addAll(contextSelectTargets);
+                return selectTargets;
+            } else {
+                return Collections.singletonList(from);
+            }
         }
 
-        final int initialCapacity = joinSpecs.size() + 1;
+        final int contextSelectTargetCount = contextSelectTargets != null ? contextSelectTargets.size() : 0;
+        final int initialCapacity = joinSpecs.size() + 1 + contextSelectTargetCount;
         final List<SelectTarget> selectTargets = new ArrayList<>(initialCapacity);
+
+        if (contextSelectTargetCount > 0) {
+            selectTargets.addAll(contextSelectTargets);
+        }
+
         selectTargets.add(from);
         final List<Class<?>> fallbackContextDtoClasses = new ArrayList<>(initialCapacity);
 

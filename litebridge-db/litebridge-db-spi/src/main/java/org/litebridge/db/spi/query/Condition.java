@@ -12,7 +12,7 @@ import org.litebridge.db.spi.expression.SelectExpression;
  * @see Operator
  * @see Join
  */
-public record Condition(SelectExpression lhs, Operator operator, @Nullable SelectExpression rhs) {
+public record Condition(@Nullable SelectExpression lhs, Operator operator, @Nullable SelectExpression rhs) {
 
     /**
      * Convenience constructor for {@code Operator.IS_NULL} and @{code Operator.IS_NOT_NULL} operators.

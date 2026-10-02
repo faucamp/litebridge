@@ -31,7 +31,7 @@ class InsertQueryCompilerTest {
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compiler.createCompilationContext(deleteNode));
+                () -> compiler.createCompilationContext(deleteNode, null));
         assertEquals("Expected InsertNode, but got " + deleteNode, ex.getMessage());
     }
 
@@ -53,7 +53,7 @@ class InsertQueryCompilerTest {
         final InsertNode insertNode = new InsertNode("items", null, new String[0]);
 
         // When
-        final InsertCompilationContext compilationContext = compiler.createCompilationContext(insertNode);
+        final InsertCompilationContext compilationContext = compiler.createCompilationContext(insertNode, null);
 
         // Then
         assertNotNull(compilationContext);

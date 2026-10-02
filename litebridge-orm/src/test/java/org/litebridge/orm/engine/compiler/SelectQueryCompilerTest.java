@@ -64,7 +64,7 @@ class SelectQueryCompilerTest {
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compiler.createCompilationContext(deleteNode));
+                () -> compiler.createCompilationContext(deleteNode, null));
         assertEquals("Expected SelectNode, but got " + deleteNode, ex.getMessage());
     }
 
@@ -83,7 +83,7 @@ class SelectQueryCompilerTest {
         final SelectNode selectNode = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
         // When
-        final SelectCompilationContext compilationContext = compiler.createCompilationContext(selectNode);
+        final SelectCompilationContext compilationContext = compiler.createCompilationContext(selectNode, null);
 
         // Then
         assertNotNull(compilationContext);

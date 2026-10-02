@@ -13,6 +13,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -75,7 +76,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> eq(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> eq(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.EQ, subselect, true);
     }
 
@@ -95,7 +96,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> neq(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> neq(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NEQ, subselect, true);
     }
 
@@ -115,7 +116,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lt(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> lt(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LT, subselect, false);
     }
 
@@ -135,7 +136,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lte(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> lte(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LTE, subselect, false);
     }
 
@@ -155,7 +156,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gt(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> gt(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GT, subselect, false);
     }
 
@@ -175,7 +176,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gte(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> gte(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
@@ -205,7 +206,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> in(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> in(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.IN, subselect, false);
     }
 
@@ -224,7 +225,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> notIn(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
+    public AbstractCbConditionClauseTerminal<DTO> notIn(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NOT_IN, subselect, false);
     }
 

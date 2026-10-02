@@ -1,5 +1,7 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
@@ -16,6 +18,8 @@ import org.litebridge.orm.engine.ast.WhenMatchedNode;
 import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 
+import java.util.List;
+
 /**
  * Specialised query node compiler for MERGE INTO statements.
  */
@@ -26,7 +30,7 @@ final class MergeQueryCompiler extends AbstractQueryCompiler<MergeCompilationCon
     }
 
     @Override
-    MergeCompilationContext createCompilationContext(final QueryNode rootNode) {
+    MergeCompilationContext createCompilationContext(final QueryNode rootNode, final @Nullable List<SelectTarget> contextSelectTargets) {
         if (!(rootNode instanceof MergeNode mergeNode)) {
             throw new IllegalArgumentException("Expected MergeNode, but got: " + rootNode);
         }

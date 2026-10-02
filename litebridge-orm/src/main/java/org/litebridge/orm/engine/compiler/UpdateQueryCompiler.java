@@ -1,5 +1,7 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
@@ -7,6 +9,8 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.engine.ast.WhereNode;
+
+import java.util.List;
 
 /**
  * Specialised query node compiler for UPDATE statements.
@@ -18,7 +22,7 @@ final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationC
     }
 
     @Override
-    UpdateCompilationContext createCompilationContext(final QueryNode rootNode) {
+    UpdateCompilationContext createCompilationContext(final QueryNode rootNode, final @Nullable List<SelectTarget> contextSelectTargets) {
         if (!(rootNode instanceof UpdateNode updateNode)) {
             throw new IllegalArgumentException("Expected UpdateNode, but got " + rootNode);
         }

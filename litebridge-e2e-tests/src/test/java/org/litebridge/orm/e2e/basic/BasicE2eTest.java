@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.sql.PreparedSql;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.config.RelatedDtoStrategy;
@@ -678,6 +679,37 @@ public class BasicE2eTest extends AbstractE2eTest {
                 .set(PersonMeta.age).mod(2)
                 .where(PersonMeta.id).eq(1));
         assertEquals(1, litebridge.select(Fn.convert(Fn.f("age"), int.class)).from(Person.class).where("id").eq(1).oneOrThrow());
+    }
+
+    @TestTemplate
+    @DisplayName("Update DTO where EXISTS")
+    void update_exists(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        litebridge.insert(Person.class, i -> i
+                .into(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
+                .values(1L, "Alice", "Smith"));
+
+        litebridge.insert(Account.class, i -> i
+                .into(AccountMeta.id, AccountMeta.name, AccountMeta.balance, AccountMeta.owner)
+                .values(1L, "Alice's account", BigInteger.ZERO, 1L));
+
+        // Update record where EXISTS
+        {
+            final UpdateResult result = litebridge.update(Person.class, u -> u
+                    .set(PersonMeta.name).to("James")
+                    .where(Fn.exists(s -> s
+                            .select(Fn.literal(1))
+                            .from(Account.class)
+                            .where(AccountMeta.owner).eq(PersonMeta.id))));
+
+            // Then
+            assertEquals(1, result.rowsAffected());
+
+            final Person resultPerson = litebridge.select(PersonMeta.name).from(Person.class).where(PersonMeta.id).eq(1).oneOrThrow();
+            assertEquals("James", resultPerson.getName());
+        }
     }
 
     @TestTemplate

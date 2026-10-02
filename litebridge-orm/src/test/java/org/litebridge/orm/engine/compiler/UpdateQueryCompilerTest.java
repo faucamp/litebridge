@@ -36,7 +36,7 @@ class UpdateQueryCompilerTest {
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compiler.createCompilationContext(deleteNode));
+                () -> compiler.createCompilationContext(deleteNode, null));
         assertEquals("Expected UpdateNode, but got " + deleteNode, ex.getMessage());
     }
 
@@ -58,7 +58,7 @@ class UpdateQueryCompilerTest {
         final UpdateNode updateNode = new UpdateNode(null, "items", null);
 
         // When
-        final UpdateCompilationContext compilationContext = compiler.createCompilationContext(updateNode);
+        final UpdateCompilationContext compilationContext = compiler.createCompilationContext(updateNode, null);
 
         // Then
         assertNotNull(compilationContext);

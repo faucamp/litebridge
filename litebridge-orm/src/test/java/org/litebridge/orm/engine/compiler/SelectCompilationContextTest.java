@@ -85,7 +85,7 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
 
         // When
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
         final Select select = (Select) compilationContext.toOperation();
 
         // Then
@@ -109,7 +109,7 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, new String[]{"id"}, null, null);
 
         // When
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
         final Select select = (Select) compilationContext.toOperation();
 
         // Then
@@ -133,7 +133,7 @@ class SelectCompilationContextTest {
         final SelectNode selectNode = new SelectNode(UserDto.class, ContextDto.class, null, null, null, null);
 
         // When
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         // Then
         assertNotNull(compilationContext);
@@ -154,12 +154,12 @@ class SelectCompilationContextTest {
 
         // Select All in SQL mode
         final SelectNode selectAllNode = new SelectNode("items", null, null, null, null);
-        final SelectCompilationContext allContext = new SelectCompilationContext(selectAllNode, context);
+        final SelectCompilationContext allContext = new SelectCompilationContext(selectAllNode, null, context);
         assertEquals(0, ((Select) allContext.toOperation()).expressions().size());
 
         // Specific columns in SQL mode
         final SelectNode selectColsNode = new SelectNode("items", null, new String[]{"name"}, null, null);
-        final SelectCompilationContext colsContext = new SelectCompilationContext(selectColsNode, context);
+        final SelectCompilationContext colsContext = new SelectCompilationContext(selectColsNode, null, context);
         assertEquals(1, ((Select) colsContext.toOperation()).expressions().size());
     }
 
@@ -179,7 +179,7 @@ class SelectCompilationContextTest {
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         // When adding join with DTO
         final OrmTable roleOrmTable = mock(OrmTable.class);
@@ -222,7 +222,7 @@ class SelectCompilationContextTest {
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         final ConditionGroupSpecStack joinConditionGroupSpecStack = compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, null, null, "orders", null, null));
 
@@ -251,7 +251,7 @@ class SelectCompilationContextTest {
         when(context.tableMetaDataCache().ensureTableMetaData(any())).thenReturn(metaData);
 
         final SelectNode selectNode = new SelectNode("items", null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         // GroupBy via column names in SQL mode
         compilationContext.addGroupByNode(new GroupByNode(null, new String[]{"category"}, null));
@@ -319,7 +319,7 @@ class SelectCompilationContextTest {
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         // Group by field in DTO mode
         compilationContext.addGroupByNode(new GroupByNode(null, new String[]{"name"}, null));
@@ -356,7 +356,7 @@ class SelectCompilationContextTest {
         when(tableRegistry.getOrmTable(any(Table.class))).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, UserDto.class, null, null, null, null));
 
@@ -395,7 +395,7 @@ class SelectCompilationContextTest {
         when(context.tableRegistry().getOrmTable(RoleDto.class)).thenReturn(roleOrmTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         compilationContext.addJoin(new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null, null, null, null));
 
@@ -440,7 +440,7 @@ class SelectCompilationContextTest {
         when(userOrmTable.mappedFieldTargetForFieldOrNull("orders")).thenReturn(mappedOneToMany);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.LEFT, OrderDto.class, null, null, null, null);
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "orders", null);
@@ -500,7 +500,7 @@ class SelectCompilationContextTest {
         when(userOrmTable.mappedFieldTargetForFieldOrNull("roles")).thenReturn(mappedManyToMany);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null, null, null, null);
         final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "roles", null);
@@ -628,7 +628,7 @@ class SelectCompilationContextTest {
 
         // Build AST: Tenant -> Setting -> Account -> Setting
         final SelectNode selectNode = new SelectNode(TenantDto.class, null, null, null, null, null);
-        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, context);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
 
         final JoinNode join1 = new JoinNode(selectNode, Join.JoinType.INNER, SettingDto.class, null, null, null, null);
         final ConditionJoinUsingNode using1 = new ConditionJoinUsingNode(null, LogicOperator.AND, "setting", null);

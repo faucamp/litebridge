@@ -32,7 +32,7 @@ class DeleteQueryCompilerTest {
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compiler.createCompilationContext(selectNode));
+                () -> compiler.createCompilationContext(selectNode, null));
         assertEquals("Expected DeleteNode, but got " + selectNode, ex.getMessage());
     }
 
@@ -48,7 +48,7 @@ class DeleteQueryCompilerTest {
         final DeleteNode deleteNode = new DeleteNode(null, "items", null);
 
         // When
-        final DeleteCompilationContext compilationContext = compiler.createCompilationContext(deleteNode);
+        final DeleteCompilationContext compilationContext = compiler.createCompilationContext(deleteNode, null);
 
         // Then
         assertNotNull(compilationContext);

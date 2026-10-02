@@ -2,10 +2,16 @@ package org.litebridge.orm.api.update;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.select.SelectApiImpl;
+import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 /**
  * DTO-mode step for specifying SET assignments or WHERE conditions in an {@code UPDATE} statement.
@@ -57,6 +63,15 @@ public final class DtoUpdateStep<DTO> extends UpdateStepBase
     @Override
     public DtoUpdateWhereConditionClause<DTO> where(final ExpressionSpec expression) {
         return whereImpl(null, expression);
+    }
+
+    @Override
+    public DtoUpdateWhereConditionClauseTerminal<DTO> where(final ExistsExpressionSpec existsExpression) {
+        final SelectTerminal<?> selectTerminal = existsExpression.query().apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode subselectNode = SelectTerminalInspector.getNode(selectTerminal);
+        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, null, Operator.EXISTS, subselectNode);
+        node = new WhereNode(this.node, conditionNode);
+        return new DtoUpdateWhereConditionClauseTerminalImpl<>(node, litebridgeContext);
     }
 
     private DtoUpdateWhereConditionClause<DTO> whereImpl(final @Nullable String field, final @Nullable ExpressionSpec expression) {

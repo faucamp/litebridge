@@ -3,10 +3,16 @@ package org.litebridge.orm.api.update;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.select.SelectApiImpl;
+import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 /**
  * SQL-mode step for specifying SET assignments or WHERE conditions in an {@code UPDATE} statement.
@@ -60,6 +66,15 @@ public final class SqlUpdateStep extends UpdateStepBase
     @Override
     public SqlUpdateWhereConditionClause where(final ExpressionSpec expression) {
         return whereImpl(null, expression);
+    }
+
+    @Override
+    public SqlUpdateWhereConditionClauseTerminal where(final ExistsExpressionSpec existsExpression) {
+        final SelectTerminal<?> selectTerminal = existsExpression.query().apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode subselectNode = SelectTerminalInspector.getNode(selectTerminal);
+        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, null, Operator.EXISTS, subselectNode);
+        node = new WhereNode(this.node, conditionNode);
+        return new SqlUpdateWhereConditionClauseTerminalImpl(tableName, node, litebridgeContext);
     }
 
     private SqlUpdateWhereConditionClause whereImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {

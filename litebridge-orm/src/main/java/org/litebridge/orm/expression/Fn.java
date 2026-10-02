@@ -20,6 +20,7 @@ import org.litebridge.orm.expression.intent.ConvertIntent;
 import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.DtoAliasSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -576,6 +577,7 @@ public final class Fn {
     public static <T> LiteralExpressionSpec<T> literal(final @Nullable T value, final @Nullable String alias) {
         return new LiteralExpressionSpec<>(value, alias);
     }
+
     // Java helper functions
 
     /**
@@ -818,5 +820,9 @@ public final class Fn {
      */
     public static CurrentTimestampSpec currentTimestamp() {
         return new CurrentTimestampSpec();
+    }
+
+    public static ExistsExpressionSpec exists(final Function<SelectApi, SelectTerminal<?>> query) {
+        return new ExistsExpressionSpec(query);
     }
 }

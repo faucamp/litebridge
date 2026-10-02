@@ -1,11 +1,14 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Specialised query node compiler for INSERT statements.
@@ -17,7 +20,7 @@ final class InsertQueryCompiler extends AbstractQueryCompiler<InsertCompilationC
     }
 
     @Override
-    InsertCompilationContext createCompilationContext(final QueryNode rootNode) {
+    InsertCompilationContext createCompilationContext(final QueryNode rootNode, final @Nullable List<SelectTarget> contextSelectTargets) {
         if (!(rootNode instanceof InsertNode insertNode)) {
             throw new IllegalArgumentException("Expected InsertNode, but got " + rootNode);
         }

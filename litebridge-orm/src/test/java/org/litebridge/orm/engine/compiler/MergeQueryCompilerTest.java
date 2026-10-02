@@ -47,7 +47,7 @@ class MergeQueryCompilerTest {
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> compiler.createCompilationContext(selectNode));
+                () -> compiler.createCompilationContext(selectNode, null));
         assertEquals("Expected MergeNode, but got: " + selectNode, ex.getMessage());
     }
 
@@ -76,7 +76,7 @@ class MergeQueryCompilerTest {
         final MergeNode mergeNode = new MergeNode("items", null, null, null);
 
         // When
-        final MergeCompilationContext compilationContext = compiler.createCompilationContext(mergeNode);
+        final MergeCompilationContext compilationContext = compiler.createCompilationContext(mergeNode, null);
 
         // Then
         assertNotNull(compilationContext);

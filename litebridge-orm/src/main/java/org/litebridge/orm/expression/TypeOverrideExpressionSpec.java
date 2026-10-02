@@ -3,6 +3,7 @@ package org.litebridge.orm.expression;
 import org.litebridge.orm.expression.function.aggregate.CountSpec;
 import org.litebridge.orm.expression.function.date.CurrentTimestampSpec;
 import org.litebridge.orm.expression.intent.ConvertSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 
 /**
@@ -12,5 +13,5 @@ import org.litebridge.orm.expression.select.LiteralExpressionSpec;
  */
 public sealed interface TypeOverrideExpressionSpec<T> extends ExpressionSpec, TypeOverride<T>
 
-        permits AbstractTODelegateExpressionSpec, ProtoNestableTOExpr, StringTODelegateExpressionSpec, CountSpec, CurrentTimestampSpec, ConvertSpec, LiteralExpressionSpec {
+        permits AbstractTODelegateExpressionSpec, ProtoNestableTOExpr, StringTODelegateExpressionSpec, CountSpec, CurrentTimestampSpec, ConvertSpec, ExistsExpressionSpec, LiteralExpressionSpec {
 }

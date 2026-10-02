@@ -1,5 +1,7 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
 
@@ -28,7 +30,7 @@ abstract sealed class AbstractQueryCompiler<CC extends CompilationContext>
         }
     }
 
-    abstract CC createCompilationContext(QueryNode rootNode);
+    abstract CC createCompilationContext(final QueryNode rootNode, final @Nullable List<SelectTarget> contextSelectTargets);
 
     protected abstract void applyNode(final QueryNode node, final CC compilationContext);
 

@@ -1,5 +1,7 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
@@ -14,6 +16,7 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -26,12 +29,12 @@ final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationC
     }
 
     @Override
-    SelectCompilationContext createCompilationContext(final QueryNode rootNode) {
+    SelectCompilationContext createCompilationContext(final QueryNode rootNode, final @Nullable List<SelectTarget> contextSelectTargets) {
         if (!(rootNode instanceof SelectNode selectNode)) {
             throw new IllegalArgumentException("Expected SelectNode, but got " + rootNode);
         }
 
-        return new SelectCompilationContext(selectNode, litebridgeContext);
+        return new SelectCompilationContext(selectNode, contextSelectTargets, litebridgeContext);
     }
 
     @Override

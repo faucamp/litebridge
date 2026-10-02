@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.update;
 
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 /**
  * Step in an {@code UPDATE} statement allowing additional SET assignments or transitioning to a WHERE clause.
@@ -33,5 +34,13 @@ public sealed interface UpdateStep<DTO,
      * @return step to specify the condition operator and value
      */
     UpdateWhereConditionClause<DTO, WCC, WCCT> where(final ExpressionSpec expression);
+
+    /**
+     * Starts a WHERE clause with an EXISTS expression.
+     *
+     * @param existsExpression the EXISTS expression specification
+     * @return step to specify the condition operator and value
+     */
+    WCCT where(final ExistsExpressionSpec existsExpression);
 
 }

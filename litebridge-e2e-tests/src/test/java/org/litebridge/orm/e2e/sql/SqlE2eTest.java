@@ -462,6 +462,36 @@ class SqlE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Update where EXISTS")
+    void update_exists(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String accountTableName = tableMapper.qualifyName("ACCOUNT");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        insertTestPersonRecords(personTableName);
+        litebridge.insert(accountTableName, i -> i
+                        .into("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+                        .values(1L, "Alice's Account", 1000L, 1L));
+
+        // Update record where EXISTS
+        {
+            final UpdateResult result = litebridge.update(personTableName, u -> u
+                    .set(firstName).to("James")
+                    .where(Fn.exists(s -> s
+                            .select(Fn.literal(1))
+                            .from(accountTableName)
+                            .where(personId).eq(Fn.c(personTableName, personId)))));
+
+            // Then
+            assertEquals(1, result.rowsAffected());
+
+            final Row resultFirstName = litebridge.select(firstName).from(personTableName).where(personId).eq(1).oneOrThrow();
+            assertEquals("James", resultFirstName.value(0));
+        }
+    }
+
+    @TestTemplate
     @DisplayName("Select using GROUP BY")
     void selectGroupBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Given

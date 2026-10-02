@@ -1,11 +1,15 @@
 package org.litebridge.orm.engine.compiler;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
+
+import java.util.List;
 
 /**
  * Specialised query node compiler for DELETE statements.
@@ -17,7 +21,7 @@ final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationC
     }
 
     @Override
-    DeleteCompilationContext createCompilationContext(final QueryNode rootNode) {
+    DeleteCompilationContext createCompilationContext(final QueryNode rootNode, final @Nullable List<SelectTarget> contextSelectTargets) {
         if (!(rootNode instanceof DeleteNode deleteNode)) {
             throw new IllegalArgumentException("Expected DeleteNode, but got " + rootNode);
         }

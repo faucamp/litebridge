@@ -3,6 +3,7 @@ package org.litebridge.orm.engine.compiler;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.DeleteNode;
@@ -56,6 +57,10 @@ public final class QueryCompiler extends AbstractRootQueryCompiler {
      * @throws IllegalArgumentException if the root query node type is unsupported
      */
     public PreparedOperation compile(final QueryNode node) {
+        return compile(node, null);
+    }
+
+    public PreparedOperation compile(final QueryNode node, final @Nullable List<SelectTarget> contextSelectTargets) {
         final List<QueryNode> nodes = flatten(node);
 
         final AbstractQueryCompiler<?> compiler = switch (nodes.getFirst()) {
@@ -67,7 +72,7 @@ public final class QueryCompiler extends AbstractRootQueryCompiler {
             default -> throw new IllegalArgumentException("Unsupported root query node type: " + nodes.getFirst());
         };
 
-        final CompilationContext compilationContext = compiler.createCompilationContext(nodes.getFirst());
+        final CompilationContext compilationContext = compiler.createCompilationContext(nodes.getFirst(), contextSelectTargets);
         compiler.applyNodes(nodes, compilationContext);
 
         final Operation operation = compilationContext.toOperation();

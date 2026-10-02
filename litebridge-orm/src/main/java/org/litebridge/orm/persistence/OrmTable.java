@@ -208,7 +208,13 @@ public class OrmTable {
     }
 
     public boolean hasField(final String fieldName) {
-        return fieldNameColumnMap.containsKey(fieldName);
+        boolean fieldFound = fieldNameColumnMap.containsKey(fieldName);
+
+        if (!fieldFound && fieldName.contains(".")) {
+            fieldFound = fieldNameTargetMap.containsKey(fieldName.substring(0, fieldName.indexOf('.')));
+        }
+
+        return fieldFound;
     }
 
     /**
