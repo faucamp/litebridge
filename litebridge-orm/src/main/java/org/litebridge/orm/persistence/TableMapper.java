@@ -306,7 +306,12 @@ public final class TableMapper {
                 new NoFieldMapping(), joinColumnSpec,
                 new NoFieldMapping(), inverseJoinColumnSpec));
 
-        final Class<?> hiddenJoinClass = Proxy.newProxyInstance(HiddenJoinEntity.class.getClassLoader(), new Class<?>[]{HiddenJoinEntity.class}, (proxy, method, args) -> null).getClass();
+        final Class<?> hiddenJoinClass = Proxy.newProxyInstance(HiddenJoinEntity.class.getClassLoader(),
+                        new Class<?>[]{HiddenJoinEntity.class},
+                        (proxy, method, args) -> {
+                            throw new UnsupportedOperationException();
+                        })
+                .getClass();
 
         try {
             return mapToTable(lookup, hiddenJoinClass, tableSpec, Collections.emptySet());
