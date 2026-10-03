@@ -32,7 +32,7 @@ public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTe
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
-        super(expressions, new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
+        super(new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
     }
 
     /**
@@ -47,7 +47,7 @@ public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTe
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
-        super(fields, new GroupByNode(node, fields, null), selectEngineTerminal, litebridgeContext);
+        super(new GroupByNode(node, fields, null), selectEngineTerminal, litebridgeContext);
     }
 
     @Override

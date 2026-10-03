@@ -36,7 +36,7 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
-        super(expressions, new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
+        super(new GroupByNode(node, null, expressions), selectEngineTerminal, litebridgeContext);
         this.selectNode = selectNode;
     }
 
@@ -54,7 +54,7 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
                                     final QueryNode node,
                                     final SelectEngineTerminal selectEngineTerminal,
                                     final LitebridgeContext litebridgeContext) {
-        super(columns, new GroupByNode(node, columns, null), selectEngineTerminal, litebridgeContext);
+        super(new GroupByNode(node, columns, null), selectEngineTerminal, litebridgeContext);
         this.selectNode = selectNode;
     }
 
