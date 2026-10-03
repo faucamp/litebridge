@@ -261,8 +261,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         final Object[] values = insertValuesNode.values();
 
         for (int i = 0; i < values.length; i++) {
-            //TODO: fix datatype detection
-            final int sqlDataType = columnMetaDataList != null ? columnMetaDataList.get(i).getDataType() : 0;
+            final int sqlDataType = columnMetaDataList.get(i).getDataType();
             whenMatchedSpec.addBindValue(new BindValue(values[i], sqlDataType));
         }
     }
@@ -457,8 +456,8 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             this.delete = delete;
         }
 
-        public @Nullable List<ColumnMetaData> getColumnMetaDataList() {
-            return columnMetaDataList;
+        public List<ColumnMetaData> getColumnMetaDataList() {
+            return Objects.requireNonNull(columnMetaDataList);
         }
 
         public List<BindValue> getBindValues() {

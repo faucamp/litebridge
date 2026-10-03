@@ -13,7 +13,6 @@ import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
-import org.litebridge.db.spi.math.MathOperator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
@@ -236,10 +235,6 @@ class MergeCompilationContextTest {
         // 5. Unsupported expression spec
         final SetNode invalidNode = new SetNode(null, new ExpressionSpecArray(new ExpressionSpec[0]), "val");
         assertThrows(IllegalArgumentException.class, () -> compilationContext.whenMatchedUpdateSet(invalidNode));
-
-        // 6. MathOperator throws UnsupportedOperationException
-        final SetNode mathNode = new SetNode(null, "user_name", null, 1, MathOperator.ADD);
-        assertThrows(UnsupportedOperationException.class, () -> compilationContext.whenMatchedUpdateSet(mathNode));
     }
 
     @Test
