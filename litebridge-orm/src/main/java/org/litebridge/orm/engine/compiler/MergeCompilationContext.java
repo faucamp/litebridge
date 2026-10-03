@@ -407,7 +407,6 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         private @Nullable List<ColumnMetaData> columnMetaDataList;
         private @Nullable List<UpdateColumn> updateColumns;
         private boolean delete;
-        private @Nullable List<String> bindValueUpdateColumnNames;
         private @Nullable List<BindValue> bindValues;
 
         WhenMatchedSpec(final boolean matched) {

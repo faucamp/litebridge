@@ -68,7 +68,7 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
         // Map the input DTO field names to database column names
         final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
         final String fieldName = QueryFieldInspector.getFieldName(queryField);
-        final Column column = getColumn(dtoClass, fieldName, table, clause);
+        final Column column = getColumn(dtoClass, fieldName);
         return Stream.of(new SelectColumnSpec(column, null, tableAlias));
     }
 
@@ -88,14 +88,10 @@ public final class DtoProtoExpressionResolver extends ProtoExpressionResolver {
 
     @Override
     protected Column getColumn(final Resolvable resolvable, final @Nullable OrmTable ormTable, final Table table, final ClauseType clause) {
-        return getColumn(getDtoClass(resolvable, ormTable), resolvable, table, clause);
+        return getColumn(getDtoClass(resolvable, ormTable), resolvable.column());
     }
 
-    private Column getColumn(final Class<?> dtoClass, final Resolvable resolvable, final Table table, final ClauseType clause) {
-        return getColumn(dtoClass, resolvable.column(), table, clause);
-    }
-
-    private Column getColumn(final Class<?> dtoClass, final String fieldName, Table table, final ClauseType clause) {
+    private Column getColumn(final Class<?> dtoClass, final String fieldName) {
         final ColumnMetaData columnMetaData = tableRegistry.getOrmTableOrThrow(dtoClass).columnMetaDataForField(fieldName);
         return columnMetaData.column();
     }

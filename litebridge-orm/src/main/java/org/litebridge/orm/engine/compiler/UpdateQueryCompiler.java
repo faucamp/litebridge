@@ -31,6 +31,7 @@ final class UpdateQueryCompiler extends AbstractQueryCompiler<UpdateCompilationC
     }
 
     @Override
+    @SuppressWarnings("unused")
     protected void applyNode(final QueryNode node, final UpdateCompilationContext compilationContext) {
         switch (node) {
             case SetNode setNode -> compilationContext.addSetNode(setNode);

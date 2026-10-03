@@ -33,7 +33,6 @@ final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationC
     protected void applyNode(final QueryNode node, final DeleteCompilationContext compilationContext) {
         switch (node) {
             case WhereNode whereNode -> flattenAndApplyNodes(whereNode.condition(), compilationContext);
-            case DeleteNode deleteNode -> { /* Ignore */ }
             case ConditionNode conditionNode -> compilationContext.addWhereCondition(conditionNode);
             case ConditionGroupNode conditionGroupNode -> {
                 final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.ensureWhereConditionGroupStack();
@@ -41,6 +40,8 @@ final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationC
                 flattenAndApplyNodes(conditionGroupNode.lastChild(), compilationContext);
                 conditionGroupSpecStack.pop();
             }
+            //noinspection unused
+            case DeleteNode deleteNode -> { /* Ignore */ }
             default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
         }
     }

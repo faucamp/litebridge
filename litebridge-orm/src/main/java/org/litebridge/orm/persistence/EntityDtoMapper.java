@@ -89,7 +89,6 @@ public class EntityDtoMapper<DTO> {
     public List<Object> entities(final DTO dto) {
         Objects.requireNonNull(dto, "DTO cannot be null");
         final Map<Class<?>, Object> constructedEntities = new HashMap<>();
-        final Map<FieldAccessor, FieldAccessor> postProcessQueue = new HashMap<>();
 
         entityToDtoFieldMap.forEach((entityClass, dtoFieldMap) -> {
             final Object entity = constructedEntities.computeIfAbsent(entityClass, ClassUtils::newInstance);
@@ -168,8 +167,7 @@ public class EntityDtoMapper<DTO> {
 
         entities.forEach(entity -> entityToDtoFieldMap.get(entity.getClass()).forEach((entityField, dtoField) -> {
             if (dtoField.type() != entityField.type() && classFieldAccessorCache.isNestedDtoField(entityField.dtoClass(), entityField)) {
-                // Nested entity - get the PK and add that to the DTO field
-                final Object nestedDto = entityField.get(entity);
+                // Nested entity
                 return;
             }
 

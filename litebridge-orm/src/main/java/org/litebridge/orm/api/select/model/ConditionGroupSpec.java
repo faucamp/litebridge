@@ -56,20 +56,6 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
     /**
      * Adds a new condition to the group and returns its specification.
      *
-     * @param logicOperator the logic operator for the condition
-     * @param lhsColumn     the left-hand side column name
-     * @param lhsExpression the left-hand side expression
-     * @return the newly created {@link ConditionSpec}
-     */
-    public ConditionSpec newCondition(final LogicOperator logicOperator,
-                                      final @Nullable String lhsColumn,
-                                      final @Nullable ExpressionSpec lhsExpression) {
-        return newCondition(logicOperator, lhsColumn, lhsExpression, null, null);
-    }
-
-    /**
-     * Adds a new condition to the group and returns its specification.
-     *
      * @param logicOperator  the logic operator for the condition
      * @param fieldOrColumn  the field or column name for the condition
      * @param expressionSpec the expression specification for the condition
@@ -98,9 +84,5 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
         final LogicConditionGroupSpec logicConditionGroupSpec = new LogicConditionGroupSpec(logicOperator);
         subgroups.add(logicConditionGroupSpec);
         return logicConditionGroupSpec;
-    }
-
-    public boolean isEmpty() {
-        return conditions.isEmpty() && subgroups.isEmpty();
     }
 }

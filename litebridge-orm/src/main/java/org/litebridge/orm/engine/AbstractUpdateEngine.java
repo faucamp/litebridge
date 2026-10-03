@@ -102,7 +102,7 @@ abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteE
      */
     protected final <T extends Result> T compileAndExecute(final int astCacheKey,
                                                            final QueryNode node,
-                                                           final Function<PreparedOperation, UpdateMetaData> updateMetaDataCreator,
+                                                           final Function<PreparedOperation, @Nullable UpdateMetaData> updateMetaDataCreator,
                                                            final Class<T> resultType,
                                                            final LitebridgeContext litebridgeContext) {
         // Compile/prepare SQL query

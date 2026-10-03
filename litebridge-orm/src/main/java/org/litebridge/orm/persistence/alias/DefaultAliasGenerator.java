@@ -39,14 +39,6 @@ public final class DefaultAliasGenerator implements AliasGenerator {
      */
     private final ScopeContextStack scope = new ScopeContextStack();
 
-    /**
-     * Clears internal alias maps and usage counts.
-     */
-    public void clear() {
-        aliasMap.clear();
-        aliasCount.clear();
-    }
-
     @Override
     public @Nullable String columnAlias(final Column column) {
         return scope.current().columnAliasMap.get(column);

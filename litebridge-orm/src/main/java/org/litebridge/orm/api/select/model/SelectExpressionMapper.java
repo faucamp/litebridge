@@ -74,6 +74,7 @@ public final class SelectExpressionMapper {
      * @param expressionSpec the expression specification to convert
      * @return the converted {@link SelectExpression}
      */
+    @SuppressWarnings("unused")
     public SelectExpression toSelectExpression(final ExpressionSpec expressionSpec, final Map<String, SelectExpression> selectExpressionAliasMap) {
         return switch (expressionSpec) {
             // Select targets
@@ -106,6 +107,7 @@ public final class SelectExpressionMapper {
         };
     }
 
+    @SuppressWarnings("unused")
     private SelectExpression resolveNestedExpression(final DelegateExpressionSpec expression, final Map<String, SelectExpression> selectExpressionAliasMap) {
         final SelectExpression nestedExpression;
 

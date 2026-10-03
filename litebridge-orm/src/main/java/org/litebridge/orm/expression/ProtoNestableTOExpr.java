@@ -82,10 +82,6 @@ public final class ProtoNestableTOExpr<T> extends AbstractAliasable
         return typeOverride;
     }
 
-    public Class<T> typeOverride() {
-        return typeOverride;
-    }
-
     @Override
     public Class<? extends ExpressionSpec> type() {
         return type;

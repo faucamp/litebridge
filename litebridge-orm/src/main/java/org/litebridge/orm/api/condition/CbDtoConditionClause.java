@@ -21,7 +21,6 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
      * @param lhsColumn         the left-hand side column name
      * @param lhsExpression     the left-hand side expression
      * @param node              the previous node in the chain
-     * @param terminalCreator   the function to create the terminal clause
      */
     public CbDtoConditionClause(final LitebridgeContext litebridgeContext,
                                 final LogicOperator logicOperator,

@@ -395,6 +395,7 @@ public class PersistenceFacade {
                                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                                 updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
                                             } else {
+                                                //noinspection DataFlowIssue
                                                 insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
                                             }
                                         }
@@ -435,6 +436,7 @@ public class PersistenceFacade {
                                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                                 updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
                                             } else {
+                                                //noinspection DataFlowIssue
                                                 insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
                                             }
                                         }

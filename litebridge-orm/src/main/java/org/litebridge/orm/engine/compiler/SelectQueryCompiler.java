@@ -38,6 +38,7 @@ final class SelectQueryCompiler extends AbstractQueryCompiler<SelectCompilationC
     }
 
     @Override
+    @SuppressWarnings("unused")
     protected void applyNode(final QueryNode node, final SelectCompilationContext compilationContext) {
         switch (node) {
             case JoinNode joinNode -> applyJoinNode(joinNode, compilationContext);

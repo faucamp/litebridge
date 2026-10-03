@@ -60,6 +60,7 @@ public final class QueryCompiler extends AbstractRootQueryCompiler {
         return compile(node, null);
     }
 
+    @SuppressWarnings("unused")
     public PreparedOperation compile(final QueryNode node, final @Nullable List<SelectTarget> contextSelectTargets) {
         final List<QueryNode> nodes = flatten(node);
 
