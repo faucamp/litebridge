@@ -203,17 +203,6 @@ public abstract class AbstractSqlGenerator {
     }
 
     /**
-     * Ensures that table metadata is available for the specified table.
-     *
-     * @param table              The table.
-     * @param connectionProvider The connection provider.
-     * @return The table metadata.
-     */
-    protected TableMetaData ensureTableMetaData(final Table table, final ConnectionProvider connectionProvider) {
-        return ensureTableMetaData.apply(table, connectionProvider);
-    }
-
-    /**
      * Ensures that column metadata is available for the specified column.
      *
      * @param column             The column.

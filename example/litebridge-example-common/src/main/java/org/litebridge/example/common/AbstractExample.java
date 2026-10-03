@@ -10,5 +10,6 @@ public abstract class AbstractExample {
         this.litebridge = litebridge;
     }
 
+    @SuppressWarnings("unused")
     public abstract void run();
 }
