@@ -1,0 +1,50 @@
+package org.litebridge.orm.api.condition;
+
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+/**
+ * Implementation of a terminal condition clause for SQL-based queries.
+ */
+public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClauseTerminal<Row> {
+
+    private final SelectNode selectNode;
+
+    /**
+     * Constructs a new {@code CbSqlConditionClauseTerminal}.
+     *
+     * @param selectNode        the root select query node
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
+     */
+    public CbSqlConditionClauseTerminal(final SelectNode selectNode,
+                                        final QueryNode node,
+                                        final LitebridgeContext litebridgeContext) {
+        super(node, litebridgeContext);
+        this.selectNode = selectNode;
+    }
+
+    @Override
+    protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final String column) {
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, column, null, node);
+    }
+
+    @Override
+    protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, null, expression, node);
+    }
+
+    @Override
+    protected AbstractCbConditionClauseTerminal<Row> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        return new CbSqlConditionClauseTerminal(selectNode,
+                new ConditionGroupNode(node, logicOperator, terminal.node()),
+                litebridgeContext);
+    }
+}

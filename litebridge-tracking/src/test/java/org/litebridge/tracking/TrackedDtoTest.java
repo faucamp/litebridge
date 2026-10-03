@@ -448,13 +448,13 @@ class TrackedDtoTest {
     private static class TestDto {
         private String string;
         private NestedDto nestedDto;
-        private NestedDto nullNestedDto = null;
+        private final NestedDto nullNestedDto = null;
         private Map<String, Long> map;
-        private Map<?, ?> emptyMap = Collections.emptyMap();
+        private final Map<?, ?> emptyMap = Collections.emptyMap();
         private Map<String, NestedDto> nestedDtoMap;
         private Map<NestedDto, Long> nestedDtoKeyMap;
         private List<String> list;
-        private List<?> emptyList = Collections.emptyList();
+        private final List<?> emptyList = Collections.emptyList();
         private List<NestedDto> nestedDtoList;
     }
 

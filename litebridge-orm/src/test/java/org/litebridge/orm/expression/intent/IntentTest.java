@@ -6,27 +6,12 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class IntentTest {
-
-    @Test
-    void testConvertIntent() {
-        final ExpressionSpec e1 = new SelectColumnSpec(mock(Column.class));
-        final ExpressionSpec[] targets = new ExpressionSpec[]{e1};
-        final ConvertIntent<Integer> intent = new ConvertIntent<>(targets, Integer.class);
-
-        assertEquals(Integer.class, intent.returnType());
-        assertArrayEquals(targets, intent.target());
-
-        final ExpressionSpecArray array = intent.toExpression();
-        assertArrayEquals(targets, array.expressions());
-    }
 
     @Test
     void testConvertSpec() {

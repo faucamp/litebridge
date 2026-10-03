@@ -2,23 +2,60 @@ package org.litebridge.db.oracle.sql;
 
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
+import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Limit;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
 import java.util.function.BiFunction;
 
-public class OracleSelectSqlGenerator extends SelectSqlGenerator {
+/**
+ * Specialised SQL generator for SELECT statements targeting Oracle databases.
+ * <p>
+ * This class extends the {@code SelectSqlGenerator} to provide Oracle-specific
+ * SQL syntax for operations such as limiting and offsetting query results.
+ * <p>
+ * The primary distinction of this generator is its handling of the LIMIT clause
+ * by translating it into Oracle-compatible pagination syntax using "OFFSET" and
+ * "FETCH FIRST N ROWS ONLY".
+ */
+public final class OracleSelectSqlGenerator extends SelectSqlGenerator {
 
-    public OracleSelectSqlGenerator(final TypeConverter typeConverter, final ColumnIdentifierGenerator columnIdentifierGenerator, final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
+    /**
+     * Constructs a new {@code OracleSelectSqlGenerator}.
+     *
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator The generator for math operations.
+     * @param ensureTableMetaData    A function to ensure table metadata.
+     */
+    public OracleSelectSqlGenerator(final LabelGenerator labelGenerator,
+                                    final MathOperationGenerator mathOperationGenerator,
+                                    final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
+    }
+
+    @Override
+    protected void appendFromClause(final StringBuilder sql, final Select select, final ConnectionProvider connectionProvider) {
+        sql.append(" FROM ");
+
+        if (select.from() instanceof SelectTarget.Void) {
+            sql.append("DUAL");
+        } else {
+            appendSelectTarget(sql, select.from(), connectionProvider);
+        }
     }
 
     @Override
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
-        limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset).append(" ROWS"));
-        limit.limit().ifPresent(limitVal -> sql.append(" FETCH FIRST ").append(limitVal).append(" ROWS ONLY"));
+        if (limit.offset() != null) {
+            sql.append(" OFFSET ").append(limit.offset()).append(" ROWS");
+        }
+
+        if (limit.limit() != null) {
+            sql.append(" FETCH FIRST ").append(limit.limit()).append(" ROWS ONLY");
+        }
     }
 }

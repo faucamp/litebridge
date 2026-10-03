@@ -1,6 +1,5 @@
 package org.litebridge.spring.boot.autoconfigure;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -85,11 +84,11 @@ public class LitebridgeAutoConfiguration {
         final LitebridgeConfig litebridgeConfig = new LitebridgeConfig(properties.getRelatedDtoStrategy());
 
         final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, litebridgeConfig, MethodHandles.lookup());
-        final @Nullable String[] scanBasePackages = properties.getScanBasePackage();
+        final String[] scanBasePackages = properties.getScanBasePackage();
 
         if (scanBasePackages != null) {
             final Class<?>[] entityClasses = new LitebridgeEntityScanner().scanBasePackage(scanBasePackages);
-            LOGGER.debug("Found {} entity classes after scanning base packages: {}", entityClasses.length, properties.getScanBasePackage());
+            LOGGER.debug("Found {} entity classes after scanning base packages: {}", entityClasses.length, scanBasePackages);
             LOGGER.trace("Found entity classes: {}", (Object) entityClasses);
 
             if (entityClasses.length > 0) {

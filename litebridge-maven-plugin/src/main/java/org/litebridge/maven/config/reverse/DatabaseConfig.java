@@ -7,6 +7,7 @@ import java.util.StringJoiner;
 /**
  * Database configuration for reverse engineering.
  */
+@SuppressWarnings("NotNullFieldNotInitialized")
 public final class DatabaseConfig {
 
     /**
@@ -36,6 +37,7 @@ public final class DatabaseConfig {
      * <p>
      * Defaults to an empty string.
      */
+    @SuppressWarnings("DefaultAnnotationParam")
     @Parameter(defaultValue = "")
     private String password = "";
 

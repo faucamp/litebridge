@@ -3,11 +3,14 @@ package org.litebridge.convert.converter;
 import org.jspecify.annotations.Nullable;
 
 import java.math.BigInteger;
+import java.sql.Types;
 
 /**
  * A converter for {@link BigInteger} values.
  */
-public class BigIntegerConverter implements Converter<BigInteger> {
+public class BigIntegerConverter implements SqlConverter<BigInteger> {
+
+    private static final int[] SQL_TYPES = new int[]{Types.BIGINT};
 
     /**
      * Converts the given value to a {@link BigInteger}.
@@ -43,5 +46,15 @@ public class BigIntegerConverter implements Converter<BigInteger> {
     @Override
     public Class<?> type() {
         return BigInteger.class;
+    }
+
+    @Override
+    public int[] sqlTypes() {
+        return SQL_TYPES;
+    }
+
+    @Override
+    public int priority() {
+        return 20;
     }
 }

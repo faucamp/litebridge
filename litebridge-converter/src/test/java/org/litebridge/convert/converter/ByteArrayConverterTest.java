@@ -115,142 +115,128 @@ class ByteArrayConverterTest {
         assertArrayEquals(new int[]{Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY, Types.BLOB}, converter.sqlTypes());
     }
 
-    private static final class ByteArrayBlob implements Blob {
-
-        private final byte[] bytes;
-
-        private ByteArrayBlob(final byte[] bytes) {
-            this.bytes = bytes;
-        }
+    private record ByteArrayBlob(byte[] bytes) implements Blob {
 
         @Override
-        public InputStream getBinaryStream() {
-            return new ByteArrayInputStream(bytes);
-        }
-
-        @Override
-        public void free() {
-            // Nothing to release.
-        }
-
-        @Override
-        public long length() {
-            return bytes.length;
-        }
-
-        @Override
-        public byte[] getBytes(final long pos, final int length) {
-            final int start = Math.toIntExact(pos - 1);
-            final byte[] result = new byte[length];
-            System.arraycopy(bytes, start, result, 0, length);
-            return result;
-        }
-
-        @Override
-        public long position(final byte[] pattern, final long start) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public long position(final Blob pattern, final long start) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int setBytes(final long pos, final byte[] bytes) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int setBytes(final long pos, final byte[] bytes, final int offset, final int len) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public OutputStream setBinaryStream(final long pos) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void truncate(final long len) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public InputStream getBinaryStream(final long pos, final long length) {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    private static final class ThrowingBlob implements Blob {
-
-        private final boolean throwOnGetBinaryStream;
-        private final boolean throwOnFree;
-
-        private ThrowingBlob(final boolean throwOnGetBinaryStream, final boolean throwOnFree) {
-            this.throwOnGetBinaryStream = throwOnGetBinaryStream;
-            this.throwOnFree = throwOnFree;
-        }
-
-        @Override
-        public InputStream getBinaryStream() throws SQLException {
-            if (throwOnGetBinaryStream) {
-                throw new SQLException("Cannot read BLOB");
+            public InputStream getBinaryStream() {
+                return new ByteArrayInputStream(bytes);
             }
 
-            return InputStream.nullInputStream();
-        }
+            @Override
+            public void free() {
+                // Nothing to release.
+            }
 
-        @Override
-        public void free() throws SQLException {
-            if (throwOnFree) {
-                throw new SQLException("Cannot free BLOB");
+            @Override
+            public long length() {
+                return bytes.length;
+            }
+
+            @Override
+            public byte[] getBytes(final long pos, final int length) {
+                final int start = Math.toIntExact(pos - 1);
+                final byte[] result = new byte[length];
+                System.arraycopy(bytes, start, result, 0, length);
+                return result;
+            }
+
+            @Override
+            public long position(final byte[] pattern, final long start) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public long position(final Blob pattern, final long start) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int setBytes(final long pos, final byte[] bytes) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int setBytes(final long pos, final byte[] bytes, final int offset, final int len) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public OutputStream setBinaryStream(final long pos) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void truncate(final long len) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public InputStream getBinaryStream(final long pos, final long length) {
+                throw new UnsupportedOperationException();
             }
         }
 
-        @Override
-        public long length() {
-            throw new UnsupportedOperationException();
-        }
+    private record ThrowingBlob(boolean throwOnGetBinaryStream, boolean throwOnFree) implements Blob {
 
         @Override
-        public byte[] getBytes(final long pos, final int length) {
-            throw new UnsupportedOperationException();
-        }
+            public InputStream getBinaryStream() throws SQLException {
+                if (throwOnGetBinaryStream) {
+                    throw new SQLException("Cannot read BLOB");
+                }
 
-        @Override
-        public long position(final byte[] pattern, final long start) {
-            throw new UnsupportedOperationException();
-        }
+                return InputStream.nullInputStream();
+            }
 
-        @Override
-        public long position(final Blob pattern, final long start) {
-            throw new UnsupportedOperationException();
-        }
+            @Override
+            public void free() throws SQLException {
+                if (throwOnFree) {
+                    throw new SQLException("Cannot free BLOB");
+                }
+            }
 
-        @Override
-        public int setBytes(final long pos, final byte[] bytes) {
-            throw new UnsupportedOperationException();
-        }
+            @Override
+            public long length() {
+                throw new UnsupportedOperationException();
+            }
 
-        @Override
-        public int setBytes(final long pos, final byte[] bytes, final int offset, final int len) {
-            throw new UnsupportedOperationException();
-        }
+            @Override
+            public byte[] getBytes(final long pos, final int length) {
+                throw new UnsupportedOperationException();
+            }
 
-        @Override
-        public OutputStream setBinaryStream(final long pos) {
-            throw new UnsupportedOperationException();
-        }
+            @Override
+            public long position(final byte[] pattern, final long start) {
+                throw new UnsupportedOperationException();
+            }
 
-        @Override
-        public void truncate(final long len) {
-            throw new UnsupportedOperationException();
-        }
+            @Override
+            public long position(final Blob pattern, final long start) {
+                throw new UnsupportedOperationException();
+            }
 
-        @Override
-        public InputStream getBinaryStream(final long pos, final long length) {
-            throw new UnsupportedOperationException();
+            @Override
+            public int setBytes(final long pos, final byte[] bytes) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int setBytes(final long pos, final byte[] bytes, final int offset, final int len) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public OutputStream setBinaryStream(final long pos) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void truncate(final long len) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public InputStream getBinaryStream(final long pos, final long length) {
+                throw new UnsupportedOperationException();
+            }
         }
-    }
 }

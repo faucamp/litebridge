@@ -15,5 +15,5 @@ public interface DelegateExpressionFactory {
      * @param args   Expression-specific additional arguments, if any.
      * @return A new column expression.
      */
-    DelegateColumnExpression create(ColumnExpression target, @Nullable Object... args);
+    DelegateExpression create(SelectExpression target, @Nullable Object... args);
 }

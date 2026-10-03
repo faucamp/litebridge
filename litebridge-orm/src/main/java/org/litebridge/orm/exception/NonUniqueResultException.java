@@ -12,9 +12,8 @@ public class NonUniqueResultException extends IllegalStateException {
      * Constructs a {@code NonUniqueResultException} with the specified detail message and cause.
      *
      * @param message the detail message explaining the reason for the exception
-     * @param cause   the underlying cause of the exception, which may be {@code null}
      */
-    public NonUniqueResultException(final String message, final Throwable cause) {
-        super(message, cause);
+    public NonUniqueResultException(final String message) {
+        super(message);
     }
 }

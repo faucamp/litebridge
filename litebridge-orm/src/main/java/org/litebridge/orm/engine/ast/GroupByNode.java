@@ -1,0 +1,16 @@
+package org.litebridge.orm.engine.ast;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+/**
+ * Represents a GROUP BY clause in the query AST.
+ *
+ * @param previous    the previous node in the chain
+ * @param columns     the columns to group by
+ * @param expressions the expressions to group by
+ */
+public record GroupByNode(@Nullable QueryNode previous,
+                          String @Nullable [] columns,
+                          ExpressionSpec @Nullable [] expressions) implements QueryNode {
+}

@@ -3,15 +3,23 @@ package org.litebridge.orm.persistence;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.AliasReferenceExpressionFactory;
+import org.litebridge.db.spi.expression.ColumnExpressionFactory;
+import org.litebridge.db.spi.expression.LiteralExpressionFactory;
+import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.expression.TestAliasReference;
+import org.litebridge.orm.expression.TestColumnExpression;
+import org.litebridge.orm.expression.TestLiteralExpression;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -20,7 +28,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.litebridge.orm.util.DatabaseProviderTestUtil.mockDatabaseProviderWithMetaData;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -34,10 +46,32 @@ class PersistenceFacadeCascadingTest {
     private Litebridge litebridge;
 
     @BeforeEach
-    void setUp() throws SQLException {
-        databaseProvider = mock(DatabaseProvider.class);
+    void setUp() {
+        databaseProvider = mockDatabaseProviderWithMetaData();
         final DataSource dataSource = mock(DataSource.class);
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+
+        final SqlFunctionRegistry sqlFunctionRegistry = mock(SqlFunctionRegistry.class);
+        final SqlFunctionRegistry.Select selectRegistry = mock(SqlFunctionRegistry.Select.class);
+        when(sqlFunctionRegistry.select()).thenReturn(selectRegistry);
+
+        final LiteralExpressionFactory literalExpressionFactory = mock(LiteralExpressionFactory.class);
+        when(sqlFunctionRegistry.select().literal()).thenReturn(literalExpressionFactory);
+        when(literalExpressionFactory.create(nullable(Object.class), nullable(String.class)))
+                .then(i -> new TestLiteralExpression(i.getArgument(0), i.getArgument(1)));
+
+        final AliasReferenceExpressionFactory aliasReferenceExpressionFactory = mock(AliasReferenceExpressionFactory.class);
+        when(sqlFunctionRegistry.select().aliasReference()).thenReturn(aliasReferenceExpressionFactory);
+        when(aliasReferenceExpressionFactory.create(anyString(), nullable(String.class)))
+                .then(i -> new TestAliasReference(i.getArgument(0)));
+
+        final ColumnExpressionFactory colExprFactory = mock(ColumnExpressionFactory.class);
+        when(sqlFunctionRegistry.select().column()).thenReturn(colExprFactory);
+        when(colExprFactory.create(any(Column.class), nullable(String.class), nullable(String.class)))
+                .then(i -> new TestColumnExpression(i.getArgument(0, Column.class)));
+
+        when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+
         litebridge = new Litebridge(databaseProvider, dataSource);
     }
 
@@ -55,14 +89,16 @@ class PersistenceFacadeCascadingTest {
         child.name = "child";
         parent.child = child;
 
-        when(databaseProvider.insert(any(PreparedSql.class), any(ConnectionProvider.class)))
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class)))
+                .thenReturn(new UpdateResult(1));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         // When
         litebridge.save(parent);
 
         // Then
-        verify(databaseProvider, times(2)).insert(any(PreparedSql.class), any(ConnectionProvider.class));
+        verify(databaseProvider, times(2)).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     private void registerOneToOne() throws SQLException {
@@ -108,8 +144,9 @@ class PersistenceFacadeCascadingTest {
 
         parent.children = new ArrayList<>(List.of(child1, child2));
 
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.insert(any(PreparedSql.class), any(ConnectionProvider.class)))
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class)))
+                .thenReturn(new UpdateResult(1));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         // When
@@ -117,7 +154,7 @@ class PersistenceFacadeCascadingTest {
 
         // Then
         // 1 for parent, 2 for children
-        verify(databaseProvider, times(3)).insert(any(PreparedSql.class), any(ConnectionProvider.class));
+        verify(databaseProvider, times(3)).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
     }
 
     private void registerOneToMany() throws SQLException {
@@ -183,8 +220,9 @@ class PersistenceFacadeCascadingTest {
 
         group.users = new ArrayList<>(List.of(user1));
 
-        when(databaseProvider.getTypeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.insert(any(PreparedSql.class), any(ConnectionProvider.class)))
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class)))
+                .thenReturn(new UpdateResult(1));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class)))
                 .thenReturn(new InsertResult(1, Collections.emptyMap()));
 
         // When
@@ -192,7 +230,8 @@ class PersistenceFacadeCascadingTest {
 
         // Then
         // 1 for group, 1 for user, 1 for junction table
-        verify(databaseProvider, times(3)).insert(any(PreparedSql.class), any(ConnectionProvider.class));
+        verify(databaseProvider, times(2)).executeUpdate(any(PreparedSql.class), eq(UpdateResult.class), any(ConnectionProvider.class));
+        verify(databaseProvider, times(1)).executeUpdate(any(PreparedSql.class), eq(InsertResult.class), any(ConnectionProvider.class));
     }
 
     private void registerManyToMany() throws SQLException {

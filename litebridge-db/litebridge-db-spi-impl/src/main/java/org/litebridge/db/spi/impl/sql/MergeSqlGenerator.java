@@ -1,0 +1,192 @@
+package org.litebridge.db.spi.impl.sql;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.CollectionUtils;
+import org.litebridge.db.spi.Operation;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.alias.AliasedQuery;
+import org.litebridge.db.spi.alias.AliasedTable;
+import org.litebridge.db.spi.expression.BindValueExpression;
+import org.litebridge.db.spi.expression.ClauseType;
+import org.litebridge.db.spi.query.Condition;
+import org.litebridge.db.spi.query.ConditionGroup;
+import org.litebridge.db.spi.query.LogicCondition;
+import org.litebridge.db.spi.query.LogicConditionGroup;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
+import org.litebridge.db.spi.query.Values;
+import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.update.Merge;
+import org.litebridge.db.spi.update.UpdateColumn;
+
+import java.util.List;
+import java.util.function.BiFunction;
+
+/**
+ * SQL generator for {@code MERGE} statements.
+ */
+public class MergeSqlGenerator extends AbstractSqlGenerator {
+
+    private final SelectSqlGenerator selectSqlGenerator;
+
+    /**
+     * Creates a new {@code MergeSqlGenerator}.
+     *
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator math operation generator
+     * @param ensureTableMetaData    function that creates/retrieves table metadata
+     */
+    public MergeSqlGenerator(final SelectSqlGenerator selectSqlGenerator,
+                             final LabelGenerator labelGenerator,
+                             final MathOperationGenerator mathOperationGenerator,
+                             final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
+        this.selectSqlGenerator = selectSqlGenerator;
+    }
+
+    /**
+     * Generates a SQL {@code MERGE INTO} statement string from the provided logical {@link Merge} object.
+     *
+     * @param merge              the {@link Merge} object representing the logical merge operation
+     * @param connectionProvider the connection provider
+     * @return the generated SQL statement string
+     */
+    public String generateSql(final Merge merge, final ConnectionProvider connectionProvider) {
+        final StringBuilder sql = new StringBuilder("MERGE INTO ");
+        appendSelectTarget(sql, merge.table(), merge, connectionProvider);
+
+        sql.append(" USING ");
+        appendSelectTarget(sql, merge.using(), merge, connectionProvider);
+
+        sql.append(" ON (");
+        appendConditionsAndSubgroups(sql, merge.on(), ClauseType.WHERE, merge, connectionProvider);
+        sql.append(')');
+
+        final List<Merge.WhenMatched<Merge.WhenMatchedOperation>> whenMatchedList = merge.whenMatched();
+
+        if (!CollectionUtils.isEmpty(whenMatchedList)) {
+            for (Merge.WhenMatched<Merge.WhenMatchedOperation> whenMatched : whenMatchedList) {
+                sql.append(" WHEN MATCHED");
+
+                if (whenMatched.and() != null) {
+                    sql.append(" AND ");
+                    appendConditionsAndSubgroups(sql, whenMatched.and(), ClauseType.WHERE, merge, connectionProvider);
+                }
+
+                sql.append(" THEN ");
+
+                if (whenMatched.operation() instanceof Merge.MergeUpdate update) {
+                    appendUpdate(sql, update);
+                } else if (whenMatched.operation() instanceof Merge.MergeDelete) {
+                    sql.append("DELETE");
+                } else {
+                    throw new IllegalArgumentException("Unsupported operation type: " + whenMatched.operation().getClass().getName());
+                }
+            }
+        }
+
+        final List<Merge.WhenMatched<Merge.MergeInsert>> whenNotMatchedList = merge.whenNotMatched();
+
+        if (!CollectionUtils.isEmpty(whenNotMatchedList)) {
+            for (Merge.WhenMatched<Merge.MergeInsert> whenNotMatched : whenNotMatchedList) {
+                sql.append(" WHEN NOT MATCHED THEN ");
+                appendInsert(sql, whenNotMatched.operation());
+            }
+        }
+
+        return sql.toString();
+    }
+
+    protected void appendUpdate(final StringBuilder sql, final Merge.MergeUpdate update) {
+        sql.append("UPDATE SET ");
+
+        boolean first = true;
+
+        for (UpdateColumn updateColumn : update.columns()) {
+            if (first) {
+                first = false;
+            } else {
+                sql.append(", ");
+            }
+
+            sql.append(labelGenerator.quoteIdentifier(updateColumn.name()));
+            sql.append(" = ");
+            sql.append(getColumnValueFragment(updateColumn));
+        }
+
+    }
+
+    protected void appendInsert(final StringBuilder sql, final Merge.MergeInsert insert) {
+        final List<String> columnNames = insert.columns().stream().map(UpdateColumn::name).toList();
+        sql.append("INSERT (")
+                .append(String.join(", ", columnNames.stream().map(labelGenerator::quoteIdentifier).toList()))
+                .append(") VALUES ");
+
+        for (int i = 0; i < insert.rows(); i++) {
+            if (i > 0) {
+                sql.append(", ");
+            }
+
+            sql.append('(');
+
+            for (int j = 0; j < insert.columns().size(); j++) {
+                final UpdateColumn insertColumn = insert.columns().get(j);
+
+                if (j > 0) {
+                    sql.append(", ");
+                }
+
+                sql.append(getColumnValueFragment(insertColumn));
+            }
+
+            sql.append(')');
+        }
+    }
+
+    /**
+     * Collects parameter bind indices from the given condition group in traversal order.
+     *
+     * @param conditionGroup   the condition group
+     * @param parameterIndices the list to collect parameter indices into
+     */
+    protected void collectConditionGroupIndices(final @Nullable ConditionGroup conditionGroup, final List<Integer> parameterIndices) {
+        if (conditionGroup == null) {
+            return;
+        }
+
+        for (final LogicCondition logicCondition : conditionGroup.conditions()) {
+            final Condition condition = logicCondition.condition();
+
+            if (condition.rhs() instanceof BindValueExpression bindValueExpression) {
+                for (int i = 0; i < bindValueExpression.size(); i++) {
+                    parameterIndices.add(bindValueExpression.index() + i);
+                }
+            }
+        }
+
+        for (final LogicConditionGroup logicConditionGroup : conditionGroup.subgroups()) {
+            collectConditionGroupIndices(logicConditionGroup.conditionGroup(), parameterIndices);
+        }
+    }
+
+    protected void appendSelectTarget(final StringBuilder sql,
+                                      final SelectTarget selectTarget,
+                                      final Operation operation,
+                                      final ConnectionProvider connectionProvider) {
+        switch (selectTarget) {
+            case Select subselect -> sql.append('(')
+                    .append(selectSqlGenerator.generateSql(subselect, connectionProvider))
+                    .append(')');
+            case AliasedQuery aliasedQuery -> sql.append('(')
+                    .append(selectSqlGenerator.generateSql(aliasedQuery.target(), connectionProvider))
+                    .append(')')
+                    .append(labelGenerator.createAliasAs(aliasedQuery.alias()));
+            case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
+                    .append(labelGenerator.createAliasAs(aliasedTable.alias()));
+            case Values values -> appendValues(sql, values, operation);
+            case Table table -> appendTable(sql, table);
+            case SelectTarget.Void voidTarget -> { /* Ignore */ }
+        }
+    }
+}

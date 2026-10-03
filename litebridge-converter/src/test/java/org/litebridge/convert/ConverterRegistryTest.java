@@ -97,7 +97,7 @@ class ConverterRegistryTest {
         Converter<String> existingConverter = new TestConverter<>(String.class);
 
         // When
-        registry.register(String.class, (ConverterFunction<String>) existingConverter);
+        registry.register(String.class, existingConverter);
 
         // Then
         Converter<String> converter = registry.getConverter(String.class);
@@ -133,7 +133,7 @@ class ConverterRegistryTest {
         int[] sqlTypes = {1};
 
         // When
-        registry.register(String.class, sqlTypes, (ConverterFunction<String>) existingConverter);
+        registry.register(String.class, sqlTypes, existingConverter);
 
         // Then
         Converter<String> converter = registry.getConverter(String.class);
@@ -204,7 +204,7 @@ class ConverterRegistryTest {
     // Helper to access package private inner classes if needed or just trigger their code
     private void registryRegisterDelegating(Converter<String> delegate) {
         ConverterRegistry registry = new ConverterRegistry();
-        registry.register(String.class, (ConverterFunction<String>) delegate);
+        registry.register(String.class, delegate);
         Converter<String> converter = registry.getConverter(String.class);
         assertNotNull(converter);
         String toString = converter.toString();
@@ -217,7 +217,7 @@ class ConverterRegistryTest {
         Converter<String> delegate = new TestConverter<>(String.class);
         int[] sqlTypes = {1};
         ConverterRegistry registry = new ConverterRegistry();
-        registry.register(String.class, sqlTypes, (ConverterFunction<String>) delegate);
+        registry.register(String.class, sqlTypes, delegate);
         Converter<String> converter = registry.getConverter(String.class);
         assertNotNull(converter);
         String toString = converter.toString();
@@ -264,7 +264,7 @@ class ConverterRegistryTest {
         // Given
         Converter<Integer> delegate = new TestConverter<>(Integer.class, int.class);
         ConverterRegistry registry = new ConverterRegistry();
-        registry.register(Integer.class, (ConverterFunction<Integer>) delegate);
+        registry.register(Integer.class, delegate);
 
         // When
         Converter<Integer> converter = registry.getConverter(Integer.class);

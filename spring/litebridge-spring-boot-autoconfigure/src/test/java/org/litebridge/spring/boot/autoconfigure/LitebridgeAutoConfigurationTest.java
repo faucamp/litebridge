@@ -1,9 +1,12 @@
 package org.litebridge.spring.boot.autoconfigure;
 
 import org.flywaydb.core.Flyway;
-import org.jspecify.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
+import org.litebridge.commons.ClassUtils;
+import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -14,8 +17,8 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.BatchUpdateResult;
+import org.litebridge.db.spi.update.Result;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
@@ -26,12 +29,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class LitebridgeAutoConfigurationTest {
 
@@ -109,8 +114,17 @@ class LitebridgeAutoConfigurationTest {
 
     static class MockDataSourceConfig {
         @Bean
-        public DataSource dataSource() {
-            return mock(DataSource.class);
+        public DataSource dataSource() throws SQLException {
+            final DataSource dataSource = mock(DataSource.class);
+            final Connection connection = mock(Connection.class);
+            final java.sql.DatabaseMetaData metaData = mock(java.sql.DatabaseMetaData.class);
+            when(dataSource.getConnection()).thenReturn(connection);
+            when(connection.getMetaData()).thenReturn(metaData);
+            when(metaData.getDatabaseProductName()).thenReturn("H2");
+            when(metaData.getDatabaseProductVersion()).thenReturn("2.3.232");
+            when(metaData.getDriverName()).thenReturn("H2 JDBC Driver");
+            when(metaData.getDriverVersion()).thenReturn("2.3.232");
+            return dataSource;
         }
     }
 
@@ -189,7 +203,7 @@ class LitebridgeAutoConfigurationTest {
                     final Litebridge litebridge = context.getBean(Litebridge.class);
 
                     // Verify via reflection since it's not exposed
-                    final java.lang.reflect.Field configField = Litebridge.class.getDeclaredField("litebridgeConfig");
+                    final java.lang.reflect.Field configField = ClassUtils.getField(Litebridge.class, "litebridgeConfig");
                     configField.setAccessible(true);
                     final LitebridgeConfig config = (LitebridgeConfig) configField.get(litebridge);
                     assertThat(config.relatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
@@ -202,62 +216,57 @@ class LitebridgeAutoConfigurationTest {
         }
 
         @Override
-        public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+        public DatabaseProviderMetaData metaData() {
             return null;
         }
 
         @Override
-        public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
+        public DatabaseMetaData databaseMetaData(final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
+        public TableMetaData tableMetaData(final @NonNull Table table, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return null;
         }
 
         @Override
-        public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        public <T extends Result> T executeUpdate(final @NonNull PreparedSql preparedSql, final @NonNull Class<T> resultType, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public BatchUpdateResult executeBatch(final @NonNull List<PreparedSql> preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+            return null;
+        }
+
+        @Override
+        public List<Row> executeQuery(final @NonNull PreparedSql preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
             return List.of();
         }
 
         @Override
-        public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
-            return null;
-        }
-
-        @Override
-        public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
+        public String toSql(final @NonNull Operation operation, final @NonNull ConnectionProvider connectionProvider) {
             return "";
         }
 
         @Override
-        public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
+        public TypeConverter typeConverter() {
             return null;
         }
 
         @Override
-        public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-            return null;
-        }
-
-        @Override
-        public TypeConverter getTypeConverter() {
-            return null;
-        }
-
-        @Override
-        public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+        public SequenceColumnValueGenerator sequenceColumnValueGenerator(final @NonNull String sequence) throws UnsupportedOperationException {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public SqlFunctionRegistry getSqlFunctionRegistry() {
+        public SqlFunctionRegistry sqlFunctionRegistry() {
             return null;
         }
 
         @Override
-        public AliasTransformer getAliasTransformer() {
+        public AliasTransformer aliasTransformer() {
             return null;
         }
     }

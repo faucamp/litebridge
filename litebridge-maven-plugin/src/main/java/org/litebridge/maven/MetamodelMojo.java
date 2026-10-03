@@ -38,6 +38,7 @@ import java.util.Optional;
  * This Mojo is executed during the <i>generate-sources</i> phase of the Maven build lifecycle by default.
  */
 @Mojo(name = "metamodel", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE)
+@SuppressWarnings("NotNullFieldNotInitialized")
 public final class MetamodelMojo extends AbstractMojo {
 
     /**

@@ -3,52 +3,67 @@ package org.litebridge.db.spi.update;
 import org.litebridge.db.spi.ColumnMetaData;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 /**
  * The result of an insert operation performed on the database.
  * <p>
- * This class extends {@link UpdateResult} and adds the capability to hold
+ * This class extends {@link UpdateOpResult} and adds the ability to hold
  * any generated keys resulting from the insert operation.
  * <p>
  * Instances of this class encapsulate both the number of rows affected
- * by the insert operation and optionally a list of generated keys,
+ * by the insert operation and optionally a map of generated keys,
  * if applicable.
  */
-public final class InsertResult extends UpdateResult {
-
-    private final Map<ColumnMetaData, Object> generatedKeys;
+public final class InsertResult extends UpdateResult implements Result {
 
     /**
-     * Constructs an {@code InsertResult} instance representing the result of an insert
+     * List of generated keys per row
+     */
+    private final List<Map<ColumnMetaData, Object>> generatedKeys;
+
+    /**
+     * Constructs an {@code InsertOpResult} instance representing the result of an insert
      * operation performed on the database.
      *
-     * @param rowsAffected The number of rows affected by the insert operation.
+     * @param rowsInserted The number of rows inserted by the operation.
      */
-    public InsertResult(final int rowsAffected) {
-        super(rowsAffected);
-        this.generatedKeys = Collections.emptyMap();
+    public InsertResult(final int rowsInserted) {
+        super(rowsInserted);
+        this.generatedKeys = Collections.emptyList();
     }
 
     /**
-     * Constructs an {@code InsertResult} instance representing the result of an insert
+     * Constructs an {@code InsertOpResult} instance representing the result of a single insert
      * operation performed on the database.
      *
-     * @param rowsAffected  The number of rows affected by the insert operation.
      * @param generatedKeys A map of generated keys resulting from the insert operation.
      */
-    public InsertResult(final int rowsAffected, final Map<ColumnMetaData, Object> generatedKeys) {
-        super(rowsAffected);
+    public InsertResult(final int rowsInserted, final Map<ColumnMetaData, Object> generatedKeys) {
+        super(rowsInserted);
+        this.generatedKeys = Collections.singletonList(generatedKeys);
+    }
+
+    /**
+     * Constructs an {@code InsertOpResult} instance representing the result of a multi-row insert
+     * operation performed on the database.
+     *
+     * @param rowsInserted  The number of rows inserted by the operation.
+     * @param generatedKeys A map of generated keys resulting from the insert operation.
+     */
+    public InsertResult(final int rowsInserted, final List<Map<ColumnMetaData, Object>> generatedKeys) {
+        super(rowsInserted);
         this.generatedKeys = generatedKeys;
     }
 
     /**
-     * Returns a map of generated keys resulting from the insert operation.
+     * Returns a per-row list of generated keys resulting from the insert operation.
      *
-     * @return A map of generated keys.
+     * @return List for each affected row, containing a map of generated keys.
      */
-    public Map<ColumnMetaData, Object> generatedKeys() {
+    public List<Map<ColumnMetaData, Object>> generatedKeys() {
         return generatedKeys;
     }
 

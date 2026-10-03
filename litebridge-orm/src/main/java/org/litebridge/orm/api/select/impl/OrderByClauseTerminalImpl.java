@@ -1,22 +1,36 @@
 package org.litebridge.orm.api.select.impl;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClauseTerminal;
-import org.litebridge.orm.api.select.ast.LimitNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.QueryNode;
 
-import java.util.Optional;
-
-public class OrderByClauseTerminalImpl<DTO, SSP extends SelectSpec>
-        extends LimitClauseTerminalImpl<DTO, SSP>
+/**
+ * Implementation of {@link OrderByClauseTerminal} for ORDER BY terminal clauses.
+ *
+ * @param <DTO> the mapped DTO/entity type or row type
+ */
+public class OrderByClauseTerminalImpl<DTO>
+        extends LimitClauseTerminalImpl<DTO>
         implements OrderByClauseTerminal<DTO> {
 
-    public OrderByClauseTerminalImpl(final AbstractSelector<DTO, SSP> delegate) {
-        super(delegate);
+    /**
+     * Creates a new {@code OrderByClauseTerminalImpl} instance.
+     *
+     * @param node                 the query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
+    public OrderByClauseTerminalImpl(final @Nullable QueryNode node,
+                                     final SelectEngineTerminal selectEngineTerminal,
+                                     final LitebridgeContext litebridgeContext) {
+        super(node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override
     public LimitClauseTerminal<DTO> limit(final int limit) {
-        return new LimitClauseTerminalImpl<>(delegate.withNode(new LimitNode(delegate.node(), Optional.of(limit), Optional.empty())));
+        return new LimitClauseTerminalImpl<>(limit, node, selectEngineTerminal, litebridgeContext);
     }
 }

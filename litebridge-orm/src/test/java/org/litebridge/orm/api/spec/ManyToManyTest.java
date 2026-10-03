@@ -14,11 +14,11 @@ class ManyToManyTest {
         final String inverseJoinColumn = "REMOTE_COLUMN";
 
         // When
-        final ManyToMany manyToMany = new ManyToMany(joinTable, joinColumn, inverseJoinColumn);
+        final ManyToMany manyToMany = new ManyToMany(joinTable, new String[] {joinColumn}, new String[] {inverseJoinColumn});
 
         // Then
         assertEquals(joinTable, manyToMany.joinTable());
-        assertEquals(joinColumn, manyToMany.joinColumn());
-        assertEquals(inverseJoinColumn, manyToMany.inverseJoinColumn());
+        assertEquals(joinColumn, manyToMany.joinColumns()[0]);
+        assertEquals(inverseJoinColumn, manyToMany.inverseJoinColumns()[0]);
     }
 }

@@ -1,6 +1,7 @@
 package org.litebridge.db.spi;
 
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.update.UpdateStatement;
 
 /**
@@ -27,5 +28,5 @@ public sealed interface Operation permits Select, UpdateStatement {
      *
      * @return the target table of the operation
      */
-    Table table();
+    SelectTarget table();
 }

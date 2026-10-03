@@ -9,39 +9,39 @@ For more information on how to use metamodels in queries, see the [Metamodels](.
 
 ## Configuration Parameters
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `input` | `MetamodelInputConfig` | Yes | - | Input configuration (packages to scan, source directory). |
-| `output` | `MetamodelOutputConfig` | Yes | - | Output configuration (package name, directory, class names). |
-| `skip` | `boolean` | No | `false` | Skips goal execution if set to `true`. |
+| Parameter | Type                    | Required | Default | Description                                                  |
+|:----------|:------------------------|:---------|:--------|:-------------------------------------------------------------|
+| `input`   | `MetamodelInputConfig`  | Yes      | -       | Input configuration (packages to scan, source directory).    |
+| `output`  | `MetamodelOutputConfig` | Yes      | -       | Output configuration (package name, directory, class names). |
+| `skip`    | `boolean`               | No       | `false` | Skips goal execution if set to `true`.                       |
 
 ### `input` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `inputPackages` | `List<String>` | Yes | - | List of packages to scan for entity/DTO classes. |
-| `srcDir` | `String` | No | project source roots | Root directory where `inputPackages` will be searched for. Useful if generating metamodels from reverse-engineered entities. |
-| `entitiesOnly` | `boolean` | No | `true` | If `true`, only classes annotated with `@Table` are processed. If `false`, all classes in the specified packages are processed. |
+| Parameter       | Type           | Required | Default              | Description                                                                                                                     |
+|:----------------|:---------------|:---------|:---------------------|:--------------------------------------------------------------------------------------------------------------------------------|
+| `inputPackages` | `List<String>` | Yes      | -                    | List of packages to scan for entity/DTO classes.                                                                                |
+| `srcDir`        | `String`       | No       | project source roots | Root directory where `inputPackages` will be searched for. Useful if generating metamodels from reverse-engineered entities.    |
+| `entitiesOnly`  | `boolean`      | No       | `true`               | If `true`, only classes annotated with `@Table` are processed. If `false`, all classes in the specified packages are processed. |
 
 ### `output` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `outputPackage` | `String` | Yes | - | The package name for the generated metamodel classes. |
-| `outputDir` | `String` | No | `${project.build.directory}/generated-sources/java` | The directory where generated metamodel files will be written. |
-| `classNamePrefix` | `String` | No | (empty) | Prefix to add to generated class names. |
-| `classNameSuffix` | `String` | No | `Meta`* | Suffix to add to generated class names. |
-| `packageInfo` | `boolean` | No | `true` | Whether to generate a `package-info.java` file. |
-| `javadoc` | `boolean` | No | `true` | Whether to include Javadoc comments in generated classes. |
-| `finalClasses` | `boolean` | No | `true` | Whether to declare generated metamodel classes as `final`. |
-| `jspecify` | `RevEngJSpecifyConfig` | No | - | Configuration for JSpecify nullability annotations. |
+| Parameter         | Type                   | Required | Default                                             | Description                                                    |
+|:------------------|:-----------------------|:---------|:----------------------------------------------------|:---------------------------------------------------------------|
+| `outputPackage`   | `String`               | Yes      | -                                                   | The package name for the generated metamodel classes.          |
+| `outputDir`       | `String`               | No       | `${project.build.directory}/generated-sources/java` | The directory where generated metamodel files will be written. |
+| `classNamePrefix` | `String`               | No       | (empty)                                             | Prefix to add to generated class names.                        |
+| `classNameSuffix` | `String`               | No       | `Meta`*                                             | Suffix to add to generated class names.                        |
+| `packageInfo`     | `boolean`              | No       | `true`                                              | Whether to generate a `package-info.java` file.                |
+| `javadoc`         | `boolean`              | No       | `true`                                              | Whether to include Javadoc comments in generated classes.      |
+| `finalClasses`    | `boolean`              | No       | `true`                                              | Whether to declare generated metamodel classes as `final`.     |
+| `jspecify`        | `RevEngJSpecifyConfig` | No       | -                                                   | Configuration for JSpecify nullability annotations.            |
 
 #### `jspecify` Settings
 
-| Parameter | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `annotate` | `boolean` | No | `false` | Enable JSpecify annotations in generated code. |
-| `nullMarked` | `boolean` | No | `true` | Use `@NullMarked` at the class or package level. If `false`, `@NullUnmarked` is used. This setting is only used if `annotate` is `true`. |
+| Parameter    | Type      | Required | Default | Description                                                                                                                              |
+|:-------------|:----------|:---------|:--------|:-----------------------------------------------------------------------------------------------------------------------------------------|
+| `annotate`   | `boolean` | No       | `false` | Enable JSpecify annotations in generated code.                                                                                           |
+| `nullMarked` | `boolean` | No       | `true`  | Use `@NullMarked` at the class or package level. If `false`, `@NullUnmarked` is used. This setting is only used if `annotate` is `true`. |
 
 \* If `classNamePrefix` is specified and `classNameSuffix` is not, `classNameSuffix` defaults to an empty string. If neither is specified, `classNameSuffix` defaults to `Meta`.
 

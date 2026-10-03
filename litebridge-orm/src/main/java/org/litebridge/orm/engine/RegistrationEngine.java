@@ -32,7 +32,7 @@ import java.util.function.Function;
  * This class supports various registration methods for defining table structures, relationships, and
  * metadata for database operations.
  */
-public class RegistrationEngine {
+public final class RegistrationEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationEngine.class);
 

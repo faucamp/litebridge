@@ -1,22 +1,15 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.query.UpdateMetaData;
-import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.db.spi.update.ColumnValue;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SetNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
+import org.litebridge.orm.engine.AbstractInsertEngine;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Objects;
 
 /**
  * Abstract base class for building SQL statements.
@@ -28,6 +21,7 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
      * The ORM table associated with the statement.
      */
     protected final OrmTable ormTable;
+    protected final @Nullable Class<?> contextDtoClass;
     private final StatementChain statementChain = new StatementChain();
 
     /**
@@ -38,37 +32,26 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
     /**
      * The current query node.
      */
-    protected QueryNode node;
+    protected @Nullable QueryNode node;
 
     /**
      * Constructs a new {@code AbstractStatementBuilder}.
      *
-     * @param ormTable          The ORM table.
-     * @param litebridgeContext The ORM context.
+     * @param ormTable          The ORM table for the target DTO.
+     * @param contextDtoClass   The parent/context DTO class.
+     * @param litebridgeContext Litebridge context.
      */
     protected AbstractStatementBuilder(final OrmTable ormTable,
+                                       final @Nullable Class<?> contextDtoClass,
                                        final LitebridgeContext litebridgeContext) {
         this.ormTable = ormTable;
+        this.contextDtoClass = contextDtoClass;
         this.litebridgeContext = litebridgeContext;
     }
 
     @Override
     public QueryNode node() {
-        return node;
-    }
-
-    @Override
-    public void addSetNode(final Column column, final @Nullable Object value, final boolean bindValue) {
-        this.node = new SetNode(this.node, column, value, bindValue);
-    }
-
-    /**
-     * Adds a column value to the statement.
-     *
-     * @param columnValue the column value to add
-     */
-    public void addColumn(final ColumnValue columnValue) {
-        addSetNode(columnValue.column(), columnValue.value(), true);
+        return Objects.requireNonNull(node, "Statement builder node not set");
     }
 
     @Override
@@ -80,30 +63,13 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
     public abstract PreparedOperation build();
 
     @Override
-    public UpdateMetaData createUpdateMetaData() {
-        final List<ColumnMetaData> generatedPrimaryKeyColumns = getGeneratedPrimaryKeyColumns(ormTable.getMetaData());
-
-        if (generatedPrimaryKeyColumns.isEmpty()) {
-            return new UpdateMetaData(false, Collections.emptyList(), new String[0]);
-        }
-
-        final String[] generatedPkColumnNames = generatedPrimaryKeyColumns.stream()
-                .map(ColumnMetaData::name)
-                .toArray(String[]::new);
-
-        return new UpdateMetaData(true, generatedPrimaryKeyColumns, generatedPkColumnNames);
-    }
-
-    /**
-     * Get the primary key columns for which the database generates values.
-     *
-     * @param tableMetaData the {@link TableMetaData} object containing the metadata of the target table
-     * @return a list of {@link ColumnMetaData} objects representing the generated primary key columns
-     */
-    private List<ColumnMetaData> getGeneratedPrimaryKeyColumns(final TableMetaData tableMetaData) {
-        return tableMetaData.primaryKey().stream()
-                .filter(columnMetadata -> columnMetadata.isAutoIncrement()
-                        || (columnMetadata.getGenerator() != null && SequenceColumnValueGenerator.class.isAssignableFrom(columnMetadata.getGenerator().getClass())))
-                .toList();
+    public UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation) {
+        return AbstractInsertEngine.createUpdateMetaData(preparedOperation,
+                () -> switch (preparedOperation.operation().table()) {
+                    case Table table -> table;
+                    case AliasedTable aliasedTable -> aliasedTable.target();
+                    default -> new Table("");
+                },
+                litebridgeContext);
     }
 }

@@ -25,7 +25,7 @@ import java.util.List;
  * @param updateMetaData         The metadata for update operations, which may be null.
  */
 public record PreparedSql(String sql,
-                          List<@Nullable BindValue> bindValues,
+                          List<BindValue> bindValues,
                           @Nullable TypeConversionMetaData typeConversionMetaData,
                           @Nullable UpdateMetaData updateMetaData) {
 
@@ -36,7 +36,7 @@ public record PreparedSql(String sql,
      * @param sql The SQL query string.
      */
     public PreparedSql(String sql,
-                       List<@Nullable BindValue> bindValues) {
+                       List<BindValue> bindValues) {
         this(sql, bindValues, null, null);
     }
 

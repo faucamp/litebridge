@@ -17,6 +17,7 @@ public final class RevEngInputConfig {
      * In addition to specifying tables to map, this allows customisation of the table mapping.
      */
     @Parameter(required = true)
+    @SuppressWarnings("NotNullFieldNotInitialized")
     private List<String> tables;
 
     public List<String> getTables() {

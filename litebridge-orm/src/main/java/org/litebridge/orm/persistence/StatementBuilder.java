@@ -1,18 +1,16 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.query.UpdateMetaData;
-import org.litebridge.db.spi.sql.BindValue;
-import org.litebridge.orm.api.select.ast.QueryNode;
-
-import java.util.List;
+import org.litebridge.db.spi.update.Result;
+import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 /**
  * Interface for building SQL execution/update statements.
  */
-public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpStatementBuilder {
+public sealed interface StatementBuilder permits AbstractStatementBuilder, ManualUpsert, NoOpStatementBuilder {
 
     /**
      * Returns the current query node.
@@ -20,15 +18,6 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
      * @return the query node
      */
     QueryNode node();
-
-    /**
-     * Adds a set node to the statement.
-     *
-     * @param column    the column to set
-     * @param value     the value to set
-     * @param bindValue whether to bind the value as a parameter
-     */
-    void addSetNode(Column column, @Nullable Object value, boolean bindValue);
 
     /**
      * Returns the chain of statements built so far.
@@ -40,9 +29,18 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
     /**
      * Creates the update metadata for the statement.
      *
+     * @param preparedOperation the prepared database operation
      * @return the update metadata
      */
-    UpdateMetaData createUpdateMetaData();
+    UpdateMetaData createUpdateMetaData(final PreparedOperation preparedOperation);
+
+    /**
+     * Sets a field value on the statement.
+     *
+     * @param fieldName the name of the field to set
+     * @param value     the value to set
+     */
+    void setField(String fieldName, @Nullable Object value);
 
     /**
      * Builds the final SQL statement.
@@ -50,4 +48,13 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, NoOpS
      * @return The built statement.
      */
     PreparedOperation build();
+
+    /**
+     * Returns the expected {@link Result} type produced when executing the built statement.
+     *
+     * @return the expected result class
+     */
+    default Class<? extends Result> resultType() {
+        return UpdateResult.class;
+    }
 }

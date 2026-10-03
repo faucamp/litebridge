@@ -2,146 +2,58 @@ package org.litebridge.db.spi.impl.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.db.spi.update.ColumnValue;
 import org.litebridge.db.spi.update.Insert;
-import org.litebridge.db.spi.update.RowValue;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.litebridge.db.spi.update.UpdateColumn;
 
-import java.sql.Types;
 import java.util.List;
-import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.litebridge.db.spi.impl.sql.TestUtil.createTestColumn;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.litebridge.db.spi.impl.sql.TestUtil.createTestTable;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class InsertSqlGeneratorTest {
 
-    @Mock
-    private TypeConverter typeConverter;
-    @Mock
-    private BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData;
     private InsertSqlGenerator insertSqlGenerator;
 
     @BeforeEach
     void beforeEach() {
-        insertSqlGenerator = new InsertSqlGenerator(typeConverter, new ColumnIdentifierGenerator(), ensureTableMetaData);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
+        insertSqlGenerator = new InsertSqlGenerator(labelGenerator, mathOperationGenerator, (table, connectionProvider) -> mock(TableMetaData.class), DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }
 
     @Test
-    void prepareSql_insert_withMultipleRows() throws Exception {
+    void generateSql_generatedValueAndBindPlaceholder() {
         // Given
-        final Column column = createTestColumn();
-
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        when(columnMetaData.toColumn()).thenReturn(column);
-
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
-        when(tableMetaData.toTable()).thenReturn(column.table());
-        when(ensureTableMetaData.apply(eq(column.table()), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-
-        final ColumnValue columnValue1 = new ColumnValue(column, "value1");
-        final ColumnValue columnValue2 = new ColumnValue(column, "value2");
-        final RowValue rowValue1 = new RowValue(List.of(columnValue1));
-        final RowValue rowValue2 = new RowValue(List.of(columnValue2));
-
-        final Insert insert = new Insert(tableMetaData.toTable(), List.of(columnMetaData.toColumn()), List.of(rowValue1, rowValue2), false);
-
-        when(typeConverter.convert(anyString(), anyInt())).then(i -> i.getArgument(0));
+        final Insert insert = new Insert(
+                createTestTable(),
+                List.of(new UpdateColumn("TEST_ID", () -> "DEFAULT", null), new UpdateColumn("TEST_COLUMN")),
+                1,
+                false);
 
         // When
-        final String result = insertSqlGenerator.prepareSql(insert, mock(TransactionManager.class));
+        final String result = insertSqlGenerator.generateSql(insert, mock(ConnectionProvider.class));
 
         // Then
-        assertNotNull(result);
-        assertTrue(result.contains("VALUES"));
+        assertEquals("INSERT INTO TEST_SCHEMA.TEST_TABLE (TEST_ID, TEST_COLUMN) VALUES (DEFAULT, ?)", result);
     }
 
     @Test
-    void prepareRow_withSequenceAndNonNullValue() throws Exception {
+    void generateSql_multipleRows() {
         // Given
-        final Column column = createTestColumn();
-
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
-        when(ensureTableMetaData.apply(eq(column.table()), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-
-        final RowValue rowValue = new RowValue(List.of(new ColumnValue(column, "testValue")));
-
-        when(typeConverter.convert("testValue", Types.VARCHAR)).thenReturn("testValue");
+        final Insert insert = new Insert(
+                createTestTable(),
+                List.of(new UpdateColumn("TEST_COLUMN")),
+                2,
+                false);
 
         // When
-        final PreparedRow result = insertSqlGenerator.prepareRow(rowValue, mock(TransactionManager.class));
+        final String result = insertSqlGenerator.generateSql(insert, mock(ConnectionProvider.class));
 
         // Then
-        assertNotNull(result);
-        assertEquals(1, result.valueSpecifiers().size());
-        assertEquals("?", result.valueSpecifiers().get(0));
-        assertEquals(1, result.bindValues().size());
-    }
-
-    @Test
-    void prepareRow_nullableColumnWithNullValue() throws Exception {
-        // Given
-        final Column column = createTestColumn();
-        final RowValue rowValue = new RowValue(List.of(new ColumnValue(column, null)));
-
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        when(columnMetaData.isNullable()).thenReturn(true);
-        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
-        when(ensureTableMetaData.apply(eq(column.table()), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-
-        // When
-        final PreparedRow preparedRow = insertSqlGenerator.prepareRow(rowValue, mock(ConnectionProvider.class));
-
-        // Then
-        assertNotNull(preparedRow);
-        assertTrue(preparedRow.valueSpecifiers().isEmpty());
-        assertTrue(preparedRow.bindValues().isEmpty());
-    }
-
-    @Test
-    void prepareRow_autoIncrementColumnWithNullValue() throws Exception {
-        // Given
-        final Column column = createTestColumn();
-        final RowValue rowValue = new RowValue(List.of(new ColumnValue(column, null)));
-
-        final ColumnMetaData columnMetaData = mock(ColumnMetaData.class);
-        when(columnMetaData.isAutoIncrement()).thenReturn(true);
-        when(columnMetaData.getDataType()).thenReturn(Types.VARCHAR);
-        final TableMetaData tableMetaData = mock(TableMetaData.class);
-        when(tableMetaData.column("TEST_COLUMN")).thenReturn(columnMetaData);
-        when(ensureTableMetaData.apply(eq(column.table()), any(ConnectionProvider.class))).thenReturn(tableMetaData);
-
-        // When
-        final PreparedRow preparedRow = insertSqlGenerator.prepareRow(rowValue, mock(ConnectionProvider.class));
-
-        // Then
-        assertNotNull(preparedRow);
-        assertTrue(preparedRow.valueSpecifiers().isEmpty());
-        assertTrue(preparedRow.bindValues().isEmpty());
+        assertEquals("INSERT INTO TEST_SCHEMA.TEST_TABLE (TEST_COLUMN) VALUES (?), (?)", result);
     }
 }

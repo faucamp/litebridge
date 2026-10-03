@@ -647,7 +647,6 @@ class ReverseEngineerMojoTest {
      * Setup H2 in-memory database
      */
     private void setupH2() {
-        //
         final String url = "jdbc:h2:mem:lb;DB_CLOSE_DELAY=-1";
         final String user = "sa";
         final String password = "";
@@ -705,7 +704,7 @@ class ReverseEngineerMojoTest {
 
     private static MemberValuePair ensureAnnotationPair(final String paramName, final boolean paramValue, final AnnotationExpr annotationExpr) {
         final MemberValuePair pair = ensureAnnotationPair(paramName, annotationExpr);
-        assertEquals(paramValue ? "true" : "false", pair.getValue().toString());
+        assertEquals(Boolean.toString(paramValue), pair.getValue().toString());
         return pair;
     }
 

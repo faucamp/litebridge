@@ -15,6 +15,7 @@ import org.litebridge.tracking.TrackedDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,7 +40,8 @@ public class OrmTable {
 
     private final Class<?> dtoClass;
     private final TableMetaData metaData;
-    private final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap;
+    private final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap;
+    private final Map<String, MappedFieldTarget> fieldNameTargetMap;
     private final List<Map.Entry<FieldAccessor, MappedFieldTarget>> fieldTargetEntries;
     private final Map<String, ColumnMetaData> columnMap;
     private final Map<String, ColumnMetaData> fieldNameColumnMap;
@@ -49,38 +51,41 @@ public class OrmTable {
     private final List<Class<?>> nestedDtoClasses;
     private final TableRegistry contextTableRegistry = new TableRegistry();
     private final ClassFieldAccessorCache classFieldAccessorCache;
+    final boolean manyToManyJoinTable;
     private @Nullable List<FieldAccessor> oneToManyReverseMappings;
     private Set<Class<?>> dtoClassInterfaces = Collections.emptySet();
-    private Set<Class<?>> relatedDtoClasses = new HashSet<>();
+    private final Set<Class<?>> relatedDtoClasses = new HashSet<>();
 
     /**
      * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
      * and a change tracker for managing object state.
      *
-     * @param dtoClass       the DTO class associated with the table
-     * @param metaData       the metadata describing the table structure
-     * @param fieldTargetMap  a map associating field accessors with their corresponding column metadata
-     * @param changeTracker   the change tracker to monitor and track modifications made to the table's data
+     * @param dtoClass                the DTO class associated with the table
+     * @param metaData                the metadata describing the table structure
+     * @param fieldAccessorTargetMap  a map associating field accessors with their corresponding column metadata
+     * @param changeTracker           the change tracker to monitor and track modifications made to the table's data
      * @param classFieldAccessorCache the cache for field accessors
      */
     public OrmTable(final Class<?> dtoClass,
                     final TableMetaData metaData,
-                    final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap,
+                    final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap,
                     final ChangeTracker changeTracker,
                     final ClassFieldAccessorCache classFieldAccessorCache) {
         this.dtoClass = dtoClass;
+        this.manyToManyJoinTable = Proxy.isProxyClass(dtoClass);
         this.metaData = metaData;
         this.classFieldAccessorCache = classFieldAccessorCache;
 
         this.changeTracker = changeTracker;
-        final Map<String, ColumnMetaData> columnMap = new HashMap<>(fieldTargetMap.size());
-        final Map<String, ColumnMetaData> fieldNameColumnMap = new HashMap<>(fieldTargetMap.size());
-        final Map<String, FieldAccessor> columnNameFieldMap = new HashMap<>(fieldTargetMap.size());
-        final Map<FieldAccessor, MappedFieldTarget> processedFieldTargetMap = new HashMap<>(fieldTargetMap.size());
+        final Map<String, ColumnMetaData> columnMap = new HashMap<>(fieldAccessorTargetMap.size());
+        final Map<String, ColumnMetaData> fieldNameColumnMap = new HashMap<>(fieldAccessorTargetMap.size());
+        final Map<String, FieldAccessor> columnNameFieldMap = new HashMap<>(fieldAccessorTargetMap.size());
+        final Map<FieldAccessor, MappedFieldTarget> processedFieldTargetMap = new HashMap<>(fieldAccessorTargetMap.size());
+        final Map<String, MappedFieldTarget> fieldNameTargetMap = new HashMap<>(fieldAccessorTargetMap.size());
         final List<Class<?>> nestedDtoClasses = new ArrayList<>();
-        final List<Map.Entry<FieldAccessor, MappedFieldTarget>> orderedFieldTargetEntries = new ArrayList<>(fieldTargetMap.size());
+        final List<Map.Entry<FieldAccessor, MappedFieldTarget>> orderedFieldTargetEntries = new ArrayList<>(fieldAccessorTargetMap.size());
 
-        fieldTargetMap.forEach(((fieldAccessor, mappedFieldTarget) -> {
+        fieldAccessorTargetMap.forEach(((fieldAccessor, mappedFieldTarget) -> {
             final MappedFieldTarget preprocessedTarget;
 
             if (mappedFieldTarget instanceof ColumnAndInlineTable(ColumnMetaData column, OrmTable tableSpec)) {
@@ -91,6 +96,8 @@ public class OrmTable {
             }
 
             processedFieldTargetMap.put(fieldAccessor, preprocessedTarget);
+            final String fieldName = (fieldAccessor instanceof FieldAccessorChain chain) ? chain.fieldPath() : fieldAccessor.name();
+            fieldNameTargetMap.put(fieldName, preprocessedTarget);
 
             if (preprocessedTarget instanceof ColumnMetaData column) {
                 columnMap.put(column.name(), column);
@@ -101,30 +108,28 @@ public class OrmTable {
                     fieldAccessorChain.fieldAccessors().stream()
                             .filter(field -> field.dtoClass() != dtoClass)
                             .forEach(field -> nestedDtoClasses.add(field.dtoClass()));
-                } else {
-                    fieldNameColumnMap.put(fieldAccessor.name(), column);
+                }
 
-                    if (!ClassUtils.isBasicType(fieldAccessor.type())) {
-                        // Related DTO - mark for partial creation later if necessary (e.g. when no JOINs are specified)
-                        relatedDtoClasses.add(fieldAccessor.type());
-                    }
+                fieldNameColumnMap.put(fieldName, column);
+
+                if (!(fieldAccessor instanceof FieldAccessorChain) && !ClassUtils.isBasicType(fieldAccessor.type())) {
+                    // Related DTO - mark for partial creation later if necessary (e.g. when no JOINs are specified)
+                    relatedDtoClasses.add(fieldAccessor.type());
                 }
             }
         }));
 
         // Add mapped field-target entries in the order of the db expressions
-        this.metaData.columns().forEach(column -> {
-            processedFieldTargetMap.entrySet().stream()
-                    .filter(entry ->
-                            entry.getValue() instanceof ColumnMetaData columnMetaData
-                                    && columnMetaData.equals(column))
-                    .findFirst()
-                    .ifPresent(orderedFieldTargetEntries::add);
-        });
+        this.metaData.columns().forEach(column -> processedFieldTargetMap.entrySet().stream()
+                .filter(entry ->
+                        entry.getValue() instanceof ColumnMetaData columnMetaData
+                                && columnMetaData.equals(column))
+                .findFirst()
+                .ifPresent(orderedFieldTargetEntries::add));
 
         // Append remaining entries to the end of the list
-        if (orderedFieldTargetEntries.size() < fieldTargetMap.size()) {
-            fieldTargetMap.entrySet().stream()
+        if (orderedFieldTargetEntries.size() < fieldAccessorTargetMap.size()) {
+            fieldAccessorTargetMap.entrySet().stream()
                     .filter(entry -> !orderedFieldTargetEntries.contains(entry))
                     .forEach(orderedFieldTargetEntries::add);
         }
@@ -132,7 +137,8 @@ public class OrmTable {
         this.columnMap = Collections.unmodifiableMap(columnMap);
         this.fieldNameColumnMap = Collections.unmodifiableMap(fieldNameColumnMap);
         this.columnNameFieldMap = Collections.unmodifiableMap(columnNameFieldMap);
-        this.fieldTargetMap = Collections.unmodifiableMap(processedFieldTargetMap);
+        this.fieldAccessorTargetMap = Collections.unmodifiableMap(processedFieldTargetMap);
+        this.fieldNameTargetMap = Collections.unmodifiableMap(fieldNameTargetMap);
         this.nestedDtoClasses = nestedDtoClasses.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(nestedDtoClasses);
         this.fieldTargetEntries = Collections.unmodifiableList(orderedFieldTargetEntries);
     }
@@ -146,13 +152,23 @@ public class OrmTable {
         return dtoClass;
     }
 
-    public Class<?> getPrimaryKeyType() {
+    /**
+     * Get the primary key field accessors for this table.
+     *
+     * @return the list of primary key field accessors
+     * @throws IllegalStateException if the table has no primary key
+     */
+    public List<FieldAccessor> getPrimaryKeyFields() {
         final List<ColumnMetaData> pkColumns = getMetaData().primaryKey();
+
         if (pkColumns.isEmpty()) {
             throw new IllegalStateException("Table '%s' has no primary key".formatted(getMetaData().name()));
         }
-        final String pkColumnName = pkColumns.getFirst().name();
-        return getFieldForColumnName(pkColumnName).type();
+
+        return pkColumns.stream()
+                .map(ColumnMetaData::name)
+                .map(this::getFieldForColumnName)
+                .toList();
     }
 
     /**
@@ -170,14 +186,35 @@ public class OrmTable {
      * @param fieldName the field name to retrieve the column metadata for
      * @return the column metadata for the specified field name, or null if not found
      */
-    public ColumnMetaData getColumnForFieldName(final String fieldName) {
+    public ColumnMetaData columnMetaDataForField(final String fieldName) {
         final FieldAccessor fieldAccessor = classFieldAccessorCache.fieldAccessorOrThrow(dtoClass, fieldName);
+        return columnMetaDataForField(fieldAccessor);
+    }
 
-        if (fieldAccessor instanceof FieldAccessorChain fieldAccessorChain) {
-            return Objects.requireNonNull(fieldNameColumnMap.get(fieldAccessorChain.fieldAccessors().getFirst().name()), "No parent column for field path '" + fieldAccessorChain.fieldPath() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
-        } else {
-            return Objects.requireNonNull(fieldNameColumnMap.get(fieldName), "No column for field '" + fieldName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+    /**
+     * Get the column metadata for the specified field accessor.
+     *
+     * @param fieldAccessor the field accessor to retrieve the column metadata for
+     * @return the column metadata for the specified field accessor
+     */
+    public ColumnMetaData columnMetaDataForField(final FieldAccessor fieldAccessor) {
+        ColumnMetaData columnMetaData = fieldNameColumnMap.get(fieldAccessor.name());
+
+        if (columnMetaData == null && fieldAccessor instanceof FieldAccessorChain chain) {
+            columnMetaData = fieldNameColumnMap.get(chain.fieldAccessors().getFirst().name());
         }
+
+        return Objects.requireNonNull(columnMetaData, () -> "No column for field path '" + fieldAccessor.name() + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'");
+    }
+
+    public boolean hasField(final String fieldName) {
+        boolean fieldFound = fieldNameColumnMap.containsKey(fieldName);
+
+        if (!fieldFound && fieldName.contains(".")) {
+            fieldFound = fieldNameTargetMap.containsKey(fieldName.substring(0, fieldName.indexOf('.')));
+        }
+
+        return fieldFound;
     }
 
     /**
@@ -220,12 +257,8 @@ public class OrmTable {
      */
     public <DTO> TrackedDto<DTO> ensureTrackedDto(final DTO dto) {
         final TrackedDto<DTO> trackedDto = changeTracker.getTrackedDtoOrNull(dto);
-
-        if (trackedDto == null) {
-            return changeTracker.getTrackedDto(changeTracker.trackDtoFields(dto, fieldTargetMap.keySet(), true));
-        } else {
-            return trackedDto;
-        }
+        return Objects.requireNonNullElseGet(trackedDto,
+                () -> changeTracker.getTrackedDto(changeTracker.trackDtoFields(dto, fieldAccessorTargetMap.keySet(), true)));
     }
 
     /**
@@ -234,7 +267,61 @@ public class OrmTable {
      * @param dto the DTO to track
      */
     public void trackDto(final Object dto) {
-        changeTracker.trackDtoFields(dto, fieldTargetMap.keySet());
+        changeTracker.trackDtoFields(dto, fieldAccessorTargetMap.keySet());
+    }
+
+    /**
+     * Get the mapped field target for the specified field name, or {@code null} if not found.
+     *
+     * @param fieldName the field name to retrieve the mapped target for
+     * @return the mapped field target, or {@code null} if not found
+     */
+    public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final String fieldName) {
+        MappedFieldTarget target = fieldNameTargetMap.get(fieldName);
+
+        if (target == null && fieldName.indexOf('.') != -1) {
+            target = fieldNameTargetMap.get(fieldName.substring(0, fieldName.indexOf('.')));
+        }
+
+        return target;
+    }
+
+    /**
+     * Get the mapped field target for the specified field accessor, or {@code null} if not found.
+     *
+     * @param fieldAccessor the field accessor to retrieve the mapped target for
+     * @return the mapped field target, or {@code null} if not found
+     */
+    public @Nullable MappedFieldTarget mappedFieldTargetForFieldOrNull(final FieldAccessor fieldAccessor) {
+        MappedFieldTarget target = fieldAccessorTargetMap.get(fieldAccessor);
+
+        if (target == null && fieldAccessor instanceof FieldAccessorChain chain) {
+            target = fieldAccessorTargetMap.get(chain.fieldAccessors().getFirst());
+        }
+
+        return target;
+    }
+
+    /**
+     * Get the mapped field target for the specified field name, throwing an exception if not found.
+     *
+     * @param fieldName the field name to retrieve the mapped target for
+     * @return the mapped field target
+     * @throws IllegalArgumentException if no mapping exists for the field name
+     */
+    public MappedFieldTarget mappedFieldTargetForField(final String fieldName) {
+        return ObjectUtils.requireNonNull(mappedFieldTargetForFieldOrNull(fieldName), () -> new IllegalArgumentException("No field '" + fieldName + "' in DTO class: " + dtoClass));
+    }
+
+    /**
+     * Get the mapped field target for the specified field accessor, throwing an exception if not found.
+     *
+     * @param fieldAccessor the field accessor to retrieve the mapped target for
+     * @return the mapped field target
+     * @throws IllegalArgumentException if no mapping exists for the field accessor
+     */
+    public MappedFieldTarget mappedFieldTargetForField(final FieldAccessor fieldAccessor) {
+        return ObjectUtils.requireNonNull(mappedFieldTargetForFieldOrNull(fieldAccessor), () -> new IllegalArgumentException("No field '" + fieldAccessor.name() + "' in DTO class: " + dtoClass));
     }
 
     /**
@@ -264,7 +351,7 @@ public class OrmTable {
      * @return a stream of field accessors
      */
     public Stream<FieldAccessor> fieldAcessorStream() {
-        return fieldTargetMap.keySet().stream();
+        return fieldAccessorTargetMap.keySet().stream();
     }
 
     /**
@@ -307,7 +394,7 @@ public class OrmTable {
      * @return the list of one-to-many mappings
      */
     public final List<MappedOneToMany> getOneToManyMappings() {
-        return fieldTargetMap.values().stream()
+        return fieldAccessorTargetMap.values().stream()
                 .filter(MappedOneToMany.class::isInstance)
                 .map(MappedOneToMany.class::cast)
                 .toList();
@@ -319,7 +406,7 @@ public class OrmTable {
      * @return the list of many-to-many mappings
      */
     public final List<MappedManyToMany> getManyToManyMappings() {
-        return fieldTargetMap.values().stream()
+        return fieldAccessorTargetMap.values().stream()
                 .filter(MappedManyToMany.class::isInstance)
                 .map(MappedManyToMany.class::cast)
                 .toList();
@@ -332,7 +419,7 @@ public class OrmTable {
      * @return the one-to-many mapping for the specified field, or empty if not found
      */
     public Optional<MappedOneToMany> getOneToManyMappingForField(final FieldAccessor field) {
-        final MappedFieldTarget mappedFieldTarget = fieldTargetMap.get(field);
+        final MappedFieldTarget mappedFieldTarget = fieldAccessorTargetMap.get(field);
 
         if (mappedFieldTarget instanceof MappedOneToMany mappedOneToMany) {
             return Optional.of(mappedOneToMany);
@@ -348,7 +435,7 @@ public class OrmTable {
      * @return the many-to-many mapping for the specified field, or empty if not found
      */
     public Optional<MappedManyToMany> getManyToManyMappingForField(final FieldAccessor field) {
-        final MappedFieldTarget mappedFieldTarget = fieldTargetMap.get(field);
+        final MappedFieldTarget mappedFieldTarget = fieldAccessorTargetMap.get(field);
 
         if (mappedFieldTarget instanceof MappedManyToMany mappedManyToMany) {
             return Optional.of(mappedManyToMany);
@@ -364,6 +451,19 @@ public class OrmTable {
      */
     public List<Map.Entry<FieldAccessor, MappedFieldTarget>> mappedFieldTargets() {
         return fieldTargetEntries;
+    }
+
+    /**
+     * Get the list of mapped column metadata for this table.
+     *
+     * @return the list of mapped column metadata
+     */
+    public List<ColumnMetaData> mappedColumns() {
+        return fieldTargetEntries.stream()
+                .map(Map.Entry::getValue)
+                .filter(ColumnMetaData.class::isInstance)
+                .map(ColumnMetaData.class::cast)
+                .toList();
     }
 
     /**
@@ -422,5 +522,14 @@ public class OrmTable {
      */
     public Set<Class<?>> getRelatedDtoClasses() {
         return relatedDtoClasses;
+    }
+
+    /**
+     * Check whether this table is a many-to-many join table.
+     *
+     * @return {@code true} if this table is a many-to-many join table; {@code false} otherwise
+     */
+    public boolean isManyToManyJoinTable() {
+        return manyToManyJoinTable;
     }
 }

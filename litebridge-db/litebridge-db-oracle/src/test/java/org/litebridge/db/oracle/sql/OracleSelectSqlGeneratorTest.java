@@ -2,16 +2,15 @@ package org.litebridge.db.oracle.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.OracleColumnIdentifierGenerator;
 import org.litebridge.db.oracle.OracleDatabaseProvider;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.mockito.Mock;
 
-import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,14 +25,16 @@ class OracleSelectSqlGeneratorTest {
 
     @BeforeEach
     void beforeEach() {
-        oracleSelectSqlGenerator = new OracleSelectSqlGenerator(typeConverter, new OracleColumnIdentifierGenerator(), ensureTableMetaData);
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final OracleMathOperationGenerator mathOperationGenerator = new OracleMathOperationGenerator(labelGenerator);
+        oracleSelectSqlGenerator = new OracleSelectSqlGenerator(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     @Test
     void appendLimitClause_withOffsetAndLimit() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.of(10), Optional.of(5));
+        final Limit limit = new Limit(10, 5);
         final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
 
         // When
@@ -47,7 +48,7 @@ class OracleSelectSqlGeneratorTest {
     void appendLimitClause_withOffsetOnly() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.empty(), Optional.of(5));
+        final Limit limit = new Limit(null, 5);
         final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
 
         // When
@@ -61,7 +62,7 @@ class OracleSelectSqlGeneratorTest {
     void appendLimitClause_withLimitOnly() {
         // Given
         final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.of(10), Optional.empty());
+        final Limit limit = new Limit(10, null);
         final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
 
         // When
@@ -69,19 +70,5 @@ class OracleSelectSqlGeneratorTest {
 
         // Then
         assertEquals("SELECT * FROM TEST_TABLE FETCH FIRST 10 ROWS ONLY", sql.toString());
-    }
-
-    @Test
-    void appendLimitClause_withoutOffsetAndLimit() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final Limit limit = new Limit(Optional.empty(), Optional.empty());
-        final StringBuilder sql = new StringBuilder("SELECT * FROM TEST_TABLE");
-
-        // When
-        oracleSelectSqlGenerator.appendLimitClause(limit, sql);
-
-        // Then
-        assertEquals("SELECT * FROM TEST_TABLE", sql.toString());
     }
 }

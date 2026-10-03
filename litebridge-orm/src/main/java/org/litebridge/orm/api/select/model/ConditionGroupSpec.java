@@ -1,18 +1,12 @@
 package org.litebridge.orm.api.select.model;
 
-import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.query.ConditionGroup;
-import org.litebridge.db.spi.query.LogicCondition;
-import org.litebridge.db.spi.query.LogicConditionGroup;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.persistence.TableMetaDataCache;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Groups conditions and condition subgroups using a logical operator.
@@ -63,12 +57,18 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
      * Adds a new condition to the group and returns its specification.
      *
      * @param logicOperator  the logic operator for the condition
+     * @param fieldOrColumn  the field or column name for the condition
      * @param expressionSpec the expression specification for the condition
+     * @param operator       the operator for the condition
+     * @param rawValue       the raw value for the condition
      * @return the newly created {@link ConditionSpec}
      */
-    public ConditionSpec newCondition(final LogicOperator logicOperator, final ExpressionSpec expressionSpec) {
-        final ConditionSpec conditionSpec = new ConditionSpec();
-        conditionSpec.setLhs(expressionSpec);
+    public ConditionSpec newCondition(final LogicOperator logicOperator,
+                                      final @Nullable String fieldOrColumn,
+                                      final @Nullable ExpressionSpec expressionSpec,
+                                      final @Nullable Operator operator,
+                                      final @Nullable Object rawValue) {
+        final ConditionSpec conditionSpec = new ConditionSpec(fieldOrColumn, expressionSpec, operator, rawValue);
         final LogicConditionSpec logicConditionSpec = new LogicConditionSpec(logicOperator, conditionSpec);
         conditions.add(logicConditionSpec);
         return conditionSpec;
@@ -84,35 +84,5 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
         final LogicConditionGroupSpec logicConditionGroupSpec = new LogicConditionGroupSpec(logicOperator);
         subgroups.add(logicConditionGroupSpec);
         return logicConditionGroupSpec;
-    }
-
-    /**
-     * Converts this specification into a {@link ConditionGroup}.
-     *
-     * @param selectExpressionMapper the mapper to use for expressions
-     * @param selectedTables         the set of tables included in the query
-     * @param bindValues             the list of bind values for the query
-     * @param tableMetaDataCache     the cache for table metadata
-     * @param typeConverter          the type converter to use
-     * @return the resulting {@link ConditionGroup}
-     */
-    public ConditionGroup toConditionGroup(final SelectExpressionMapper selectExpressionMapper,
-                                           final Set<Table> selectedTables,
-                                           final List<BindValue> bindValues,
-                                           final TableMetaDataCache tableMetaDataCache,
-                                           final TypeConverter typeConverter) {
-        final List<LogicCondition> resolvedConditions = conditions.stream()
-                .map(spec -> new LogicCondition(spec.logicOperator(),
-                        spec.conditionSpec().toCondition(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter)))
-                .toList();
-
-        final List<LogicConditionGroup> subConditionGroups = subgroups.stream()
-                .map(subgroup -> {
-                    final ConditionGroup conditionGroup = subgroup.conditionGroupSpec().toConditionGroup(selectExpressionMapper, selectedTables, bindValues, tableMetaDataCache, typeConverter);
-                    return new LogicConditionGroup(subgroup.logicOperator(), conditionGroup);
-                })
-                .toList();
-
-        return new ConditionGroup(resolvedConditions, subConditionGroups);
     }
 }

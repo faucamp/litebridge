@@ -1,23 +1,20 @@
 package org.litebridge.db.spi.impl.sql;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.CollectionUtils;
-import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.alias.AliasedQuery;
+import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.SelectExpression;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Limit;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.sql.PreparedSql;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 /**
@@ -28,24 +25,24 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
     /**
      * Creates a new {@code SelectSqlGenerator}.
      *
-     * @param typeConverter             the type converter
-     * @param columnIdentifierGenerator the column identifier generator
-     * @param ensureTableMetaData       a function to ensure table metadata
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator the math operation generator
+     * @param ensureTableMetaData    a function to ensure table metadata
      */
-    public SelectSqlGenerator(final TypeConverter typeConverter,
-                              final ColumnIdentifierGenerator columnIdentifierGenerator,
+    public SelectSqlGenerator(final LabelGenerator labelGenerator,
+                              final MathOperationGenerator mathOperationGenerator,
                               final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
-        super(typeConverter, columnIdentifierGenerator, ensureTableMetaData);
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData);
     }
 
     /**
-     * Prepares a SQL SELECT statement along with its bind values for execution.
+     * Generates a SQL {@code SELECT} query string from the provided logical {@link Select} object.
      *
-     * @param select             the select operation
+     * @param select             the {@link Select} object representing the logical select query
      * @param connectionProvider the connection provider
-     * @return a {@link PreparedSql} object containing the generated SQL query string and the list of bind values
+     * @return the generated SQL query string
      */
-    public String prepareSql(final Select select, final ConnectionProvider connectionProvider) {
+    public String generateSql(final Select select, final ConnectionProvider connectionProvider) {
         final StringBuilder sql = new StringBuilder("SELECT ");
 
         boolean first = true;
@@ -63,17 +60,12 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                 sql.append(identifier);
             }
         } else {
-            // Empty select clause; return all expressions
+            // Empty select clause; return all columns
             sql.append("*");
         }
 
         // From table
-        sql.append(" FROM ");
-        appendTable(sql, select.table());
-
-        if (select.table().alias() != null) {
-            sql.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(select.table().alias())));
-        }
+        appendFromClause(sql, select, connectionProvider);
 
         // Joins
         if (!CollectionUtils.isEmpty(select.joins())) {
@@ -83,13 +75,13 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
         }
 
         // Where
-        if (select.where().isPresent()) {
+        if (select.where() != null) {
             sql.append(" WHERE ");
-            appendConditionsAndSubgroups(sql, select.where().get(), select, connectionProvider);
+            appendConditionsAndSubgroups(sql, select.where(), ClauseType.WHERE, select, connectionProvider);
         }
 
         // Group by
-        if (!select.groupBy().isEmpty()) {
+        if (!CollectionUtils.isEmpty(select.groupBy())) {
             sql.append(" GROUP BY ");
 
             first = true;
@@ -103,9 +95,9 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
                 sql.append(expression.toSql(select, ClauseType.GROUP_BY));
             }
 
-            if (select.having().isPresent()) {
+            if (select.having() != null) {
                 sql.append(" HAVING ");
-                appendConditionsAndSubgroups(sql, select.having().get(), select, connectionProvider);
+                appendConditionsAndSubgroups(sql, select.having(), ClauseType.HAVING, select, connectionProvider);
             }
         }
 
@@ -126,11 +118,34 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
             }
         }
 
-        select.limit().ifPresent(limit -> {
-            appendLimitClause(limit, sql);
-        });
+        if (select.limit() != null) {
+            appendLimitClause(select.limit(), sql);
+        }
 
         return sql.toString();
+    }
+
+    protected void appendFromClause(final StringBuilder sql, final Select select, final ConnectionProvider connectionProvider) {
+        if (!(select.from() instanceof SelectTarget.Void)) {
+            sql.append(" FROM ");
+            appendSelectTarget(sql, select.from(), connectionProvider);
+        }
+    }
+
+    protected void appendSelectTarget(final StringBuilder sql, final SelectTarget selectTarget, final ConnectionProvider connectionProvider) {
+        switch (selectTarget) {
+            case Table table -> appendTable(sql, table);
+            case Select subselect -> sql.append('(')
+                    .append(generateSql(subselect, connectionProvider))
+                    .append(')');
+            case AliasedQuery aliasedQuery -> sql.append('(')
+                    .append(generateSql(aliasedQuery.target(), connectionProvider))
+                    .append(')')
+                    .append(labelGenerator.createAliasAs(aliasedQuery.alias()));
+            case AliasedTable aliasedTable -> appendTable(sql, aliasedTable.target())
+                    .append(labelGenerator.createAliasAs(aliasedTable.alias()));
+            case SelectTarget.Void voidTarget -> { /* Ignore */ }
+        }
     }
 
     /**
@@ -147,22 +162,19 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * @return Prepared SQL join clause
      */
     protected String createJoin(final Join join, final Select operation, final ConnectionProvider connectionProvider) {
-        final StringBuilder sb = appendTable(new StringBuilder(" JOIN "), join.table());
-
-        if (join.table().alias() != null) {
-            sb.append(' ').append(columnIdentifierGenerator.createAliasDeclaration(Objects.requireNonNull(join.table().alias())));
-        }
+        final StringBuilder sql = new StringBuilder(" JOIN ");
+        appendSelectTarget(sql, join.target(), connectionProvider);
 
         if (join.conditions().conditions().size() == 1
                 && join.conditions().subgroups().isEmpty()
                 && join.conditions().conditions().getFirst().condition().operator() == Operator.USING) {
-            sb.append(' ');
+            sql.append(' ');
         } else {
-            sb.append(" ON ");
+            sql.append(" ON ");
         }
 
-        appendConditionsAndSubgroups(sb, join.conditions(), operation, connectionProvider);
-        return sb.toString();
+        appendConditionsAndSubgroups(sql, join.conditions(), ClauseType.JOIN, operation, connectionProvider);
+        return sql.toString();
     }
 
     /**
@@ -172,7 +184,12 @@ public class SelectSqlGenerator extends AbstractSqlGenerator {
      * @param sql   the SQL string builder
      */
     protected void appendLimitClause(final Limit limit, final StringBuilder sql) {
-        limit.limit().ifPresent(limitVal -> sql.append(" LIMIT ").append(limitVal));
-        limit.offset().ifPresent(offset -> sql.append(" OFFSET ").append(offset));
+        if (limit.limit() != null) {
+            sql.append(" LIMIT ").append(limit.limit());
+        }
+
+        if (limit.offset() != null) {
+            sql.append(" OFFSET ").append(limit.offset());
+        }
     }
 }

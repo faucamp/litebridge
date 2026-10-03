@@ -58,6 +58,7 @@ public final class SqlReservedWords {
      * @return {@code true} if the word is a reserved word, {@code false} otherwise.
      */
     public static boolean contains(final String word) {
-        return reservedWords.contains(word.toUpperCase());
+        return reservedWords.contains(word.toUpperCase())
+                || word.indexOf('(') != -1;
     }
 }

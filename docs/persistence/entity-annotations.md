@@ -126,7 +126,7 @@ scanner.
 
 ### Spring Integration
 
-In Spring applications, the `LitebridgeEntityScanner` can be used to automatically discover and register annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md#entity-and-mapping-scanning) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.
+In Spring applications, the `LitebridgeEntityScanner` can be used to automatically discover and register annotated entities. See [Spring Manual Configuration](../spring/manual-configuration.md) and [Spring Boot Starter](../spring/spring-boot-starter.md#entity-and-mapping-registration) for more details.
 
 ## Relationships
 
@@ -178,7 +178,7 @@ public class Group {
 }
 ```
 
-- `joinTable`: The name of the intermediate table.
+- `joinOrmTable`: The name of the intermediate table.
 - `joinColumn`: The column in the join table referencing the current entity (`Group`).
 - `inverseJoinColumn`: The column in the join table referencing the target entity (`Person`).
 
@@ -268,6 +268,6 @@ Applied to a collection field or method.
 
 ### `@ManyToMany`
 Applied to a collection field or method.
-- `joinTable`: The join table name.
+- `joinOrmTable`: The join table name.
 - `joinColumn`: The column in the join table referencing the current entity.
 - `inverseJoinColumn`: The column in the join table referencing the target entity.

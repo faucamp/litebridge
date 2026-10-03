@@ -12,9 +12,10 @@ public interface ColumnExpressionFactory {
     /**
      * Creates a column expression.
      *
-     * @param column Target column of the expression.
-     * @param args   Expression-specific additional arguments, if any.
+     * @param column     Target column of the expression.
+     * @param alias      Optional column alias
+     * @param tableAlias Optional table alias
      * @return A new column expression.
      */
-    ColumnExpression create(Column column, @Nullable Object... args);
+    ColumnExpression create(Column column, @Nullable String alias, @Nullable String tableAlias);
 }

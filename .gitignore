@@ -57,3 +57,4 @@ node_modules/
 .env.development
 .env.local
 *.env
+*.db

@@ -1,8 +1,5 @@
 package org.litebridge.db.spi;
 
-import org.jspecify.annotations.Nullable;
-
-import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
@@ -10,10 +7,13 @@ import java.util.StringJoiner;
  * <p>
  * It extends the functionality of the {@code Aliased} class to include the concept of table association.
  * Columns can be used to construct queries and represent database metadata.
+ *
+ * @param name  Name of the database column.
+ * @param table Table to which this column belongs.
  */
-public class Column extends Aliased {
+public record Column(String name, Table table) {
 
-    private Table table;
+    private static final Table NO_TABLE = VirtualTable.anonymous();
 
     /**
      * Construct a new {@code Column} instance associated with the specified table and column name.
@@ -22,119 +22,34 @@ public class Column extends Aliased {
      * @param name  the name of the column; must not be null
      */
     public Column(final Table table, final String name) {
-        this(table, name, null);
+        this(name, table);
     }
 
     /**
-     * Construct a new {@code Column} instance associated with the specified table, column name,
-     * and optional column alias.
+     * Construct a new {@code Column} instance without an associated {@link Table} instance.
      *
-     * @param table the table to which the column belongs; must not be null
-     * @param name  the name of the column; must not be null
-     * @param alias an optional alias for the column; may be null if not needed
+     * @param name the name of the column; must not be null
      */
-    public Column(final Table table, final String name, final @Nullable String alias) {
-        super(name, alias);
-        this.table = table;
+    public Column(final String name) {
+        this(NO_TABLE, name);
+    }
+
+    public boolean hasTable() {
+        //noinspection ConstantValue
+        return table != null && table != NO_TABLE;
     }
 
     /**
-     * Retrieve the {@code Table} instance associated with this {@code Column}.
+     * Returns the qualified name of the column ("tableName.columnName").
      *
-     * @return the {@code Table} to which this column belongs
+     * @return the qualified column name
      */
-    public Table table() {
-        return table;
-    }
-
-    /**
-     * Sets the table associated with this column.
-     *
-     * @param table the table to set
-     */
-    public void setTable(final Table table) {
-        this.table = table;
-    }
-
-    /**
-     * Assign an alias to the current {@code Column} instance and return the updated instance.
-     *
-     * @param alias the alias to set for this column; must not be null
-     * @return the updated {@code Column} instance with the specified alias
-     */
-    @Override
-    public Column as(final String alias) {
-        setAlias(alias);
-        return this;
-    }
-
-    /**
-     * Create a new {@code Column} instance for the specified table and column name.
-     * <p>
-     * This is shorthand for {@code new Column(table, column)}.
-     *
-     * @param table  the table to which the column belongs
-     * @param column the name of the column
-     * @return a new {@code Column} instance associated with the given table and column name
-     */
-    public static Column c(final Table table, final String column) {
-        return new Column(table, column);
-    }
-
-    /**
-     * Create a new {@code Column} instance associated with the specified table and column name.
-     * <p>
-     * This is shorthand for {@code new Column(new Table("", "", table), column)}.
-     *
-     * @param table  the name of the table to which the column belongs
-     * @param column the name of the column
-     * @return a new {@code Column} instance associated with the specified catalog, schema, table, and column name
-     */
-    public static Column c(final String table, final String column) {
-        return c(new Table(table, null), column);
-    }
-
-    /**
-     * Create a new {@code Column} instance associated with the specified schema, table, and column name.
-     * <p>
-     * This is shorthand for {@code new Column(new Table("", schema, table), column)}.
-     *
-     * @param schema the name of the schema to which the table belongs
-     * @param table  the name of the table to which the column belongs
-     * @param column the name of the column
-     * @return a new {@code Column} instance associated with the specified catalog, schema, table, and column name
-     */
-    public static Column c(final String schema, final String table, final String column) {
-        return c("", schema, table, column);
-    }
-
-    /**
-     * Create a new {@code Column} instance associated with the specified catalog, schema, table, and column name.
-     * <p>
-     * This is shorthand for {@code new Column(new Table(catalog, schema, table), column)}.
-     *
-     * @param catalog the name of the catalog to which the table belongs
-     * @param schema  the name of the schema to which the table belongs
-     * @param table   the name of the table to which the column belongs
-     * @param column  the name of the column
-     * @return a new {@code Column} instance associated with the specified catalog, schema, table, and column name
-     */
-    public static Column c(final String catalog, final String schema, final String table, final String column) {
-        return new Column(new Table(catalog, schema, table), column);
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof final Column column)) return false;
-        if (!super.equals(o)) return false;
-        return Objects.equals(table, column.table);
-    }
-
-    @Override
-    public boolean equalsIgnoreAlias(final Aliased aliased) {
-        if (!(aliased instanceof final Column column)) return false;
-        if (!super.equalsIgnoreAlias(column)) return false;
-        return table.equalsIgnoreAlias(column.table);
+    public String qualifiedName() {
+        if (table != NO_TABLE) {
+            return table.name() + "." + name();
+        } else {
+            return name();
+        }
     }
 
     /**
@@ -144,21 +59,16 @@ public class Column extends Aliased {
      * @param column the column to compare with
      * @return {@code true} if the column names are equal; {@code false} otherwise
      */
+    @Deprecated(forRemoval = true)
     public boolean equalsColumnOnlyIgnoreAlias(final Column column) {
-        return super.equalsIgnoreAlias(column);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), table);
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", Column.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
                 .add("table=" + table)
-                .add("name=" + name())
-                .add("alias=" + alias())
                 .toString();
     }
 }

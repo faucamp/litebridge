@@ -1,0 +1,65 @@
+package org.litebridge.orm.engine.compiler;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.ConditionGroup;
+import org.litebridge.db.spi.update.Delete;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
+import org.litebridge.orm.persistence.OrmTable;
+
+import java.util.Collections;
+import java.util.Objects;
+
+/**
+ * Compilation context for DELETE statements.
+ */
+final class DeleteCompilationContext extends AbstractCompilationContext {
+
+    private static final ConditionGroup EMPTY_CONDITION_GROUP = new ConditionGroup(Collections.emptyList());
+
+    private final Table table;
+    private @Nullable ConditionGroupSpecStack where;
+
+    DeleteCompilationContext(final DeleteNode deleteNode,
+                             final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
+
+        if (deleteNode.dtoClass() != null) {
+            final OrmTable ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(deleteNode.dtoClass());
+            this.table = ormTable.getMetaData().table();
+        } else {
+            this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(deleteNode.table()));
+        }
+    }
+
+    public ConditionGroupSpecStack ensureWhereConditionGroupStack() {
+        if (where == null) {
+            where = new ConditionGroupSpecStack();
+        }
+
+        return where;
+    }
+
+    public void addWhereCondition(final ConditionNode conditionNode) {
+        ensureWhereConditionGroupStack().current().newCondition(conditionNode.logicOperator(),
+                conditionNode.lhsColumn(),
+                conditionNode.lhsExpression(),
+                conditionNode.operator(),
+                conditionNode.rhs());
+    }
+
+    @Override
+    public Delete toOperation() {
+        final ConditionGroup whereConditionGroup;
+
+        if (where != null) {
+            whereConditionGroup = toConditionGroup(where.current(), table, EMPTY_SELECT_EXPRESSIONS);
+        } else {
+            whereConditionGroup = EMPTY_CONDITION_GROUP;
+        }
+
+        return new Delete(table, whereConditionGroup);
+    }
+}

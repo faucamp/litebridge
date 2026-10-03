@@ -7,7 +7,6 @@ import org.litebridge.example.common.QueryExample;
 import org.litebridge.example.common.SqlExample;
 import org.litebridge.example.common.mapping.CommonDtoRegistration;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +32,8 @@ public class H2Example {
     }
 
     private static void runExamples(final DataSource dataSource) {
-        // Initialise litebridgedb and register DTO-table mappings
-        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), new DefaultTransactionManager(dataSource));
+        // Initialise Litebridge and register DTO-table mappings
+        final Litebridge litebridge = Litebridge.withDatabase(new H2DatabaseProvider(), dataSource).build();
         CommonDtoRegistration.registerPersonAndAccount(litebridge);
 
         new PersistenceExample(litebridge).run();

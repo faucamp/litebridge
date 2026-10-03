@@ -1,12 +1,14 @@
 package org.litebridge.orm.expression;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 /**
  * Query expression encapsulating a target column.
  */
-public sealed interface ColumnExpressionSpec extends ExpressionSpec permits DelegateExpressionSpec, SelectColumnSpec {
+public sealed interface ColumnExpressionSpec
+        extends Aliasable, ExpressionSpec
+        permits AbstractColumnExpressionSpec, DelegateExpressionSpec {
 
     /**
      * Gets the target column of this expression.
@@ -21,4 +23,8 @@ public sealed interface ColumnExpressionSpec extends ExpressionSpec permits Dele
      * @param column the target column to set.
      */
     void setColumn(Column column);
+
+    @Nullable String getTableAlias();
+
+    void setTableAlias(@Nullable String tableAlias);
 }

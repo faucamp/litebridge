@@ -1,10 +1,8 @@
 package org.litebridge.orm.api.condition;
 
-import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.dto.condition.CbDtoConditionClause;
-import org.litebridge.orm.api.select.model.ConditionGroupSpec;
-import org.litebridge.orm.api.select.model.ConditionSpec;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -15,17 +13,23 @@ import org.litebridge.orm.expression.ExpressionSpec;
 public abstract class AbstractConditionClauseStart<DTO> {
 
     /**
-     * The engine used to process the FROM clause.
+     * The current query node.
      */
-    protected final FromClauseEngine fromClauseEngine;
+    protected final @Nullable QueryNode node;
+    /**
+     * The Litebridge context.
+     */
+    protected final LitebridgeContext litebridgeContext;
 
     /**
      * Constructs a new {@code AbstractConditionClauseStart}.
      *
-     * @param fromClauseEngine   The FROM clause engine.
+     * @param node              the current query node
+     * @param litebridgeContext the Litebridge context
      */
-    public AbstractConditionClauseStart(final FromClauseEngine fromClauseEngine) {
-        this.fromClauseEngine = fromClauseEngine;
+    public AbstractConditionClauseStart(@Nullable final QueryNode node, final LitebridgeContext litebridgeContext) {
+        this.node = node;
+        this.litebridgeContext = litebridgeContext;
     }
 
     /**

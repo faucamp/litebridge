@@ -1,0 +1,43 @@
+package org.litebridge.orm.api.update;
+
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.UpdateNode;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+/**
+ * DTO-mode entry step for constructing an {@code UPDATE} statement.
+ *
+ * @param <DTO> the mapped DTO/entity type
+ */
+public final class DtoUpdateStart<DTO> extends UpdateStepBase
+
+        implements UpdateStart<DTO,
+        DtoUpdateStep<DTO>,
+        DtoUpdateSetStep<DTO>,
+        DtoUpdateWhereConditionClause<DTO>,
+        DtoUpdateWhereConditionClauseTerminal<DTO>> {
+
+    private final UpdateNode updateNode;
+
+    /**
+     * Creates a new {@code DtoUpdateStart} instance.
+     *
+     * @param dtoClass          the mapped DTO/entity class to update
+     * @param litebridgeContext the Litebridge context
+     */
+    public DtoUpdateStart(final Class<DTO> dtoClass,
+                          final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
+        this.updateNode = new UpdateNode(dtoClass, null);
+    }
+
+    @Override
+    public DtoUpdateSetStep<DTO> set(final String field) {
+        return new DtoUpdateSetStep<>(field, updateNode, node -> new DtoUpdateStep<>(node, litebridgeContext));
+    }
+
+    @Override
+    public DtoUpdateSetStep<DTO> set(final ExpressionSpec expression) {
+        return new DtoUpdateSetStep<>(expression, updateNode, node -> new DtoUpdateStep<>(node, litebridgeContext));
+    }
+}

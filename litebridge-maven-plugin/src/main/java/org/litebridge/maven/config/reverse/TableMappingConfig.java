@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * Table mapping customisation configuration for reverse engineering.
  */
+@SuppressWarnings("NotNullFieldNotInitialized")
 public class TableMappingConfig {
 
     /**

@@ -11,13 +11,13 @@ Expressions are primarily constructed using static methods from the `org.litebri
 
 Selectors are the basic building blocks for choosing which fields or columns to retrieve.
 
-| Method                                        | Description                                                         |
-|:----------------------------------------------|:--------------------------------------------------------------------|
-| `f(String)`, `field(String)`                  | Selects a field from the primary DTO being queried. Used in DTO-level queries. |
-| `f(Class, String)`, `field(Class, String)`    | Selects a field from a specific DTO type. Useful in multi-table joins.         |
-| `Metamodel.field`                             | Selects a field via its [Metamodel](metamodels.md). This is the recommended type-safe way to select fields. |
-| `c(String)`, `column(String)`                 | Selects a database column by name.                                             |
-| `ca(...)`, `columnAlias(...)`                 | Selects a database column and assigns it an alias.                  |
+| Method                                     | Description                                                                                                 |
+|:-------------------------------------------|:------------------------------------------------------------------------------------------------------------|
+| `f(String)`, `field(String)`               | Selects a field from the primary DTO being queried. Used in DTO-level queries.                              |
+| `f(Class, String)`, `field(Class, String)` | Selects a field from a specific DTO type. Useful in multi-table joins.                                      |
+| `Metamodel.field`                          | Selects a field via its [Metamodel](metamodels.md). This is the recommended type-safe way to select fields. |
+| `c(String)`, `column(String)`              | Selects a database column by name.                                                                          |
+| `ca(...)`, `columnAlias(...)`              | Selects a database column and assigns it an alias.                                                          |
 
 ### DTO Field Examples
 
@@ -127,7 +127,7 @@ This is useful when the database driver returns a type that does not perfectly m
 | Method                                 | Description                                                                                                               |
 |:---------------------------------------|:--------------------------------------------------------------------------------------------------------------------------|
 | `convert(ExpressionSpec, Class<T>)`    | Converts the result of the nested expression to the target class.                                                         |
-| `convert(Class<T>, ExpressionSpec...)` | Converts/projects the final result of all expressions to a target type.                                                    |
+| `convert(Class<T>, ExpressionSpec...)` | Converts/projects the final result of all expressions to a target type.                                                   |
 | `row(...)`                             | Returns a generic `Row` result set for multi-expression selections. Shorthand for `convert(Row.class, ExpressionSpec...)` |
 
 ### Examples

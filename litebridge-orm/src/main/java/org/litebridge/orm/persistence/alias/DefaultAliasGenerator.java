@@ -1,12 +1,12 @@
 package org.litebridge.orm.persistence.alias;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
-import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.engine.compiler.ContextStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,64 +24,94 @@ import java.util.Objects;
  */
 public final class DefaultAliasGenerator implements AliasGenerator {
 
-    private final AliasTransformer aliasTransformer;
     /**
      * Map of name -> alias base string
      */
     private final Map<String, String> aliasMap = new HashMap<>();
+
     /**
      * Map of alias base string -> count (number of times used)
      */
     private final Map<String, Integer> aliasCount = new HashMap<>();
 
-
-    public void clear() {
-        aliasMap.clear();
-        aliasCount.clear();
-    }
     /**
-     * Constructs a {@code DefaultAliasGenerator} with the specified {@link AliasTransformer}.
-     *
-     * @param aliasTransformer the transformer to use for creating base aliases
+     * Scope stack (used for subqueries)
      */
-    public DefaultAliasGenerator(final AliasTransformer aliasTransformer) {
-        this.aliasTransformer = aliasTransformer;
+    private final ScopeContextStack scope = new ScopeContextStack();
+
+    @Override
+    public @Nullable String columnAlias(final Column column) {
+        return scope.current().columnAliasMap.get(column);
     }
 
     @Override
-    public Table aliasTable(final OrmTable ormTable) {
-        final TableMetaData tableMetaData = ormTable.getMetaData();
-        final String tableAlias = newAlias(tableMetaData.name());
-        return new Table(tableMetaData.catalog(), tableMetaData.schema(), tableMetaData.name(), tableAlias);
+    public @Nullable String tableAlias(final Table table) {
+        return scope.current().tableAliasMap.get(table);
     }
 
     @Override
-    public Column aliasColumn(final Table ormTable, final ColumnMetaData columnMetaData) {
-        // Create a new alias
-        final String columnAlias = ormTable.alias() + newAlias(columnMetaData.name());
-        return new Column(ormTable, columnMetaData.name(), columnAlias);
+    public String newTableAlias(final Table table) {
+        final String tableAlias = newAlias(table.name());
+        scope.current().tableAliasMap.put(table, tableAlias);
+        return tableAlias;
     }
 
     @Override
-    public Column aliasColumn(final Table ormTable, final Column column) {
-        if (column.alias() != null) {
-            return column;
-        }
-
-        // Create a new alias
-        final String columnAlias = ormTable.alias() + newAlias(column.name());
-        column.setAlias(columnAlias);
-        return column;
+    public String newColumnAlias(final Column column) {
+        final String columnAlias = newAlias(column.qualifiedName());
+        scope.current().columnAliasMap.put(column, columnAlias);
+        return columnAlias;
     }
 
-    private String newAlias(final String name) {
-        final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, v -> aliasTransformer.transformAlias(StringUtils.abbreviate(v))));
+    @Override
+    public void setColumnAlias(final Column column, final String alias) {
+        scope.current().columnAliasMap.put(column, alias);
+        aliasMap.put(alias, alias);
+    }
+
+    @Override
+    public String newAlias(final String name) {
+        final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, StringUtils::abbreviate));
         final int count = aliasCount.compute(alias, (k, v) -> v == null ? 0 : v + 1);
 
         if (count >= 1) {
             return alias + count;
         } else {
             return alias;
+        }
+    }
+
+    @Override
+    public void pushScope() {
+        scope.push(LogicOperator.NOOP);
+    }
+
+    @Override
+    public void popScope() {
+        scope.pop();
+    }
+
+    /**
+     * @param tableAliasMap  Tables that have been aliased for the current operation; the value is the alias.
+     * @param columnAliasMap Columns that have been aliased for the current operation; the value is the alias.
+     */
+    private record Scope(Map<Table, String> tableAliasMap, Map<Column, String> columnAliasMap) {
+
+        public Scope() {
+            this(new HashMap<>(), new HashMap<>());
+        }
+    }
+
+    private static class ScopeContextStack extends ContextStack<Scope> {
+
+        @Override
+        protected Scope newRootInstance() {
+            return new Scope();
+        }
+
+        @Override
+        protected Scope newSubInstance(final LogicOperator logicOperator) {
+            return new Scope();
         }
     }
 }

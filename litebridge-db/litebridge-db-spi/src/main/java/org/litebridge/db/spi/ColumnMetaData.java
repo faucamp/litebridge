@@ -18,15 +18,12 @@ import java.util.StringJoiner;
  * Instances of this class are immutable except for specific mutable fields like auto-increment, sequence,
  * and joinColumn, which can be modified after initialization.
  */
-public final class ColumnMetaData implements MappedFieldTarget {
+public final class ColumnMetaData extends ColumnType implements MappedFieldTarget {
 
-    private final Table table;
-    private final String name;
+    private final Column column;
     private final boolean nullable;
-    private final int dataType;
-    private final int size;
     private final int decimalDigits;
-    private boolean autoIncrement;
+    private final boolean autoIncrement;
     private final @Nullable String defaultValue;
     private @Nullable ColumnValueGenerator generator;
     private @Nullable String joinColumn;
@@ -55,11 +52,9 @@ public final class ColumnMetaData implements MappedFieldTarget {
                           final boolean autoIncrement,
                           @Nullable final String defaultValue,
                           final @Nullable ColumnValueGenerator generator) {
-        this.table = table;
-        this.name = name;
+        super(dataType, size);
+        this.column = new Column(table, name);
         this.nullable = nullable;
-        this.dataType = dataType;
-        this.size = size;
         this.decimalDigits = decimalDigits;
         this.autoIncrement = autoIncrement;
         this.defaultValue = defaultValue;
@@ -101,7 +96,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @return the column name
      */
     public String name() {
-        return name;
+        return column.name();
     }
 
     /**
@@ -110,7 +105,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @return the table
      */
     public Table table() {
-        return table;
+        return column.table();
     }
 
     /**
@@ -147,7 +142,7 @@ public final class ColumnMetaData implements MappedFieldTarget {
      * @return the size of the column.
      */
     public int getSize() {
-        return size;
+        return Objects.requireNonNullElse(size, 0);
     }
 
     /**
@@ -166,16 +161,6 @@ public final class ColumnMetaData implements MappedFieldTarget {
      */
     public boolean isAutoIncrement() {
         return autoIncrement;
-    }
-
-    /**
-     * Sets whether this column is an auto-increment column.
-     *
-     * @param autoIncrement {@code true} if auto-increment; {@code false} otherwise
-     */
-    @Deprecated
-    public void setAutoIncrement(final boolean autoIncrement) {
-        this.autoIncrement = autoIncrement;
     }
 
     /**
@@ -263,25 +248,32 @@ public final class ColumnMetaData implements MappedFieldTarget {
      *
      * @return a new {@link Column} instance
      */
-    public Column toColumn() {
-        return new Column(new Table(table), name);
+    public Column column() {
+        return column;
     }
 
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof final ColumnMetaData that)) return false;
-        return nullable == that.nullable && dataType == that.dataType && size == that.size && decimalDigits == that.decimalDigits && autoIncrement == that.autoIncrement && Objects.equals(table, that.table) && Objects.equals(name, that.name) && Objects.equals(generator, that.generator) && Objects.equals(joinColumn, that.joinColumn);
+        return Objects.equals(column, that.column)
+                && nullable == that.nullable
+                && dataType == that.dataType
+                && Objects.equals(size, that.size)
+                && decimalDigits == that.decimalDigits
+                && autoIncrement == that.autoIncrement
+                && Objects.equals(generator, that.generator)
+                && Objects.equals(joinColumn, that.joinColumn);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(table, name, nullable, dataType, size, decimalDigits, autoIncrement, generator, joinColumn);
+        return Objects.hash(column, nullable, dataType, size, decimalDigits, autoIncrement, generator, joinColumn);
     }
 
     @Override
     public String toString() {
         return new StringJoiner(", ", ColumnMetaData.class.getSimpleName() + "[", "]")
-                .add("name='" + name + "'")
+                .add("column='" + column + "'")
                 .toString();
     }
 }

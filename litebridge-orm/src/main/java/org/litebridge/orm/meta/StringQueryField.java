@@ -1,7 +1,10 @@
 package org.litebridge.orm.meta;
 
+import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.ProtoNestableTOExpr;
+
+import java.util.Objects;
 
 /**
  * Metamodel field for querying string-based columns in a type-safe manner.
@@ -14,8 +17,18 @@ import org.litebridge.orm.expression.ProtoNestableTOExpr;
  */
 public final class StringQueryField extends QueryField {
 
+    /**
+     * Creates a new {@code StringQueryField} instance for the specified DTO class and field name.
+     *
+     * @param dtoClass  the DTO class
+     * @param fieldName the field name
+     */
     public StringQueryField(final Class<?> dtoClass, final String fieldName) {
         super(dtoClass, fieldName);
+    }
+
+    private StringQueryField(final StringQueryField other, final ExpressionSpec pendingExpressionSpec) {
+        super(other, pendingExpressionSpec);
     }
 
     /**
@@ -23,8 +36,9 @@ public final class StringQueryField extends QueryField {
      *
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
-    public ProtoNestableTOExpr<String> upper() {
-        return Fn.upper(Fn.f(dtoClass, field));
+    public StringQueryField upper() {
+        return new StringQueryField(this,
+                Fn.upper(Objects.requireNonNullElseGet(pendingExpressionSpec, () -> Fn.f(dtoClass, field))));
     }
 
     /**
@@ -32,7 +46,8 @@ public final class StringQueryField extends QueryField {
      *
      * @return a {@link ProtoNestableTOExpr} expression instance to select a specific column.
      */
-    public ProtoNestableTOExpr<String> lower() {
-        return Fn.lower(Fn.f(dtoClass, field));
+    public StringQueryField lower() {
+        return new StringQueryField(this,
+                Fn.lower(Objects.requireNonNullElseGet(pendingExpressionSpec, () -> Fn.f(dtoClass, field))));
     }
 }

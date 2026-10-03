@@ -5,11 +5,12 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
@@ -18,6 +19,13 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Common implementation class for condition clauses providing relational and comparison operators.
+ *
+ * @param <DTO>  the mapped DTO/entity type or row type
+ * @param <SELF> the self-referencing condition clause type
+ * @param <CCT>  the condition clause terminal type
+ */
 public class ConditionClauseImpl<DTO,
         SELF extends ConditionClause<DTO, SELF, CCT>,
         CCT extends ConditionClauseTerminal<DTO, SELF, CCT>>
@@ -25,21 +33,34 @@ public class ConditionClauseImpl<DTO,
         implements ConditionClause<DTO, SELF, CCT> {
 
     private final LitebridgeContext litebridgeContext;
-    private final Function<QueryNode, CCT> terminalRecreator;
+    private final Function<QueryNode, CCT> terminalCreator;
     private final LogicOperator logicOperator;
-    private final ExpressionSpec lhs;
+    private final @Nullable String lhsColumn;
+    private final @Nullable ExpressionSpec lhsExpression;
     private final @Nullable QueryNode node;
 
-    public ConditionClauseImpl(final LitebridgeContext litebridgeContext,
-                               final LogicOperator logicOperator,
-                               final ExpressionSpec lhs,
-                               final @Nullable QueryNode node,
-                               final Function<QueryNode, CCT> terminalRecreator) {
+    /**
+     * Creates a new {@code ConditionClauseImpl} instance.
+     *
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR/NOOP)
+     * @param lhsColumn         the left-hand side column or field name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the current query node
+     * @param terminalCreator   the function to create the terminal clause
+     */
+    protected ConditionClauseImpl(final LitebridgeContext litebridgeContext,
+                                  final LogicOperator logicOperator,
+                                  final @Nullable String lhsColumn,
+                                  final @Nullable ExpressionSpec lhsExpression,
+                                  final @Nullable QueryNode node,
+                                  final Function<QueryNode, CCT> terminalCreator) {
         this.litebridgeContext = litebridgeContext;
         this.logicOperator = logicOperator;
-        this.lhs = lhs;
+        this.lhsColumn = lhsColumn;
+        this.lhsExpression = lhsExpression;
         this.node = node;
-        this.terminalRecreator = terminalRecreator;
+        this.terminalCreator = terminalCreator;
     }
 
     /**
@@ -53,8 +74,8 @@ public class ConditionClauseImpl<DTO,
     }
 
     public CCT using(final String column) {
-        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, null, Operator.USING, column);
-        return terminalRecreator.apply(newNode);
+        final QueryNode newNode = new ConditionNode(node, LogicOperator.NOOP, column, null, Operator.USING, column);
+        return terminalCreator.apply(newNode);
     }
 
     /**
@@ -63,7 +84,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT eq(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT eq(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.EQ, subselect, true);
     }
 
@@ -83,7 +104,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT neq(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT neq(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NEQ, subselect, true);
     }
 
@@ -103,7 +124,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT lt(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT lt(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LT, subselect, false);
     }
 
@@ -123,7 +144,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT lte(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT lte(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LTE, subselect, false);
     }
 
@@ -143,7 +164,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT gt(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT gt(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GT, subselect, false);
     }
 
@@ -163,7 +184,7 @@ public class ConditionClauseImpl<DTO,
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public CCT gte(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT gte(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
@@ -193,7 +214,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     @Override
-    public CCT in(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT in(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.IN, subselect, false);
     }
 
@@ -212,7 +233,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     @Override
-    public CCT notIn(final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect) {
+    public CCT notIn(final @Nullable Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NOT_IN, subselect, false);
     }
 
@@ -239,9 +260,8 @@ public class ConditionClauseImpl<DTO,
     }
 
     private CCT subselectImpl(final Operator operator,
-                              final @Nullable Function<SelectEngine, SelectTerminal<?>> subselect,
+                              final @Nullable Function<SelectApi, SelectTerminal<?>> subselect,
                               final boolean allowNull) {
-        // To support the current overloading and null parameters
         if (subselect == null) {
             if (allowNull) {
                 return condition(operator, null);
@@ -250,8 +270,9 @@ public class ConditionClauseImpl<DTO,
             throw new NullPointerException("Operator " + operator + " requires a non-NULL RHS value");
         }
 
-        final SelectTerminal<?> selectTerminal = subselect.apply(new SelectEngine(litebridgeContext.fromClauseEngine()));
-        return condition(operator, selectTerminal);
+        final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode subselectNode = SelectTerminalInspector.getNode(selectTerminal);
+        return condition(operator, subselectNode);
     }
 
     /**
@@ -276,8 +297,8 @@ public class ConditionClauseImpl<DTO,
             translatedOperator = operator;
         }
 
-        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhs, translatedOperator, value);
+        final QueryNode conditionNode = new ConditionNode(node, logicOperator, lhsColumn, lhsExpression, translatedOperator, value);
 
-        return terminalRecreator.apply(conditionNode);
+        return terminalCreator.apply(conditionNode);
     }
 }

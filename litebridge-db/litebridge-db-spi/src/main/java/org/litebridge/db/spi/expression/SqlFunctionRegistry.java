@@ -12,22 +12,25 @@ public record SqlFunctionRegistry(
         Select select,
         Aggregate aggregate,
         Scalar scalar,
+        DelegateExpressionFactory cast,
         Date date) {
 
 
     /**
      * Expressions dealing with selecting columns, sub-selects, literals, and references to selected columns.
      *
-     * @param column    Factory to create column expression to specify a column to be selected.
-     * @param subselect Factory to create sub-select expressions.
-     * @param literal   Factory to create literal expressions.
-     * @param reference Factory to create selected column reference expressions.
+     * @param column         Factory to create column expression to specify a column to be selected.
+     * @param subselect      Factory to create sub-select expressions.
+     * @param literal        Factory to create literal expressions.
+     * @param bindValue      Factory to create bind value expressions.
+     * @param aliasReference Factory to create references to aliased columns in the query.
      */
     public record Select(
             ColumnExpressionFactory column,
             SubselectExpressionFactory subselect,
             LiteralExpressionFactory literal,
-            SelectReferenceExpressionFactory reference) {
+            BindValueExpressionFactory bindValue,
+            AliasReferenceExpressionFactory aliasReference) {
     }
 
     /**

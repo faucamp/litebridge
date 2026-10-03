@@ -1,24 +1,27 @@
 package org.litebridge.orm.persistence;
 
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.WhereNode;
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhereNode;
 
 /**
  * Abstract base class for building SQL statements.
  */
 public abstract sealed class AbstractConditionalStatementBuilder extends AbstractStatementBuilder
-        permits UpdateBuilder, DeleteBuilder {
+        permits DeleteBuilder, UpdateBuilder {
 
     /**
-     * Constructs a new {@code AbstractConditionalStatementBuilder}.
+     * Creates a new {@code AbstractConditionalStatementBuilder} instance.
      *
-     * @param ormTable          the ORM table
-     * @param litebridgeContext the ORM context
+     * @param ormTable          The ORM table for the target DTO.
+     * @param contextDtoClass   The parent/context DTO class.
+     * @param litebridgeContext Litebridge context.
      */
     public AbstractConditionalStatementBuilder(final OrmTable ormTable,
+                                               final @Nullable Class<?> contextDtoClass,
                                                final LitebridgeContext litebridgeContext) {
-        super(ormTable, litebridgeContext);
+        super(ormTable, contextDtoClass, litebridgeContext);
     }
 
     /**

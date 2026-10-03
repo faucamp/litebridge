@@ -29,26 +29,4 @@ class IntentExpressionTest {
         assertEquals("", spec.column());
         assertEquals(target.getClass(), spec.type());
     }
-
-    @Test
-    void testConvertIntent() {
-        // Given
-        final ExpressionSpec target = mockTarget();
-        final Class<Integer> returnType = Integer.class;
-
-        // When
-        final ConvertIntent<Integer> intent = new ConvertIntent<>(new ExpressionSpec[]{target}, returnType);
-
-        // Then
-        assertEquals(1, intent.target().length);
-        assertEquals(target, intent.target()[0]);
-        assertEquals(returnType, intent.returnType());
-
-        // When
-        final ExpressionSpecArray spec = intent.toExpression();
-
-        // Then
-        assertEquals(1, spec.expressions().length);
-        assertEquals(target, spec.expressions()[0]);
-    }
 }

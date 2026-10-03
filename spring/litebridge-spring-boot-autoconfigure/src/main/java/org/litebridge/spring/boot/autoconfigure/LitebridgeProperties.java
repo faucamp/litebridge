@@ -24,7 +24,7 @@ public class LitebridgeProperties {
     /**
      * One or more base packages to scan for Litebridge entities or type-safe DTO mappings.
      */
-    private @Nullable String[] scanBasePackage;
+    private String @Nullable [] scanBasePackage;
 
     /**
      * Defines how related DTOs should be handled when not included as a JOIN in a query.
@@ -87,7 +87,7 @@ public class LitebridgeProperties {
      *
      * @return base packages to scan
      */
-    public @Nullable String[] getScanBasePackage() {
+    public String @Nullable [] getScanBasePackage() {
         return scanBasePackage;
     }
 
@@ -96,7 +96,7 @@ public class LitebridgeProperties {
      *
      * @param scanBasePackage base packages to scan
      */
-    public void setScanBasePackage(final @Nullable String[] scanBasePackage) {
+    public void setScanBasePackage(final String @Nullable [] scanBasePackage) {
         this.scanBasePackage = scanBasePackage;
     }
 

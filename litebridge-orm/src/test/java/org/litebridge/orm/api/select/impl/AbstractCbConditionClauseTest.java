@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select.impl;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
@@ -9,10 +10,10 @@ import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClause;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
@@ -26,20 +27,23 @@ import static org.mockito.Mockito.mock;
 
 class AbstractCbConditionClauseTest {
 
-    private FromClauseEngine fromClauseEngine;
     private AbstractCbConditionClause<Object> clause;
-    private QueryNode[] capturedNode = new QueryNode[1];
+    private final QueryNode[] capturedNode = new QueryNode[1];
 
     @BeforeEach
+    @SuppressWarnings("ConstantConditions")
     void setUp() {
-        fromClauseEngine = mock(FromClauseEngine.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         ExpressionSpec lhs = new SelectColumnSpec(new Column(new Table("TEST"), "COL"));
-        clause = new AbstractCbConditionClause<Object>(fromClauseEngine, LogicOperator.NOOP, lhs, null, n -> {
-            capturedNode[0] = n;
-            return null;
-        }) {
+        clause = new AbstractCbConditionClause<Object>(
+                litebridgeContext,
+                LogicOperator.NOOP,
+                null,
+                lhs,
+                null) {
+
             @Override
-            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(@NonNull QueryNode conditionNode) {
                 capturedNode[0] = conditionNode;
                 return null;
             }

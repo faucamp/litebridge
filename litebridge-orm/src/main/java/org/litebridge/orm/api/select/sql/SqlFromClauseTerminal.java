@@ -1,0 +1,95 @@
+package org.litebridge.orm.api.select.sql;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.query.Join;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.JoinNode;
+import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.engine.ast.WhereNode;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+/**
+ * SQL-mode terminal clause for FROM clauses.
+ */
+public final class SqlFromClauseTerminal extends AbstractFromClauseTerminal<Row,
+        SqlJoinClause,
+        SqlJoinConditionClause,
+        SqlJoinConditionClauseTerminal,
+        SqlWhereConditionClause,
+        SqlWhereConditionClauseTerminal,
+        SqlGroupByClauseTerminal,
+        SqlHavingConditionClause,
+        SqlHavingConditionClauseTerminal,
+        SqlOrderByClause,
+        SqlOrderByClauseChain>
+
+        implements SqlJoinClauseTerminal {
+
+    private final SelectNode selectNode;
+
+    /**
+     * Creates a new {@code SqlFromClauseTerminal} instance.
+     *
+     * @param selectNode           the SELECT query node
+     * @param selectEngineTerminal the terminal select engine
+     * @param litebridgeContext    the Litebridge context
+     */
+    public SqlFromClauseTerminal(final SelectNode selectNode,
+                                 final SelectEngineTerminal selectEngineTerminal,
+                                 final LitebridgeContext litebridgeContext) {
+        super(selectNode, selectEngineTerminal, litebridgeContext);
+        this.selectNode = selectNode;
+    }
+
+    @Override
+    public SqlJoinClause join(final String table) {
+        return new SqlJoinClause(litebridgeContext, conditionNode -> {
+            final JoinNode joinNode = new JoinNode(node, Join.JoinType.INNER, null, null, table, null, null);
+            joinNode.setCondition(conditionNode);
+            return new SqlJoinConditionClauseTerminal(selectNode, joinNode, selectEngineTerminal, litebridgeContext);
+        });
+    }
+
+    @Override
+    public SqlWhereConditionClause where(final String column) {
+        return whereImpl(LogicOperator.NOOP, column, null);
+    }
+
+    @Override
+    public SqlWhereConditionClause where(final ExpressionSpec expression) {
+        return whereImpl(LogicOperator.NOOP, null, expression);
+    }
+
+    @Override
+    public SqlGroupByClauseTerminal groupBy(final String... columns) {
+        return new SqlGroupByClauseTerminal(selectNode, columns, node(), selectEngineTerminal, litebridgeContext);
+    }
+
+    @Override
+    public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
+        return new SqlGroupByClauseTerminal(selectNode, expressions, node(), selectEngineTerminal, litebridgeContext);
+    }
+
+    @Override
+    public SqlOrderByClause orderBy(final String... columns) {
+        return new SqlOrderByClause(columns, node(), selectEngineTerminal, litebridgeContext);
+    }
+
+    @Override
+    public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
+        return new SqlOrderByClause(expressions, node(), selectEngineTerminal, litebridgeContext);
+    }
+
+    private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
+        return new SqlWhereConditionClause(litebridgeContext,
+                logicOperator,
+                column,
+                expression,
+                null,
+                conditionNode -> new SqlWhereConditionClauseTerminal(selectNode, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+    }
+}

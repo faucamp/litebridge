@@ -1,0 +1,51 @@
+package org.litebridge.orm.e2e.singletable_multidto;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.TestTemplate;
+import org.litebridge.orm.e2e.AbstractE2eTest;
+import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridge.orm.e2e.singletable_multidto.dto.SingleTableNestedParent;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+
+class SingleTableMultiDtoE2eTest extends AbstractE2eTest {
+
+    @TestTemplate
+    @DisplayName("Nested DTOs mapped to a single table")
+    void nestedDtos_singleTable(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Set up database-specific column names
+        final String columnNestedDto = tableMapper.qualifyName("NESTED_DTO");
+        final String columnParentValue1 = tableMapper.transformColumnName("PARENT_VALUE1");
+        final String columnChildValue1 = tableMapper.transformColumnName("CHILD_VALUE1");
+        final String columnGrandchildValue1 = tableMapper.transformColumnName("GRANDCHILD_VALUE1");
+
+        // Register DTO-table mapping
+        litebridge.register(SingleTableNestedParent.class, rc -> rc.mapToTable(columnNestedDto)
+                .with(spec -> spec.mapField("parentValue1").toColumn(columnParentValue1))
+                .with(spec -> spec.mapField("nestedChild.childValue1").toColumn(columnChildValue1))
+                .with(spec -> spec.mapField("nestedChild.grandChild.grandChildValue1").toColumn(columnGrandchildValue1)));
+
+        // Create DTOs and enable change tracking
+        final SingleTableNestedParent singleTableNestedParent = litebridge.track(new SingleTableNestedParent());
+        singleTableNestedParent.setParentValue1("testParentValue1");
+        singleTableNestedParent.setNestedChild(new SingleTableNestedParent.NestedChild());
+        singleTableNestedParent.getNestedChild().setChildValue1("testChildValue1");
+        singleTableNestedParent.getNestedChild().setGrandChild(new SingleTableNestedParent.NestedChild.NestedGrandChild());
+        singleTableNestedParent.getNestedChild().getGrandChild().setGrandChildValue1("testGrandChildValue1");
+
+        // Save DTO and load it back
+        litebridge.save(singleTableNestedParent);
+        final SingleTableNestedParent result = litebridge.select(SingleTableNestedParent.class)
+                .oneOrThrow();
+
+        // Then
+        assertNotSame(result, singleTableNestedParent);
+        assertEquals("testParentValue1", result.getParentValue1());
+        assertNotNull(result.getNestedChild());
+        assertEquals("testChildValue1", result.getNestedChild().getChildValue1());
+        assertNotNull(result.getNestedChild().getGrandChild());
+        assertEquals("testGrandChildValue1", result.getNestedChild().getGrandChild().getGrandChildValue1());
+    }
+}

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.update.UpdateResult;
 
 import java.util.Collections;
 
@@ -21,17 +22,13 @@ class PlaceHolderDatabaseProviderTest {
         Table table = new Table("TEST");
 
         assertThrows(UnsupportedOperationException.class, () -> provider.tableMetaData(table, connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.insert(preparedSql, connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.update(preparedSql, connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.select(preparedSql, connectionProvider));
+        assertThrows(UnsupportedOperationException.class, () -> provider.executeUpdate(preparedSql, UpdateResult.class, connectionProvider));
+        assertThrows(UnsupportedOperationException.class, () -> provider.executeQuery(preparedSql, connectionProvider));
         assertThrows(UnsupportedOperationException.class, () -> provider.toSql(mock(org.litebridge.db.spi.query.Select.class), connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.delete(preparedSql, connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.nativeSqlQuery("SELECT 1", Collections.emptyList(), connectionProvider));
-        assertThrows(UnsupportedOperationException.class, () -> provider.nativeSqlUpdate("UPDATE TEST SET COL = 1", Collections.emptyList(), connectionProvider));
-        assertThrows(UnsupportedOperationException.class, provider::getTypeConverter);
-        assertThrows(UnsupportedOperationException.class, provider::getSqlFunctionRegistry);
-        assertThrows(UnsupportedOperationException.class, provider::getAliasTransformer);
+        assertThrows(UnsupportedOperationException.class, provider::typeConverter);
+        assertThrows(UnsupportedOperationException.class, provider::sqlFunctionRegistry);
+        assertThrows(UnsupportedOperationException.class, provider::aliasTransformer);
 
-        assertNotNull(provider.getSequenceColumnValueGenerator("SEQ"));
+        assertNotNull(provider.sequenceColumnValueGenerator("SEQ"));
     }
 }

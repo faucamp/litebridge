@@ -1,0 +1,39 @@
+package org.litebridge.db.spi;
+
+import org.jspecify.annotations.Nullable;
+
+/**
+ * A column within a row of a database query result.
+ * <p>
+ * The column is defined by a label, a nullablel value, and an optional
+ * reference to a {@link Column} instance. The label acts as the unique
+ * identifier or alias for the column in the row, while the value holds
+ * the data associated with the column at runtime.
+ * <p>
+ * This class is immutable and designed to be part of the {@link Row} class,
+ * which represents a collection of such columns within a single row of
+ * query results.
+ *
+ * @param label      The label or alias that identifies this column in a row; must not be null.
+ * @param value      The optional value associated with this column; may be null if no value is present.
+ * @param column     An optional reference to the {@link Column} defining this column's metadata; can be null.
+ * @param tableAlias The optional table alias associated with this column; can be null.
+ */
+public record RowColumn(String label, @Nullable Object value, @Nullable Column column, @Nullable String tableAlias) {
+
+    public RowColumn(final String label, final @Nullable Object value, final @Nullable Column column) {
+        this(label, value, column, null);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{").append(label);
+
+        if (column != null && !column.name().equals(label)) {
+            sb.append('/').append(column.name());
+        }
+
+        sb.append(": ").append(value).append('}');
+        return sb.toString();
+    }
+}

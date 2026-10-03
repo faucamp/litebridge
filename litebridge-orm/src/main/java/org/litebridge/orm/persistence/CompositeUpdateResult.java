@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.commons.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -39,16 +38,6 @@ public final class CompositeUpdateResult {
      */
     public List<DtoUpdateResult> results() {
         return dtoUpdateResults;
-    }
-
-    /**
-     * Returns the primary {@link DtoUpdateResult} from the composite update result.
-     * The primary result is the first non-null result in the list of {@link DtoUpdateResult} objects.
-     *
-     * @return The primary {@link DtoUpdateResult} or null if no non-null result is found.
-     */
-    public DtoUpdateResult primary() {
-        return CollectionUtils.requireNonEmpty(dtoUpdateResults, "Update results not set").getFirst();
     }
 
     /**

@@ -3,16 +3,18 @@ package org.litebridge.orm.persistence;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.update.Update;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.QueryCompiler;
+import org.litebridge.orm.engine.ast.WhereNode;
+import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;
@@ -26,7 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UpdateBuilderTest {
@@ -34,8 +38,8 @@ class UpdateBuilderTest {
     @Test
     void where() {
         // Given
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable(), mock(LitebridgeContext.class));
-        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, Operator.IS_NULL, null);
+        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable(), null, mock(LitebridgeContext.class));
+        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, null, Operator.IS_NULL, null);
 
         // When
         final AbstractStatementBuilder result = updateBuilder.where(conditionNode);
@@ -51,10 +55,11 @@ class UpdateBuilderTest {
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
-        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable, litebridgeContext);
+        when(queryCompiler.compile(any(QueryNode.class))).thenReturn(mock(PreparedOperation.class));
+        final UpdateBuilder updateBuilder = new UpdateBuilder(ormTable, null, litebridgeContext);
 
         final Column column = new Column(new Table("TEST_TABLE"), "TEST_COLUMN");
-        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, new SelectColumnSpec(column), Operator.EQ, "test");
+        final ConditionNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, new SelectColumnSpec(column), Operator.EQ, "test");
 
         // When
         updateBuilder.where(conditionNode);
@@ -64,9 +69,7 @@ class UpdateBuilderTest {
 
         // Then
         assertNotNull(result);
-        assertInstanceOf(Update.class, result.operation());
-        final Update update = (Update) result.operation();
-        assertEquals(ormTable.getMetaData().toTable(), update.table());
+        verify(queryCompiler).compile(any(WhereNode.class));
     }
 
     private static OrmTable ormTable() {

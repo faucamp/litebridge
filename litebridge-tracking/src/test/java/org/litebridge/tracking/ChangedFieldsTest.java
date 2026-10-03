@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChangedFieldsTest {
 
-    private ChangedFields changedFields = new ChangedFields(Map.of("testName", new ChangedField("testName", "testValue")));
+    private final ChangedFields changedFields = new ChangedFields(Map.of("testName", new ChangedField("testName", "testValue")));
 
     @Test
     void get() {

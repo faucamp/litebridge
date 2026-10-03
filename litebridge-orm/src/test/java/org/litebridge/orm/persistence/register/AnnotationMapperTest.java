@@ -122,7 +122,7 @@ class AnnotationMapperTest {
         // Given
         final DatabaseProvider dbProvider = Mockito.mock(DatabaseProvider.class);
         final SequenceColumnValueGenerator seqGen = Mockito.mock(SequenceColumnValueGenerator.class);
-        when(dbProvider.getSequenceColumnValueGenerator(anyString())).thenReturn(seqGen);
+        when(dbProvider.sequenceColumnValueGenerator(anyString())).thenReturn(seqGen);
 
         // When
         DtoTableSpec result = AnnotationMapper.createDtoTableSpec(SpecialColumnEntity.class, dbProvider, MethodHandles.lookup());
@@ -292,7 +292,7 @@ class AnnotationMapperTest {
 
     public static class CustomGenerator implements ColumnValueGenerator {
         @Override
-        public Object generate(org.litebridge.db.spi.ColumnMetaData columnMetaData) {
+        public String generate() {
             return "generated";
         }
     }
@@ -309,7 +309,7 @@ class AnnotationMapperTest {
         }
 
         @Override
-        public Object generate(org.litebridge.db.spi.ColumnMetaData columnMetaData) {
+        public String generate() {
             return null;
         }
     }

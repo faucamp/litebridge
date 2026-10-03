@@ -6,19 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to define a many-to-many relationship between two entities
- * in the context of Object-Relational Mapping (ORM). This relationship represents
- * an association where multiple records in one entity are related to multiple records
- * in another entity, typically via a join table.
+ * Specifies a many-to-many relationship between two entities.
  * <p>
- * The relationship is configured through three attributes:
- * - `joinTable`: Specifies the name of the intermediate table used to link the two entities.
- * - `joinColumn`: Defines the column in the join table that references the primary key of the current entity.
- * - `inverseJoinColumn`: Specifies the column in the join table that references the primary key of the associated entity.
- * <p>
- * This annotation is applied to fields or methods within entity classes to declare
- * and configure the many-to-many mapping. Litebridge uses this metadata to manage
- * the relationships and generate the necessary SQL for data persistence.
+ * This annotation is applied to fields or properties within entity classes to
+ * configure the many-to-many mapping.
  */
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

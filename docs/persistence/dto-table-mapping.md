@@ -220,7 +220,7 @@ litebridge.register(Server.class, rc -> rc.mapToTable("LB.SERVER")
             .with(spec -> spec.mapField("message").toColumn("MESSAGE")))));
 ```
 
-When querying a shared DTO, the context (the parent DTO) must be specified to disambiguate which table to use:
+When querying a shared DTO directly, the context (the parent DTO) must be specified to disambiguate which table to use:
 
 ```java
 Status status = litebridge.select(Status.class, Server.class)
@@ -266,8 +266,7 @@ DtoTableSpec personSpec = new DtoTableSpec(Person.class, new TableSpec("LB.PERSO
 DtoTableSpec accountSpec = new DtoTableSpec(Account.class, new TableSpec("LB.ACCOUNT", personMap));
 
 // Register the table mappings
-litebridge.register(MethodHandles.lookup(), personSpec);
-litebridge.register(MethodHandles.lookup(), accountSpec); 
+litebridge.register(personSpec, accountSpec);
 ```
 
 The above snippet makes use of staticly-imported shorthand mapping methods `f()`, `p()`, and `c()`,

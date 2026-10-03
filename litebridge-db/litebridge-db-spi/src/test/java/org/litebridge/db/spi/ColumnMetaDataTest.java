@@ -70,10 +70,6 @@ class ColumnMetaDataTest {
         final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
         final ColumnMetaData column = new ColumnMetaData(table, "id", false, 1);
 
-        assertFalse(column.isAutoIncrement());
-        column.setAutoIncrement(true);
-        assertTrue(column.isAutoIncrement());
-
         assertNull(column.getGenerator());
         final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
         column.setGenerator(generator);
@@ -204,12 +200,11 @@ class ColumnMetaDataTest {
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "id", false, 1, 20, 0, true, null, mock(ColumnValueGenerator.class));
 
         // When
-        final Column result = columnMetaData.toColumn();
+        final Column result = columnMetaData.column();
 
         // Then
         assertEquals(columnMetaData.table(), result.table());
         assertEquals(columnMetaData.name(), result.name());
-        assertNull(result.alias());
     }
 
     @Test

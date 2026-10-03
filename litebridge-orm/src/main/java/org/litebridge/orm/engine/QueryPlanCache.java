@@ -6,8 +6,7 @@ import org.litebridge.db.spi.query.TypeConversionMetaData;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +43,8 @@ public final class QueryPlanCache {
     /**
      * Stores an execution plan in the cache.
      *
-     * @param node the AST terminating node
+     * @param node            the AST terminating node
+     * @param cachedOperation the execution plan to cache
      */
     public void put(final QueryNode node, final CachedOperation cachedOperation) {
         cache.put(node.hashCode(), cachedOperation);
@@ -53,7 +53,8 @@ public final class QueryPlanCache {
     /**
      * Stores an execution plan in the cache.
      *
-     * @param nodeHash the AST terminating node hash
+     * @param nodeHash        the AST terminating node hash
+     * @param cachedOperation the execution plan to cache
      */
     public void put(final int nodeHash, final CachedOperation cachedOperation) {
         cache.put(nodeHash, cachedOperation);
@@ -75,12 +76,29 @@ public final class QueryPlanCache {
         cache.clear();
     }
 
+    public Map<Integer, CachedOperation> cache() {
+        return cache;
+    }
+
+    /**
+     * Cached operation representing compiled SQL, bind value types, and conversion metadata.
+     *
+     * @param sql                    the generated SQL string
+     * @param bindValueSqlTypes      the SQL types for bind values
+     * @param typeConversionMetaData type conversion metadata, or {@code null}
+     * @param updateMetaData         update metadata, or {@code null}
+     */
     public record CachedOperation(String sql,
                                   List<Integer> bindValueSqlTypes,
                                   @Nullable TypeConversionMetaData typeConversionMetaData,
-                                  @Nullable UpdateMetaData updateMetaData,
-                                  @Nullable SelectSpec selectSpec) {
+                                  @Nullable UpdateMetaData updateMetaData) {
 
+        /**
+         * Creates a {@link PreparedSql} instance populated with the supplied runtime bind values.
+         *
+         * @param rawBindValues the runtime bind values matching the required SQL types
+         * @return the prepared SQL object ready for execution
+         */
         public PreparedSql preparedSql(final List<@Nullable Object> rawBindValues) {
             if (rawBindValues.size() != bindValueSqlTypes.size()) {
                 throw new IllegalArgumentException("Number of bind values does not match number of bind value SQL types; expected " + bindValueSqlTypes().size() + ", got " + rawBindValues.size());

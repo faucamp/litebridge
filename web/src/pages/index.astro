@@ -2,11 +2,79 @@
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.astro';
 import Features from '../components/Features.astro';
-import CodeExamples from '../components/CodeExamples.astro';
+import CodeExample, { type CodeSnippet } from '../components/CodeExample.astro';
+
+const examples: CodeSnippet[] = [
+  {
+    id: 'mapping',
+    title: 'Registration',
+    description: 'Map DTOs to database tables using a fluent, programmatic API.',
+    code: `// Register an annotated Litebridge entity
+litebridge.register(PersonEntity.class);
+
+// Or register any DTO programmatically
+litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
+    .with(spec -> spec.mapField("id").toColumn("PERSON_ID")
+        .generateUsingSequence("LB.PERSON_SEQ"))
+    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+    .with(spec -> spec.mapField("accounts")
+        .oneToMany(c -> c.mappedByField("owner"))));
+`,
+  },
+  {
+    id: 'persisting',
+    title: 'Persisting',
+    description: 'Save, insert, or update DTOs with automatic change tracking.',
+    code: `Person person = new Person();
+person.setName("Alice");
+person.setSurname("Smith");
+
+// Executes an INSERT statement
+litebridge.save(person);
+
+person.setName("Bob");
+
+// Executes an UPDATE statement for modified "name" field
+litebridge.save(person);`,
+  },
+  {
+    id: 'querying',
+    title: 'Querying',
+    description: 'Retrieve data using a familiar, SQL-like fluent builder.',
+    code: `import static org.example.PersonMeta.*;
+
+// Use metamodels for type-safe queries
+Optional<Person> alice = litebridge.select(Person.class)
+        .where(name).eq("Alice")
+        .and(surname).eq("Smith")
+        .orderBy(id).asc()
+        .first();
+
+// ...or simply via strings
+litebridge.select(Person.class)
+        .where("name").isNull()
+        .stream()
+        .forEach(p -> logger.info("Found: {}", p));`,
+  },
+];
 ---
 
 <Layout title="Litebridge - Fast, lightweight ORM for Java 21+">
 	<Hero />
 	<Features />
-	<CodeExamples />
+	<section id="examples" class="py-24 bg-white dark:bg-dark-bg">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="mb-16 text-center">
+				<h2 class="text-base font-semibold uppercase tracking-wider text-accent">Code Examples</h2>
+				<p class="mt-2 text-3xl font-extrabold tracking-tight text-primary dark:text-white sm:text-4xl">
+					SQL-Like, Minimal Magic
+				</p>
+				<p class="mx-auto mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400">
+					Litebridge treats SQL as a first-class citizen while keeping your Java code clean.
+				</p>
+			</div>
+
+			<CodeExample examples={examples} layout="sidebar" class="reveal" />
+		</div>
+	</section>
 </Layout>

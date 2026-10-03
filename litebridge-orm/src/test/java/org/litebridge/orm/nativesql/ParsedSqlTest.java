@@ -13,13 +13,11 @@ class ParsedSqlTest {
         // Given
         final String sql = "SELECT * FROM TABLE WHERE COL = ?";
         final List<String> params = List.of("param1");
-        final ParsedSql parsedSql = new ParsedSql(sql, params);
+        final ParsedSql parsedSql = new ParsedSql(sql, 1, params);
 
         // Then
         assertEquals(sql, parsedSql.sql());
-        assertEquals(params, parsedSql.bindParameterNames());
-        assertEquals(new ParsedSql(sql, params), parsedSql);
-        assertEquals(new ParsedSql(sql, params).hashCode(), parsedSql.hashCode());
-        assertEquals("ParsedSql[sql=" + sql + ", bindParameterNames=" + params + "]", parsedSql.toString());
+        assertEquals(1, parsedSql.bindValueCount());
+        assertEquals(params, parsedSql.bindValueNames());
     }
 }

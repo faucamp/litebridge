@@ -26,7 +26,6 @@ class DtoTableSpecBuilderTest {
         // Then
         assertNotNull(spec);
         assertEquals(TestDto.class, spec.dtoClass());
-        assertEquals("TEST_TABLE", spec.tableSpec().name());
         assertEquals(1, spec.tableSpec().fieldColumnMap().size());
         assertEquals(1, spec.dtoInterfaces().size());
         assertEquals(TestInterface.class, spec.dtoInterfaces().get(0));

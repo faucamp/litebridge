@@ -10,7 +10,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -119,7 +118,7 @@ public class LitebridgeTransactionManager extends DataSourceTransactionManager i
     }
 
     @Override
-    public ManagedConnection connection() throws SQLException {
+    public ManagedConnection connection() {
         final DataSource dataSource = getDataSource();
         final Connection connection = DataSourceUtils.getConnection(dataSource);
 

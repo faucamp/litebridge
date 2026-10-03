@@ -139,7 +139,7 @@ public final class DefaultTransactionManager implements TransactionManager {
             throw new TransactionException("Commit failed", ex);
         }
 
-        executeCompletionCallbacks(state.getCommitCallbacks(), "Rollback callback failed");
+        executeCompletionCallbacks(state.getCommitCallbacks());
     }
 
     @Override
@@ -212,21 +212,21 @@ public final class DefaultTransactionManager implements TransactionManager {
             throw new TransactionException("Rollback failed", ex);
         }
 
-        executeCompletionCallbacks(state.getRollbackCallbacks(), "Rollback callback failed");
+        executeCompletionCallbacks(state.getRollbackCallbacks());
     }
 
     private static boolean isTransactionActive(final @Nullable TransactionState state) {
         return state != null && !state.autoCommit;
     }
 
-    private static void executeCompletionCallbacks(final List<Runnable> callbacks, final String errorStr) {
+    private static void executeCompletionCallbacks(final List<Runnable> callbacks) {
         if (!callbacks.isEmpty()) {
             LOGGER.trace("Executing transaction completion callbacks");
 
             try {
                 callbacks.forEach(Runnable::run);
             } catch (Exception ex) {
-                throw new TransactionException(errorStr, ex);
+                throw new TransactionException("Rollback callback failed", ex);
             }
 
             LOGGER.trace("Transaction completion callbacks done");
@@ -296,7 +296,7 @@ public final class DefaultTransactionManager implements TransactionManager {
          */
         private @Nullable List<Runnable> rollbackCallbacks;
 
-        TransactionState(final Connection connection, final boolean autoCommit) throws SQLException {
+        TransactionState(final Connection connection, final boolean autoCommit) {
             this.connection = connection;
             this.managedConnection = new ManagedConnection(connection);
             this.autoCommit = autoCommit;

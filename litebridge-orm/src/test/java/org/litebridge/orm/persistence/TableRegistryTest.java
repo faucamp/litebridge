@@ -11,7 +11,6 @@ import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -65,7 +64,7 @@ class TableRegistryTest {
         tableRegistry.addTable(TestDto.class, ormTable);
 
         // When
-        final OrmTable result = tableRegistry.getTableOrThrow(TestDto.class);
+        final OrmTable result = tableRegistry.getOrmTableOrThrow(TestDto.class);
 
         // Then
         assertSame(ormTable, result);
@@ -77,7 +76,7 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When/Then
-        assertThrows(NullPointerException.class, () -> tableRegistry.getTableOrThrow(TestDto.class));
+        assertThrows(NullPointerException.class, () -> tableRegistry.getOrmTableOrThrow(TestDto.class));
     }
 
     @Test
@@ -90,11 +89,10 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContext(TestDto.class, ContextDto.class);
 
         // Then
-        assertTrue(result.isPresent());
-        assertSame(nestedTable, result.get());
+        assertSame(nestedTable, result);
     }
 
     @Test
@@ -105,10 +103,10 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContext(TestDto.class, ContextDto.class);
 
         // Then
-        assertTrue(result.isEmpty());
+        assertNull(result);
     }
 
     @Test
@@ -117,10 +115,10 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final Optional<OrmTable> result = tableRegistry.getTableInContext(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContext(TestDto.class, ContextDto.class);
 
         // Then
-        assertTrue(result.isEmpty());
+        assertNull(result);
     }
 
     @Test
@@ -133,7 +131,7 @@ class TableRegistryTest {
         tableRegistry.addTable(ContextDto.class, contextTable);
 
         // When
-        final OrmTable result = tableRegistry.getTableInContextOrThrow(TestDto.class, ContextDto.class);
+        final OrmTable result = tableRegistry.getOrmTableInContextOrThrow(TestDto.class, ContextDto.class);
 
         // Then
         assertSame(nestedTable, result);
@@ -154,29 +152,19 @@ class TableRegistryTest {
     }
 
     @Test
-    void getTable_schemaAndTable() {
+    void getTable_string_unqualified() {
         // Given
         final TableRegistry tableRegistry = new TableRegistry();
         final OrmTable ormTable = ormTable(TestDto.class, "public", "test_table");
         tableRegistry.addTable(TestDto.class, ormTable);
 
         // When
-        final OrmTable result = tableRegistry.getOrmTable("public", "test_table");
+        final OrmTable result = tableRegistry.getOrmTable("test_table");
+        final OrmTable resultCaseInsensitive = tableRegistry.getOrmTable("TEST_TABLE");
 
         // Then
         assertSame(ormTable, result);
-    }
-
-    @Test
-    void getTable_schemaAndTable_notFound() {
-        // Given
-        final TableRegistry tableRegistry = new TableRegistry();
-
-        // When
-        final OrmTable result = tableRegistry.getOrmTable("public", "test_table");
-
-        // Then
-        assertNull(result);
+        assertSame(ormTable, resultCaseInsensitive);
     }
 
     @Test
@@ -194,13 +182,29 @@ class TableRegistryTest {
     }
 
     @Test
+    void getTable_table_unqualified() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final OrmTable ormTable = ormTable(TestDto.class, "public", "test_table");
+        tableRegistry.addTable(TestDto.class, ormTable);
+
+        // When
+        final OrmTable result = tableRegistry.getOrmTable(new Table(null, null, "test_table"));
+        final OrmTable resultCaseInsensitive = tableRegistry.getOrmTable(new Table(null, null, "TEST_TABLE"));
+
+        // Then
+        assertSame(ormTable, result);
+        assertSame(ormTable, resultCaseInsensitive);
+    }
+
+    @Test
     void containsTable() {
         // Given
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(TestDto.class, ormTable(TestDto.class, "public", "test_table"));
 
         // When
-        final boolean result = tableRegistry.containsTable(TestDto.class);
+        final boolean result = tableRegistry.containsOrmTable(TestDto.class);
 
         // Then
         assertTrue(result);
@@ -212,28 +216,10 @@ class TableRegistryTest {
         final TableRegistry tableRegistry = new TableRegistry();
 
         // When
-        final boolean result = tableRegistry.containsTable(TestDto.class);
+        final boolean result = tableRegistry.containsOrmTable(TestDto.class);
 
         // Then
         assertFalse(result);
-    }
-
-    @Test
-    void tableStream() {
-        // Given
-        final TableRegistry tableRegistry = new TableRegistry();
-        final OrmTable firstTable = ormTable(TestDto.class, "public", "test_table");
-        final OrmTable secondTable = ormTable(AnotherTestDto.class, "other", "another_test_table");
-        tableRegistry.addTable(TestDto.class, firstTable);
-        tableRegistry.addTable(AnotherTestDto.class, secondTable);
-
-        // When
-        final List<OrmTable> result = tableRegistry.tableStream().toList();
-
-        // Then
-        assertEquals(2, result.size());
-        assertTrue(result.contains(firstTable));
-        assertTrue(result.contains(secondTable));
     }
 
     @Test

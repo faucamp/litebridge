@@ -3,7 +3,7 @@ package org.litebridge.example.common;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.example.common.dto.Account;
 import org.litebridge.example.common.dto.Person;
-import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,7 @@ public class QueryExample extends AbstractExample {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(QueryExample.class);
 
-    public QueryExample(final Litebridge litebridge) {
+    public QueryExample(final LitebridgeCore litebridge) {
         super(litebridge);
     }
 

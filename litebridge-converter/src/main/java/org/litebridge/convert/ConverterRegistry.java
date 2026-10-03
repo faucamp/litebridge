@@ -9,6 +9,7 @@ import org.litebridge.convert.converter.SqlConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.JDBCType;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -33,33 +34,69 @@ final class ConverterRegistry {
      * @param converter the converter to register
      */
     public void register(final Converter<?> converter) {
-        if (classConverterMap.containsKey(converter.type())) {
-            LOGGER.warn("Overriding existing converter for type '{}': {}", converter.type(), classConverterMap.get(converter.type()));
+        registerConverter(converter);
+        registerPrimitiveConverter(converter);
+        registerSqlConverter(converter);
+    }
+
+    private void registerConverter(final Converter<?> converter) {
+        final Converter<?> existingConverter = classConverterMap.get(converter.type());
+
+        if (existingConverter != null) {
+            if (existingConverter.priority() < converter.priority()) {
+                LOGGER.trace("Not overriding converter for {} from: {} to: {}; existing has priority", converter.type(), existingConverter.getClass().getSimpleName(), converter.getClass().getSimpleName());
+                return;
+            }
+
+            LOGGER.debug("Overriding converter for {} from: {} to: {}", converter.type(), existingConverter.getClass().getSimpleName(), converter.getClass().getSimpleName());
         }
 
-        LOGGER.debug("Registering converter for type '{}': {}", converter.type(), converter);
+        LOGGER.trace("Registering converter for type '{}': {}", converter.type(), converter);
         classConverterMap.put(converter.type(), converter);
+    }
+
+    private void registerPrimitiveConverter(final Converter<?> converter) {
         final Class<?> primitiveType = converter.primitiveType();
 
-        if (primitiveType != null) {
-            if (classConverterMap.containsKey(primitiveType)) {
-                LOGGER.warn("Overriding existing converter for primitive type '{}': {}", converter.type(), classConverterMap.get(primitiveType));
-            }
-
-            LOGGER.debug("Registering converter for primitive type '{}': {}", primitiveType, converter);
-            classConverterMap.put(primitiveType, converter);
+        if (primitiveType == null) {
+            return;
         }
 
-        if (converter instanceof SqlConverter<?> sqlConverter) {
-            for (final int sqlType : sqlConverter.sqlTypes()) {
-                LOGGER.debug("Registering converter for SQL type '{}': {}", sqlType, converter);
+        final Converter<?> existingConverter = classConverterMap.get(primitiveType);
 
-                if (sqlDataTypeConverterMap.containsKey(sqlType)) {
-                    LOGGER.warn("Overriding existing converter for SQL type '{}': {}", converter.type(), sqlDataTypeConverterMap.get(sqlType));
+        if (existingConverter != null) {
+            if (existingConverter.priority() < converter.priority()) {
+                LOGGER.trace("Not overriding converter for primitive type {} from: {} to: {}; existing has priority", primitiveType, existingConverter.getClass().getSimpleName(), converter.getClass().getSimpleName());
+                return;
+            }
+
+            LOGGER.debug("Overriding converter for primitive type {} from: {} to: {}", primitiveType, existingConverter.getClass().getSimpleName(), converter.getClass().getSimpleName());
+        }
+
+        LOGGER.trace("Registering converter for primitive type '{}': {}", primitiveType, converter);
+        classConverterMap.put(primitiveType, converter);
+    }
+
+    private void registerSqlConverter(final Converter<?> converter) {
+        if (!(converter instanceof SqlConverter<?> sqlConverter)) {
+            return;
+        }
+
+        for (final int sqlType : sqlConverter.sqlTypes()) {
+
+            final Converter<?> existingConverter = sqlDataTypeConverterMap.get(sqlType);
+
+            if (existingConverter != null) {
+                if (existingConverter.priority() < converter.priority()) {
+                    LOGGER.trace("Not overriding SQL converter for SQL type {} / {} from {} to {}; existing has priority", JDBCType.valueOf(sqlType), converter.type(), sqlDataTypeConverterMap.get(sqlType).getClass().getSimpleName(), converter.getClass().getSimpleName());
+                    return;
                 }
 
-                sqlDataTypeConverterMap.put(sqlType, sqlConverter);
+                LOGGER.debug("Overriding SQL converter for SQL type {} / {} from {} to {}", JDBCType.valueOf(sqlType), converter.type(), sqlDataTypeConverterMap.get(sqlType).getClass().getSimpleName(), converter.getClass().getSimpleName());
             }
+
+            LOGGER.trace("Registering converter for SQL type '{}': {}", sqlType, converter);
+            sqlDataTypeConverterMap.put(sqlType, sqlConverter);
         }
     }
 
