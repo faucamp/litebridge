@@ -8,7 +8,7 @@ import org.litebridge.orm.expression.select.ValuesSpec;
 
 import java.util.Objects;
 
-abstract sealed class MergeStepBase permits MergeAndStep, MergeOnStep {
+abstract sealed class MergeStepBase permits MergeOnStep {
 
     /**
      * The root merge node containing target table information
