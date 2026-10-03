@@ -31,14 +31,12 @@ public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClaus
 
     @Override
     protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final String column) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, column, null, node,
-                conditionNode -> new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext));
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, column, null, node);
     }
 
     @Override
     protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, null, expression, node,
-                conditionNode -> new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext));
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, null, expression, node);
     }
 
     @Override

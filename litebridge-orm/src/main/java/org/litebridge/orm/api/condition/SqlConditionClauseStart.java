@@ -48,14 +48,12 @@ public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
 
     @Override
     public CbSqlConditionClause where(final String column) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, LogicOperator.NOOP, column, null, node,
-                conditionNode -> new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext));
+        return new CbSqlConditionClause(selectNode, litebridgeContext, LogicOperator.NOOP, column, null, node);
     }
 
 
     @Override
     public AbstractCbConditionClause<Row> where(final ExpressionSpec expression) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, LogicOperator.NOOP, null, expression, node,
-                conditionNode -> new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext));
+        return new CbSqlConditionClause(selectNode, litebridgeContext, LogicOperator.NOOP, null, expression, node);
     }
 }

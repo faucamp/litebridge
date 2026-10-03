@@ -6,8 +6,6 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
-import java.util.function.Function;
-
 /**
  * Implementation of a condition clause for DTO-based queries.
  *
@@ -29,9 +27,8 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
                                 final LogicOperator logicOperator,
                                 final @Nullable String lhsColumn,
                                 final @Nullable ExpressionSpec lhsExpression,
-                                final @Nullable QueryNode node,
-                                final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
-        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalCreator);
+                                final @Nullable QueryNode node) {
+        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node);
     }
 
     @Override

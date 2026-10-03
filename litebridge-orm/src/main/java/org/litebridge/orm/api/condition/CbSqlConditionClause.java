@@ -8,8 +8,6 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
-import java.util.function.Function;
-
 /**
  * Implementation of a condition clause for SQL-based queries.
  */
@@ -33,9 +31,8 @@ public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
                                 final LogicOperator logicOperator,
                                 final @Nullable String lhsColumn,
                                 final @Nullable ExpressionSpec lhsExpression,
-                                final @Nullable QueryNode node,
-                                final Function<QueryNode, AbstractCbConditionClauseTerminal<Row>> terminalCreator) {
-        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalCreator);
+                                final @Nullable QueryNode node) {
+        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node);
         this.selectNode = selectNode;
     }
 

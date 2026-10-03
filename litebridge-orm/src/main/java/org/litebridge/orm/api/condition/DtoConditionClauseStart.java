@@ -39,7 +39,6 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
                 LogicOperator.NOOP,
                 field,
                 expression,
-                node,
-                node -> new CbDtoConditionClauseTerminal<>(node, litebridgeContext));
+                node);
     }
 }

@@ -44,14 +44,12 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param lhsColumn         the left-hand side column name
      * @param lhsExpression     the left-hand side expression
      * @param node              the previous node in the chain
-     * @param terminalCreator   the function to create the terminal clause
      */
     public AbstractCbConditionClause(final LitebridgeContext litebridgeContext,
                                      final LogicOperator logicOperator,
                                      final @Nullable String lhsColumn,
                                      final @Nullable ExpressionSpec lhsExpression,
-                                     final @Nullable QueryNode node,
-                                     final Function<QueryNode, AbstractCbConditionClauseTerminal<DTO>> terminalCreator) {
+                                     final @Nullable QueryNode node) {
         this.logicOperator = logicOperator;
         this.lhsColumn = lhsColumn;
         this.lhsExpression = lhsExpression;

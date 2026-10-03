@@ -40,11 +40,8 @@ class AbstractCbConditionClauseTest {
                 LogicOperator.NOOP,
                 null,
                 lhs,
-                null,
-                n -> {
-                    capturedNode[0] = n;
-                    return null;
-                }) {
+                null) {
+
             @Override
             protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(@NonNull QueryNode conditionNode) {
                 capturedNode[0] = conditionNode;
