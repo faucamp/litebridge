@@ -2,9 +2,13 @@ package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
+import org.litebridge.orm.api.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.UsingNode;
@@ -88,7 +92,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      */
     @Override
     public MergeOnConditionClauseTerminal<DTO, MUS, MIS> and(final QueryConditionBuilder<DTO> query) {
-        return null;
+        return onImpl(LogicOperator.AND, query);
     }
 
     /**
@@ -121,7 +125,17 @@ public final class MergeOnConditionClauseTerminal<DTO,
      */
     @Override
     public MergeOnConditionClauseTerminal<DTO, MUS, MIS> or(final QueryConditionBuilder<DTO> query) {
-        return null;
+        return onImpl(LogicOperator.OR, query);
+    }
+
+    @Override
+    QueryNode node() {
+        if (usingNode == null) {
+            usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, usingQueryNode, usingValues, usingAlias, node);
+            return usingNode;
+        } else {
+            return node;
+        }
     }
 
     private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> onImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
@@ -136,13 +150,10 @@ public final class MergeOnConditionClauseTerminal<DTO,
                 });
     }
 
-    @Override
-    QueryNode node() {
-        if (usingNode == null) {
-            usingNode = new UsingNode(mergeNode, usingTable, usingDtoClass, usingQueryNode, usingValues, usingAlias, node);
-            return usingNode;
-        } else {
-            return node;
-        }
+    private MergeOnConditionClauseTerminal<DTO, MUS, MIS> onImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
+        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        node = new ConditionGroupNode(node, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal));
+        return this;
     }
 }

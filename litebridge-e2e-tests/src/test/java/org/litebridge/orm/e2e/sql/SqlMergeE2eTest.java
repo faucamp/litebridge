@@ -101,6 +101,80 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("SQL merge using table, complex ON conditions")
+    public void merge_usingTable_complexOnConditions(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Don't run test for databases that do not support MERGE INTO
+        assumeTrue(litebridge instanceof Litebridge);
+        final Litebridge litebridge = (Litebridge) this.litebridge;
+
+        final String accountTable = tableMapper.qualifyName("ACCOUNT");
+        final String personTable = tableMapper.qualifyName("PERSON");
+        final String accountId = tableMapper.transformColumnName("ACCOUNT_ID");
+        final String accountName = tableMapper.transformColumnName("ACCOUNT_NAME");
+        final String balance = tableMapper.transformColumnName("BALANCE");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        for (int j = 0; j < 10; j++) {
+            final int id = j + 1;
+            litebridge.insert(personTable, i -> i
+                    .into(firstName, surname, age)
+                    .values("Name" + id, "Surname" + id, id));
+        }
+
+        for (int j = 0; j < 9; j++) {
+            final int id = j + 1;
+            litebridge.insert(accountTable, i -> i
+                    .into(accountId, accountName, balance, personId)
+                    .values(id, "Account" + id, BigInteger.valueOf(id), id));
+        }
+
+        // Merge on condition with chained nested subconditions
+        {
+            final UpdateResult updateResult = litebridge.mergeInto(accountTable, m -> m
+                    .using(personTable)
+                    .on(Fn.c(accountTable, accountId)).eq(Fn.c(personTable, personId))
+                    .and(q -> q
+                            .where(accountId).lte(99)
+                            .or(accountId).gte(101))
+                    .whenMatched(u -> u
+                            .update(account -> account
+                                    .set(balance).to(500)
+                                    .where(accountId).lt(5)))
+                    .whenNotMatched(i -> i
+                            .insert(accountId, accountName, balance, personId)
+                            .values(123L, "Default Account", 0, 1L)));
+
+            assertEquals(5, updateResult.rowsAffected());
+
+            final int count = litebridge.select(Fn.convert(Fn.count(), int.class)).from(Account.class).oneOrThrow();
+            assertEquals(10, count);
+        }
+
+        // Merge on nested subconditions
+        {
+            final UpdateResult updateResult = litebridge.mergeInto(accountTable, m -> m
+                    .using(personTable)
+                    .on(q -> q
+                            .where(Fn.c(accountTable, accountId)).eq(Fn.c(personTable, personId))
+                            .or(q2 -> q2
+                                    .where(Fn.c(accountTable, accountId)).eq(Fn.c(personTable, personId))
+                                    .and(q3 -> q3
+                                            .where(accountId).lte(99)
+                                            .or(accountId).gte(101))))
+                    .whenMatched(u -> u
+                            .update(account -> account
+                                    .set(balance).to(500)
+                                    .where(accountId).lt(5))));
+
+            assertEquals(4, updateResult.rowsAffected());
+        }
+    }
+
+    @TestTemplate
     @DisplayName("SQL merge using query")
     public void merge_usingQuery(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Don't run test for databases that do not support MERGE INTO
@@ -139,6 +213,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
                         .select(accountId)
                         .from(accountTable))
                 .on(accountId).eq(Fn.c(personTable, personId))
+                .and(accountId).gte(1)
                 .whenMatched(u -> u
                         .update(person -> person
                                 .set(firstName).to("Updated Name")

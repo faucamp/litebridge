@@ -79,17 +79,37 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     }
 
     protected final ConditionGroup toConditionGroup(final ConditionGroupSpec conditionGroupSpec, final List<SelectTarget> selectTargets, final SelectExpressions selectExpressions) {
-        final List<LogicCondition> resolvedConditions = conditionGroupSpec.conditions().stream()
-                .map(spec -> new LogicCondition(spec.logicOperator(),
-                        toCondition(spec.conditionSpec(), selectTargets, selectExpressions)))
-                .toList();
+        final boolean hasConditions = !conditionGroupSpec.conditions().isEmpty();
+        final List<LogicCondition> resolvedConditions;
 
-        final List<LogicConditionGroup> subConditionGroups = conditionGroupSpec.subgroups().stream()
-                .map(subgroup -> {
-                    final ConditionGroup conditionGroup = toConditionGroup(subgroup.conditionGroupSpec(), selectTargets, selectExpressions);
-                    return new LogicConditionGroup(subgroup.logicOperator(), conditionGroup);
-                })
-                .toList();
+        if (hasConditions) {
+            resolvedConditions = conditionGroupSpec.conditions().stream()
+                    .map(spec -> new LogicCondition(spec.logicOperator(),
+                            toCondition(spec.conditionSpec(), selectTargets, selectExpressions)))
+                    .toList();
+        } else {
+            resolvedConditions = Collections.emptyList();
+        }
+
+        final int subGroupCount = conditionGroupSpec.subgroups().size();
+
+        if (subGroupCount == 1 && !hasConditions) {
+            // Empty group containing just a subgroup; skip the "wrapper"
+            return toConditionGroup(conditionGroupSpec.subgroups().getFirst().conditionGroupSpec(), selectTargets, selectExpressions);
+        }
+
+        final List<LogicConditionGroup> subConditionGroups;
+
+        if (subGroupCount > 0) {
+            subConditionGroups = conditionGroupSpec.subgroups().stream()
+                    .map(subgroup -> {
+                        final ConditionGroup conditionGroup = toConditionGroup(subgroup.conditionGroupSpec(), selectTargets, selectExpressions);
+                        return new LogicConditionGroup(subgroup.logicOperator(), conditionGroup);
+                    })
+                    .toList();
+        } else {
+            subConditionGroups = Collections.emptyList();
+        }
 
         return new ConditionGroup(resolvedConditions, subConditionGroups);
     }
