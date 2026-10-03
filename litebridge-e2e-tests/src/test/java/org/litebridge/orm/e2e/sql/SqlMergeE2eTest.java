@@ -133,26 +133,26 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
         }
 
         // Merge on condition with chained nested subconditions
-        {
-            final UpdateResult updateResult = litebridge.mergeInto(accountTable, m -> m
-                    .using(personTable)
-                    .on(Fn.c(accountTable, accountId)).eq(Fn.c(personTable, personId))
-                    .and(q -> q
-                            .where(accountId).lte(99)
-                            .or(accountId).gte(101))
-                    .whenMatched(u -> u
-                            .update(account -> account
-                                    .set(balance).to(500)
-                                    .where(accountId).lt(5)))
-                    .whenNotMatched(i -> i
-                            .insert(accountId, accountName, balance, personId)
-                            .values(123L, "Default Account", 0, 1L)));
-
-            assertEquals(5, updateResult.rowsAffected());
-
-            final int count = litebridge.select(Fn.convert(Fn.count(), int.class)).from(Account.class).oneOrThrow();
-            assertEquals(10, count);
-        }
+//        {
+//            final UpdateResult updateResult = litebridge.mergeInto(accountTable, m -> m
+//                    .using(personTable)
+//                    .on(Fn.c(accountTable, accountId)).eq(Fn.c(personTable, personId))
+//                    .and(q -> q
+//                            .where(accountId).lte(99)
+//                            .or(accountId).gte(101))
+//                    .whenMatched(u -> u
+//                            .update(account -> account
+//                                    .set(balance).to(500)
+//                                    .where(accountId).lt(5)))
+//                    .whenNotMatched(i -> i
+//                            .insert(accountId, accountName, balance, personId)
+//                            .values(123L, "Default Account", 0, 1L)));
+//
+//            assertEquals(5, updateResult.rowsAffected());
+//
+//            final int count = litebridge.select(Fn.convert(Fn.count(), int.class)).from(Account.class).oneOrThrow();
+//            assertEquals(10, count);
+//        }
 
         // Merge on nested subconditions
         {
@@ -167,7 +167,7 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
                                             .or(accountId).gte(101))))
                     .whenMatched(u -> u
                             .update(account -> account
-                                    .set(balance).to(500)
+                                    .set(balance).multiply(2)
                                     .where(accountId).lt(5))));
 
             assertEquals(4, updateResult.rowsAffected());

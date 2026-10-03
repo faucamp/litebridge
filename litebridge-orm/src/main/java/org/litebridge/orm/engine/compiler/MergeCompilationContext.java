@@ -201,14 +201,13 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             }
         }
 
-        whenMatchedSpec.addUpdateColumn(columnMetaData);
-
         if (setNode.mathOperator() != null) {
-            //TODO: implement generated values
-            throw new UnsupportedOperationException("Not yet implemented");
+            whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator()));
         } else {
-            whenMatchedSpec.addBindValue(new BindValue(setNode.value(), columnMetaData.getDataType()));
+            whenMatchedSpec.addUpdateColumn(columnMetaData);
         }
+
+        whenMatchedSpec.addBindValue(new BindValue(setNode.value(), columnMetaData.getDataType()));
     }
 
     public void whenNotMatchedInsert(final InsertNode insertNode) {
