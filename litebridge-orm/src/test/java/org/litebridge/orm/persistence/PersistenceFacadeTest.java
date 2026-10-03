@@ -336,7 +336,7 @@ class PersistenceFacadeTest {
         final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         productTable.syncPersistedDto(product);
 
-        final Class<?> joinTableClass = Proxy.getProxyClass(HiddenJoinEntity.class.getClassLoader(), HiddenJoinEntity.class);
+        final Class<?> joinTableClass = Proxy.newProxyInstance(HiddenJoinEntity.class.getClassLoader(), new Class<?>[]{HiddenJoinEntity.class}, (proxy, method, args) -> null).getClass();
         final OrmTable joinTable = createOrmTable(changeTracker, joinTableClass, "product_tags", Map.of("prod_id", numeric("PROD_ID"), "tag_id", numeric("TAG_ID")), List.of());
         when(tableRegistry.getOrmTableOrThrow(joinTableClass)).thenReturn(joinTable);
         final MappedManyToMany m2m = new MappedManyToMany(joinTable, "PROD_ID", changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, "TAG_ID");
