@@ -525,6 +525,121 @@ class SelectCompilationContextTest {
     }
 
     @Test
+    void addJoinConditionUsingNodeManyToMany_compositePk() {
+        // Given
+        final LitebridgeContext context = createMockContext();
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+
+        when(context.selectExpressionMapper().toSelectExpression(any(), anyMap()))
+                .thenAnswer(inv -> {
+                    final Object arg = inv.getArgument(0);
+                    if (arg instanceof SelectColumnSpec spec) {
+                        final org.litebridge.db.spi.expression.ColumnExpression colExpr = mock(org.litebridge.db.spi.expression.ColumnExpression.class);
+                        when(colExpr.column()).thenReturn(spec.getColumn());
+                        when(colExpr.tableAlias()).thenReturn(spec.getTableAlias());
+                        return colExpr;
+                    }
+                    return mock(SelectExpression.class);
+                });
+
+        final Table userTable = new Table("comp_users");
+        final ColumnMetaData userPk1 = new ColumnMetaData(userTable, "pk1", true, Types.INTEGER, 0);
+        final ColumnMetaData userPk2 = new ColumnMetaData(userTable, "pk2", true, Types.INTEGER, 1);
+        final TableMetaData userMeta = new TableMetaData(userTable, List.of("pk1", "pk2"), List.of(userPk1, userPk2));
+
+        final Table joinTable = new Table("comp_user_roles");
+        final ColumnMetaData joinLeftPk1 = new ColumnMetaData(joinTable, "left_pk1", true, Types.INTEGER, 0);
+        final ColumnMetaData joinLeftPk2 = new ColumnMetaData(joinTable, "left_pk2", true, Types.INTEGER, 1);
+        final ColumnMetaData joinRightPk1 = new ColumnMetaData(joinTable, "right_pk1", true, Types.INTEGER, 2);
+        final ColumnMetaData joinRightPk2 = new ColumnMetaData(joinTable, "right_pk2", true, Types.INTEGER, 3);
+        final TableMetaData joinMeta = new TableMetaData(joinTable, List.of("left_pk1", "left_pk2", "right_pk1", "right_pk2"), List.of(joinLeftPk1, joinLeftPk2, joinRightPk1, joinRightPk2));
+        final OrmTable joinOrmTable = mock(OrmTable.class);
+        when(joinOrmTable.getMetaData()).thenReturn(joinMeta);
+        when(joinOrmTable.dtoClass()).thenReturn((Class) RoleDto.class);
+
+        final Table roleTable = new Table("comp_roles");
+        final ColumnMetaData rolePk1 = new ColumnMetaData(roleTable, "rpk1", true, Types.INTEGER, 0);
+        final ColumnMetaData rolePk2 = new ColumnMetaData(roleTable, "rpk2", true, Types.INTEGER, 1);
+        final TableMetaData roleMeta = new TableMetaData(roleTable, List.of("rpk1", "rpk2"), List.of(rolePk1, rolePk2));
+        final OrmTable roleOrmTable = mock(OrmTable.class);
+        when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
+        when(roleOrmTable.mappedColumns()).thenReturn(List.of(rolePk1, rolePk2));
+        when(roleOrmTable.dtoClass()).thenReturn((Class) RoleDto.class);
+
+        final TableRegistry tableRegistry = context.tableRegistry();
+        final OrmTable userOrmTable = mock(OrmTable.class);
+        when(userOrmTable.getMetaData()).thenReturn(userMeta);
+        when(userOrmTable.mappedColumns()).thenReturn(List.of(userPk1, userPk2));
+        when(userOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
+        when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTable(UserDto.class)).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
+        when(tableRegistry.getOrmTable(RoleDto.class)).thenReturn(roleOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(any(Table.class))).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTable(any(Table.class))).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTable(any(String.class))).thenReturn(userOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(any(String.class))).thenReturn(userOrmTable);
+        when(context.tableMetaDataCache().ensureTableMetaData(joinTable)).thenReturn(joinMeta);
+
+        final FieldAccessor collection = mock(FieldAccessor.class);
+        final MappedManyToMany mappedManyToMany = new MappedManyToMany(
+                joinOrmTable,
+                new String[]{"left_pk1", "left_pk2"},
+                collection,
+                () -> roleOrmTable,
+                new String[]{"right_pk1", "right_pk2"});
+
+        when(userOrmTable.mappedFieldTargetForField("roles")).thenReturn(mappedManyToMany);
+        when(userOrmTable.mappedFieldTargetForFieldOrNull("roles")).thenReturn(mappedManyToMany);
+
+        final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
+
+        final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.INNER, RoleDto.class, null, null, null, null);
+        final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "roles", null);
+        joinNode.setCondition(usingNode);
+
+        compilationContext.addJoin(joinNode);
+        compilationContext.addJoinUsingCondition(usingNode);
+
+        // When
+        final Select select = (Select) compilationContext.toOperation();
+
+        // Then
+        assertNotNull(select);
+        assertNotNull(select.joins());
+        assertEquals(2, select.joins().size());
+
+        final Join firstJoin = select.joins().get(0);
+        final Join secondJoin = select.joins().get(1);
+
+        assertEquals(Join.JoinType.INNER, firstJoin.type());
+        assertEquals(Join.JoinType.INNER, secondJoin.type());
+
+        // First join ON conditions: comp_users.pk1 = comp_user_roles.left_pk1 AND comp_users.pk2 = comp_user_roles.left_pk2
+        assertEquals(2, firstJoin.conditions().conditions().size());
+        final org.litebridge.db.spi.expression.ColumnExpression firstJoinLhs0 = (org.litebridge.db.spi.expression.ColumnExpression) firstJoin.conditions().conditions().get(0).condition().lhs();
+        final org.litebridge.db.spi.expression.ColumnExpression firstJoinRhs0 = (org.litebridge.db.spi.expression.ColumnExpression) firstJoin.conditions().conditions().get(0).condition().rhs();
+        final org.litebridge.db.spi.expression.ColumnExpression firstJoinLhs1 = (org.litebridge.db.spi.expression.ColumnExpression) firstJoin.conditions().conditions().get(1).condition().lhs();
+        final org.litebridge.db.spi.expression.ColumnExpression firstJoinRhs1 = (org.litebridge.db.spi.expression.ColumnExpression) firstJoin.conditions().conditions().get(1).condition().rhs();
+        assertEquals("pk1", firstJoinLhs0.column().name());
+        assertEquals("left_pk1", firstJoinRhs0.column().name());
+        assertEquals("pk2", firstJoinLhs1.column().name());
+        assertEquals("left_pk2", firstJoinRhs1.column().name());
+
+        // Second join ON conditions: comp_user_roles.right_pk1 = comp_roles.rpk1 AND comp_user_roles.right_pk2 = comp_roles.rpk2
+        assertEquals(2, secondJoin.conditions().conditions().size());
+        final org.litebridge.db.spi.expression.ColumnExpression secondJoinLhs0 = (org.litebridge.db.spi.expression.ColumnExpression) secondJoin.conditions().conditions().get(0).condition().lhs();
+        final org.litebridge.db.spi.expression.ColumnExpression secondJoinRhs0 = (org.litebridge.db.spi.expression.ColumnExpression) secondJoin.conditions().conditions().get(0).condition().rhs();
+        final org.litebridge.db.spi.expression.ColumnExpression secondJoinLhs1 = (org.litebridge.db.spi.expression.ColumnExpression) secondJoin.conditions().conditions().get(1).condition().lhs();
+        final org.litebridge.db.spi.expression.ColumnExpression secondJoinRhs1 = (org.litebridge.db.spi.expression.ColumnExpression) secondJoin.conditions().conditions().get(1).condition().rhs();
+        assertEquals("right_pk1", secondJoinLhs0.column().name());
+        assertEquals("rpk1", secondJoinRhs0.column().name());
+        assertEquals("right_pk2", secondJoinLhs1.column().name());
+        assertEquals("rpk2", secondJoinRhs1.column().name());
+    }
+
+    @Test
     void multiLevelSharedDtoJoinResolvesCorrectLeftAlias() {
         // Given
         final LitebridgeContext context = createMockContext();

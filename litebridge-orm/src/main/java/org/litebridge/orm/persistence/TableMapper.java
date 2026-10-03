@@ -301,11 +301,14 @@ public final class TableMapper {
     private MappedTable mapManyToManyJoinTable(final ManyToMany manyToMany, final MethodHandles.Lookup lookup) {
         final String[] joinColumns = manyToMany.joinColumns();
         final String[] inverseJoinColumns = manyToMany.inverseJoinColumns();
-        final Map<FieldMapping, ColumnMapping> columnSpecMap = new HashMap<>(joinColumns.length * 2);
+        final Map<FieldMapping, ColumnMapping> columnSpecMap = new HashMap<>(joinColumns.length + inverseJoinColumns.length);
 
-        for (int i = 0; i < joinColumns.length; i++) {
-            columnSpecMap.put(new NoFieldMapping(), new ColumnSpec(joinColumns[i], null, joinColumns[i]));
-            columnSpecMap.put(new NoFieldMapping(), new ColumnSpec(inverseJoinColumns[i], null, inverseJoinColumns[i]));
+        for (final String joinColumn : joinColumns) {
+            columnSpecMap.put(new NoFieldMapping(), new ColumnSpec(joinColumn, null, joinColumn));
+        }
+
+        for (final String inverseJoinColumn : inverseJoinColumns) {
+            columnSpecMap.put(new NoFieldMapping(), new ColumnSpec(inverseJoinColumn, null, inverseJoinColumn));
         }
 
         final TableSpec tableSpec = new TableSpec(manyToMany.joinTable(), columnSpecMap);

@@ -96,25 +96,19 @@ public class DtoMapper {
         // Resolve inter-DTO dependencies
         resolveDependencies(createdDtosByMapping);
 
-        // Return all unique DTOs assignable to the requested type, in order of mappings then rows
+        // Return all unique DTOs assignable to the requested type from the root mapping
         final List<DTO> result = new ArrayList<>();
         final Set<Object> seenDtos = new HashSet<>();
+        final MappingData rootMappingData = compilationResult.rootMappingData();
 
         for (final Row row : rows) {
-            final List<MappingData> mappings = new ArrayList<>(compilationResult.mappingDataMap().values());
-            Collections.reverse(mappings);
-
-            for (MappingData mappingData : mappings) {
-                if (dtoClass.isAssignableFrom(mappingData.dtoClass())) {
-                    final Pk pk = getPrimaryKey(mappingData, row);
-                    final PartiallyConstructedDto pd = dtoCache.get(mappingData, pk);
-                    if (pd != null && pd.getDto() != null) {
-                        final Object dto = pd.getDto();
-                        if (seenDtos.add(dto)) {
-                            //noinspection unchecked
-                            result.add((DTO) dto);
-                        }
-                    }
+            final Pk pk = getPrimaryKey(rootMappingData, row);
+            final PartiallyConstructedDto pd = dtoCache.get(rootMappingData, pk);
+            if (pd != null && pd.getDto() != null) {
+                final Object dto = pd.getDto();
+                if (seenDtos.add(dto)) {
+                    //noinspection unchecked
+                    result.add((DTO) dto);
                 }
             }
         }
@@ -483,7 +477,8 @@ public class DtoMapper {
             for (final MappedManyToMany mappedManyToMany : mappedManyToManyList) {
                 final OrmTable targetOrmTable = mappedManyToMany.targetOrmTable().get();
                 final List<PartiallyConstructedDto> matchingCreatedDtos = allPartialDtos.stream()
-                        .filter(pd -> pd.mappingData().dtoClass().equals(targetOrmTable.dtoClass()))
+                        .filter(pd -> pd.mappingData() != partialDto.mappingData()
+                                && pd.mappingData().dtoClass().equals(targetOrmTable.dtoClass()))
                         .toList();
 
                 if (!matchingCreatedDtos.isEmpty()) {

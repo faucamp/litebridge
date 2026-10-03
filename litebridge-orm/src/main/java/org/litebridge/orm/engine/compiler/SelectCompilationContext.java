@@ -926,7 +926,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             leftSelectColumnSpecs[i] = new SelectColumnSpec(joinTableColumn, null, joinTableAlias);
 
             // Right column
-            final ColumnMetaData rightColumnMetaData = rightTableMetaData.primaryKey().getFirst();
+            final ColumnMetaData rightColumnMetaData = rightTableMetaData.primaryKey().get(i);
             final Column rightColumn = rightColumnMetaData.column();
             rightSelectColumnSpecs[i] = new SelectColumnSpec(rightColumn, null, rightTableAlias);
         }
