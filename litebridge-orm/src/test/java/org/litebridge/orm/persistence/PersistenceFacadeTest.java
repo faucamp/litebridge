@@ -339,7 +339,7 @@ class PersistenceFacadeTest {
         final Class<?> joinTableClass = Proxy.newProxyInstance(HiddenJoinEntity.class.getClassLoader(), new Class<?>[]{HiddenJoinEntity.class}, (proxy, method, args) -> null).getClass();
         final OrmTable joinTable = createOrmTable(changeTracker, joinTableClass, "product_tags", Map.of("prod_id", numeric("PROD_ID"), "tag_id", numeric("TAG_ID")), List.of());
         when(tableRegistry.getOrmTableOrThrow(joinTableClass)).thenReturn(joinTable);
-        final MappedManyToMany m2m = new MappedManyToMany(joinTable, "PROD_ID", changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, "TAG_ID");
+        final MappedManyToMany m2m = new MappedManyToMany(joinTable, new String[]{"PROD_ID"}, changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "tags"), null, new String[]{"TAG_ID"});
 
         final Map<String, Object> productFields = new HashMap<>();
         productFields.put("id", numeric("ID"));

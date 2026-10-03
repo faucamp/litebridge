@@ -208,7 +208,7 @@ class TableMapperExtraTest {
         });
 
         final TableSpec tableSpec = new TableSpec("TEST", Map.of(
-                new FieldSpec("id", false), new ManyToMany("join_table", "join_col", "inv_join_col")
+                new FieldSpec("id", false), new ManyToMany("join_table", new String[]{"join_col"}, new String[]{"inv_join_col"})
         ));
 
         assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Collections.emptySet()));

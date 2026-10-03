@@ -9,6 +9,7 @@ import org.litebridge.orm.e2e.compositepk.dto.CompositePkLookup;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimple;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimpleM2M;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridge.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,7 +173,7 @@ class CompositePkTest extends AbstractE2eTest {
         final CompositePkSimpleM2M dto2 = new CompositePkSimpleM2M();
         dto2.setPk1(100L);
         dto2.setPk2(200L);
-        dto1.setDescription("other");
+        dto2.setDescription("other");
 
         dto1.setOthers(List.of(dto2));
         dto2.setOthers(List.of(dto1));
@@ -181,7 +182,10 @@ class CompositePkTest extends AbstractE2eTest {
         litebridge.save(dto1);
 
         // Then
+        assertEquals(2, litebridge.select().from(compPkSimpleTable).list().size());
+
         final CompositePkSimpleM2M result = litebridge.select(CompositePkSimpleM2M.class)
+                .join(CompositePkSimpleM2M.class).on("others")
                 .where("pk1").eq(1L)
                 .and("pk2").eq(2L)
                 .oneOrThrow();

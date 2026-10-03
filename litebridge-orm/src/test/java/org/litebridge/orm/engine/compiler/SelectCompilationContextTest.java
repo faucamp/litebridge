@@ -494,7 +494,7 @@ class SelectCompilationContextTest {
         when(context.tableMetaDataCache().ensureTableMetaData(joinTable)).thenReturn(joinMeta);
 
         final FieldAccessor collection = mock(FieldAccessor.class);
-        final MappedManyToMany mappedManyToMany = new MappedManyToMany(joinOrmTable, "user_id", collection, () -> roleOrmTable, "role_id");
+        final MappedManyToMany mappedManyToMany = new MappedManyToMany(joinOrmTable, new String[]{"user_id"}, collection, () -> roleOrmTable, new String[]{"role_id"});
 
         when(userOrmTable.mappedFieldTargetForField("roles")).thenReturn(mappedManyToMany);
         when(userOrmTable.mappedFieldTargetForFieldOrNull("roles")).thenReturn(mappedManyToMany);

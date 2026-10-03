@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
@@ -194,10 +193,10 @@ class OrmTableTest {
 
         final MappedManyToMany mappedManyToMany = new MappedManyToMany(
                 joinTable,
-                "parent_id",
+                new String[]{"parent_id"},
                 childrenField,
                 () -> targetTable,
-                "child_id");
+                new String[]{"child_id"});
 
         final OrmTable ormTable = new OrmTable(ParentDto.class,
                 tableMetaData("parent_table", idColumn),
