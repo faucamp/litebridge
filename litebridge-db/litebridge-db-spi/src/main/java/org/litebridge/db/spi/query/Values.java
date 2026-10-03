@@ -9,7 +9,7 @@ import java.util.StringJoiner;
 
 public final class Values extends VirtualTable {
 
-    private List<LiteralExpression> values;
+    private final List<LiteralExpression> values;
 
     public Values(final List<LiteralExpression> values, final String alias) {
         super(alias);

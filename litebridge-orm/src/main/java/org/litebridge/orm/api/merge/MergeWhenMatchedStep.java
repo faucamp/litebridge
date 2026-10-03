@@ -3,7 +3,6 @@ package org.litebridge.orm.api.merge;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhenMatchedNode;
 
 import java.util.function.Function;

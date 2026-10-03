@@ -296,7 +296,7 @@ public final class DefaultTransactionManager implements TransactionManager {
          */
         private @Nullable List<Runnable> rollbackCallbacks;
 
-        TransactionState(final Connection connection, final boolean autoCommit) throws SQLException {
+        TransactionState(final Connection connection, final boolean autoCommit) {
             this.connection = connection;
             this.managedConnection = new ManagedConnection(connection);
             this.autoCommit = autoCommit;

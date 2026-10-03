@@ -13,7 +13,6 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 import java.util.Arrays;
 import java.util.Collection;

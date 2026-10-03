@@ -106,7 +106,7 @@ public final class ManagedConnection implements Connection {
     }
 
     @Override
-    public void setReadOnly(final boolean readOnly) throws SQLException {
+    public void setReadOnly(final boolean readOnly) {
         throw managedMethodUnsupported("setReadOnly(boolean)");
     }
 
@@ -116,7 +116,7 @@ public final class ManagedConnection implements Connection {
     }
 
     @Override
-    public void setCatalog(final String catalog) throws SQLException {
+    public void setCatalog(final String catalog) {
         throw managedMethodUnsupported("setCatalog(String)");
     }
 
@@ -126,7 +126,7 @@ public final class ManagedConnection implements Connection {
     }
 
     @Override
-    public void setTransactionIsolation(final int level) throws SQLException {
+    public void setTransactionIsolation(final int level) {
         throw managedMethodUnsupported("setTransactionIsolation(int)");
     }
 
@@ -174,12 +174,12 @@ public final class ManagedConnection implements Connection {
     }
 
     @Override
-    public void setTypeMap(final Map<String, Class<?>> map) throws SQLException {
+    public void setTypeMap(final Map<String, Class<?>> map) {
         throw managedMethodUnsupported("setTypeMap(Map<String, Class<?>>)");
     }
 
     @Override
-    public void setHoldability(final int holdability) throws SQLException {
+    public void setHoldability(final int holdability) {
         throw managedMethodUnsupported("setHoldability(int)");
     }
 
@@ -308,7 +308,7 @@ public final class ManagedConnection implements Connection {
     }
 
     @Override
-    public void setSchema(final String schema) throws SQLException {
+    public void setSchema(final String schema) {
         throw managedMethodUnsupported("setSchema(String)");
     }
 
@@ -323,7 +323,7 @@ public final class ManagedConnection implements Connection {
     }
 
     @Override
-    public void setNetworkTimeout(final Executor executor, final int milliseconds) throws SQLException {
+    public void setNetworkTimeout(final Executor executor, final int milliseconds) {
         throw managedMethodUnsupported("setNetworkTimeout(Executor, int)");
     }
 
@@ -333,47 +333,42 @@ public final class ManagedConnection implements Connection {
     }
 
     @Override
-    public void beginRequest() throws SQLException {
+    public void beginRequest() {
         throw managedMethodUnsupported("beginRequest()");
     }
 
     @Override
-    public void endRequest() throws SQLException {
+    public void endRequest() {
         throw managedMethodUnsupported("endRequest()");
     }
 
     @Override
-    public boolean setShardingKeyIfValid(
-            final ShardingKey shardingKey,
-            final ShardingKey superShardingKey,
-            final int timeout
-    ) throws SQLException {
+    public boolean setShardingKeyIfValid(final ShardingKey shardingKey, final ShardingKey superShardingKey, final int timeout) {
         throw managedMethodUnsupported("setShardingKeyIfValid(ShardingKey, ShardingKey, int)");
     }
 
     @Override
-    public boolean setShardingKeyIfValid(final ShardingKey shardingKey, final int timeout) throws SQLException {
+    public boolean setShardingKeyIfValid(final ShardingKey shardingKey, final int timeout) {
         throw managedMethodUnsupported("setShardingKeyIfValid(ShardingKey, int)");
     }
 
     @Override
-    public void setShardingKey(final ShardingKey shardingKey, final ShardingKey superShardingKey)
-            throws SQLException {
+    public void setShardingKey(final ShardingKey shardingKey, final ShardingKey superShardingKey) {
         throw managedMethodUnsupported("setShardingKey(ShardingKey, ShardingKey)");
     }
 
     @Override
-    public void setShardingKey(final ShardingKey shardingKey) throws SQLException {
+    public void setShardingKey(final ShardingKey shardingKey) {
         throw managedMethodUnsupported("setShardingKey(ShardingKey)");
     }
 
     @Override
-    public <T> T unwrap(final Class<T> iface) throws SQLException {
+    public <T> T unwrap(final Class<T> iface) {
         throw managedMethodUnsupported("unwrap(Class<T>)");
     }
 
     @Override
-    public boolean isWrapperFor(final Class<?> iface) throws SQLException {
+    public boolean isWrapperFor(final Class<?> iface) {
         throw managedMethodUnsupported("isWrapperFor(Class<T>)");
     }
 

@@ -48,12 +48,12 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) throws SQLException {
+    public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) {
         return context.metaDataEngine().databaseMetaData(connectionProvider);
     }
 
     @Override
-    public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+    public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) {
         return context.metaDataEngine().ensureTableMetaData(table, connectionProvider);
     }
 

@@ -185,7 +185,7 @@ public abstract class AbstractSqlGenerator {
         return sql;
     }
 
-    protected StringBuilder appendValues(final StringBuilder sql, final Values values, final Operation operation) {
+    protected void appendValues(final StringBuilder sql, final Values values, final Operation operation) {
         sql.append("(VALUES ");
 
         final StringJoiner valuesStrings = new StringJoiner(", ", "(", ")");
@@ -196,9 +196,10 @@ public abstract class AbstractSqlGenerator {
             labels.add(labelGenerator.quoteAlias(Objects.requireNonNull(literal.alias(), "No label value in VALUES clause")));
         }
 
-        return sql.append(valuesStrings)
-                .append(") AS ").append(labelGenerator.quoteAlias(values.name()))
-                .append(' ').append(labels);
+        sql.append(valuesStrings)
+                .append(") AS ")
+                .append(labelGenerator.quoteAlias(values.name())).append(' ')
+                .append(labels);
     }
 
     /**

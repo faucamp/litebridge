@@ -16,7 +16,6 @@ import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.BatchUpdateResult;
 import org.litebridge.db.spi.update.Result;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -47,7 +46,7 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
      * @return this implementation always throws {@link UnsupportedOperationException}
      */
     @Override
-    public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) throws SQLException {
+    public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
@@ -77,7 +76,7 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 

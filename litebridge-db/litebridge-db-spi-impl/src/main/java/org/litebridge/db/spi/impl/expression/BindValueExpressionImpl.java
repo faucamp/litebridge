@@ -27,7 +27,7 @@ public class BindValueExpressionImpl extends AbstractAliasedExpression implement
      *
      * @param index          the index of the bind value
      * @param size           the size of the bind value (e.g. for collection expressions)
-     * @param columnType       the data type of the bind value
+     * @param columnType     the data type of the bind value
      * @param alias          the alias for the expression
      * @param labelGenerator the label generator for rendering aliases/identifiers
      */
@@ -56,25 +56,19 @@ public class BindValueExpressionImpl extends AbstractAliasedExpression implement
 
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
-        final String bindValue = getBindValueDelimiter();
-
         if (size > 1) {
             final StringJoiner joiner = new StringJoiner(", ");
 
             for (int i = 0; i < size; i++) {
-                joiner.add(bindValue);
+                joiner.add("?");
             }
 
             return joiner.toString();
         } else if (alias != null) {
-            return bindValue + labelGenerator.createAliasAs(alias);
+            return "?" + labelGenerator.createAliasAs(alias);
         } else {
-            return bindValue;
+            return "?";
         }
-    }
-
-    protected String getBindValueDelimiter() {
-        return "?";
     }
 
     @Override

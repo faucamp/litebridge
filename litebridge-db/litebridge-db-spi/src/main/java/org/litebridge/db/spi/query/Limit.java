@@ -17,12 +17,9 @@ import org.jspecify.annotations.Nullable;
  */
 public record Limit(@Nullable Integer limit, @Nullable Integer offset) {
 
-    public Limit(@Nullable final Integer limit, @Nullable final Integer offset) {
+    public Limit {
         if (limit == null && offset == null) {
             throw new IllegalArgumentException("Either limit or offset must be specified");
         }
-
-        this.limit = limit;
-        this.offset = offset;
     }
 }

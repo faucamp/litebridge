@@ -25,22 +25,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * A builder class for constructing SQL INSERT statements.
  */
 final class MergeBuilder extends InsertBuilder {
 
-    private final Object dto;
 
-
-    public MergeBuilder(final Object dto,
-                        final OrmTable table,
+    public MergeBuilder(final OrmTable ormTable,
                         final @Nullable Class<?> contextDtoClass,
                         final LitebridgeContext litebridgeContext) {
-        super(table, contextDtoClass, litebridgeContext);
-        this.dto = dto;
+        super(ormTable, contextDtoClass, litebridgeContext);
     }
 
     @Override

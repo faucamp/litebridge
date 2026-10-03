@@ -245,7 +245,7 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createMergeBuilder(final Object dto, final OrmTable ormTable, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final MergeBuilder mergeBuilder = new MergeBuilder(dto, ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
+        final MergeBuilder mergeBuilder = new MergeBuilder(ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
 
         if (prepareUpdateStatement(dto, ormTable, mergeBuilder, inProgressDtos, tableProvider) == null) {
             return NO_OP_STATEMENT_BUILDER;
