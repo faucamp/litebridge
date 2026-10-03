@@ -294,15 +294,13 @@ class AbstractCompilationContextTest {
         when(context.typeConverter().getSqlDataType(String.class)).thenReturn(Types.VARCHAR);
 
         // When rawValue is non-null
-        final List<BindValue> binds1 = compilationContext.createBindValues(nonColumnExpr, "hello",
-                context.tableMetaDataCache(), context.typeConverter());
+        final List<BindValue> binds1 = compilationContext.createBindValues(nonColumnExpr, "hello", context.typeConverter());
 
         // Then
         assertEquals(List.of(new BindValue("hello", Types.VARCHAR)), binds1);
 
         // When rawValue is null
-        final List<BindValue> binds2 = compilationContext.createBindValues(nonColumnExpr, null,
-                context.tableMetaDataCache(), context.typeConverter());
+        final List<BindValue> binds2 = compilationContext.createBindValues(nonColumnExpr, null, context.typeConverter());
 
         // Then
         assertEquals(List.of(new BindValue(null, Types.NULL)), binds2);

@@ -695,7 +695,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             if (selectExpression instanceof LiteralExpression literalExpression) {
                 final Object value = literalExpression.value();
                 final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size(), literalExpression.alias());
-                bindValues.addAll(createBindValues(literalExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));
+                bindValues.addAll(createBindValues(literalExpression, value, litebridgeContext.typeConverter()));
                 selectExpressions.add(bindValueExpression);
             } else {
                 selectExpressions.add(selectExpression);

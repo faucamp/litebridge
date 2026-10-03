@@ -156,7 +156,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             case IS_NULL, IS_NOT_NULL -> new Condition(lhsSelectExpression, operator, null);
             default -> {
                 final BindValueExpression bindValueExpression = createBindValueExpression(value, bindValues.size(), null);
-                bindValues.addAll(createBindValues(lhsSelectExpression, value, litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter()));
+                bindValues.addAll(createBindValues(lhsSelectExpression, value, litebridgeContext.typeConverter()));
                 yield new Condition(lhsSelectExpression, operator, bindValueExpression);
             }
         };
@@ -179,10 +179,10 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
      *
      * @param lhsSelectExpression LHS select expression for the condition.
      * @param rawValue            The raw value.
-     * @param tableMetaDataCache  Table metadata cache.
+     * @param typeConverter       The type converter.
      * @return The bind value.
      */
-    protected List<BindValue> createBindValues(final SelectExpression lhsSelectExpression, final @Nullable Object rawValue, final TableMetaDataCache tableMetaDataCache, final TypeConverter typeConverter) {
+    protected List<BindValue> createBindValues(final SelectExpression lhsSelectExpression, final @Nullable Object rawValue, final TypeConverter typeConverter) {
         final Column column;
 
         if (lhsSelectExpression instanceof ColumnExpression columnExpression) {
