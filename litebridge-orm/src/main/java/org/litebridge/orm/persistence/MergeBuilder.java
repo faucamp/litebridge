@@ -31,7 +31,6 @@ import java.util.Set;
  */
 final class MergeBuilder extends InsertBuilder {
 
-
     public MergeBuilder(final OrmTable ormTable,
                         final @Nullable Class<?> contextDtoClass,
                         final LitebridgeContext litebridgeContext) {
@@ -52,8 +51,9 @@ final class MergeBuilder extends InsertBuilder {
         return node;
     }
 
-    private QueryNode createMerge(final LinkedHashMap<String, @Nullable Object> row) {
-        final Class<?> dtoClass = ormTable.dtoClass();
+    @SuppressWarnings("unchecked")
+    private <T> QueryNode createMerge(final LinkedHashMap<String, @Nullable Object> row) {
+        final Class<T> dtoClass = (Class<T>) ormTable.dtoClass();
         final String tableAlias = "upsert" + dtoClass.getSimpleName();
         final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
         final LinkedHashMap<String, @Nullable Object> pkValues = new LinkedHashMap<>(pkFields.size());
@@ -82,7 +82,7 @@ final class MergeBuilder extends InsertBuilder {
             }
         }
 
-        final DtoMergeOnStep<?> mergeOnStep;
+        final DtoMergeOnStep<T> mergeOnStep;
         final boolean mergeUsingValuesSupported = litebridgeContext.databaseProvider().metaData()
                 .mergeCapability() == DatabaseProviderMetaData.MergeCapability.USING_VALUES;
 
@@ -97,14 +97,14 @@ final class MergeBuilder extends InsertBuilder {
         }
 
         final Set<String> pkFieldNames = new HashSet<>(pkFields.size());
-        MergeOnConditionClauseTerminal<?, DtoMergeUpdateStep<?>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;
+        MergeOnConditionClauseTerminal<T, DtoMergeUpdateStep<T>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;
 
         for (FieldAccessor pkField : pkFields) {
             final String fieldName = pkField.name();
             pkFieldNames.add(fieldName);
             final SelectColumnSpec pkColumn = new SelectColumnSpec(ormTable.columnMetaDataForField(fieldName).column());
             final AliasReferenceSpec aliasRef = Fn.aliasRef(tableAlias, fieldName);
-            mergeOnConditionClauseTerminal = (MergeOnConditionClauseTerminal) mergeOnStep.on(pkColumn).eq(aliasRef);
+            mergeOnConditionClauseTerminal = mergeOnStep.on(pkColumn).eq(aliasRef);
         }
 
         // Don't update primary key fields
@@ -125,7 +125,7 @@ final class MergeBuilder extends InsertBuilder {
         if (!nonPkFields.isEmpty()) {
             mergeTerminal = mergeOnConditionClauseTerminal
                     .whenMatched(m -> m.update(u -> {
-                        DtoUpdateStep<?> dtoUpdateStep = null;
+                        DtoUpdateStep<T> dtoUpdateStep = null;
 
                         for (Map.Entry<String, @Nullable Object> entry : nonPkFields.sequencedEntrySet()) {
                             if (dtoUpdateStep == null) {
