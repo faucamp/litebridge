@@ -41,7 +41,7 @@ class DeleteBuilderTest {
         when(preparedOperation.operation()).thenReturn(deleteOp);
         when(queryCompiler.compile(any(QueryNode.class))).thenReturn(preparedOperation);
 
-        final DeleteBuilder builder = new DeleteBuilder(ormTable, litebridgeContext);
+        final DeleteBuilder builder = new DeleteBuilder(ormTable, null, litebridgeContext);
         final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, null, Operator.IS_NULL, null);
         builder.where(conditionNode);
 

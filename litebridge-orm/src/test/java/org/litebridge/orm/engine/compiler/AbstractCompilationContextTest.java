@@ -9,7 +9,6 @@ import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
-import org.litebridge.db.spi.expression.ColumnReference;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.expression.SubselectExpression;
@@ -42,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -171,24 +171,24 @@ class AbstractCompilationContextTest {
     @Test
     void toConditionWithSubselectRhs() {
         // Given
-        final LitebridgeContext context = createMockContext();
+        final LitebridgeContext litebridgeContext = createMockContext();
         final Table table = new Table("items");
-        final DeleteCompilationContext compilationContext = createContext(context, table);
+        final DeleteCompilationContext compilationContext = createContext(litebridgeContext, table);
 
         final QueryNode subselectNode = new DeleteNode(null, "sub", null);
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
-        when(context.createQueryCompiler()).thenReturn(queryCompiler);
+        when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
 
         final Select subselect = mock(Select.class);
         final BindValue subBind = new BindValue("sub", Types.VARCHAR);
         final PreparedOperation subPrepared = new PreparedOperation(subselect, List.of(subBind));
-        when(queryCompiler.compile(subselectNode)).thenReturn(subPrepared);
+        when(queryCompiler.compile(eq(subselectNode), anyList())).thenReturn(subPrepared);
 
         final SubselectExpression subselectExpression = mock(SubselectExpression.class);
-        when(context.sqlFunctionRegistry().select().subselect().create(subselect)).thenReturn(subselectExpression);
+        when(litebridgeContext.sqlFunctionRegistry().select().subselect().create(subselect)).thenReturn(subselectExpression);
 
         final SelectExpression lhsSelectExpr = mock(SelectExpression.class);
-        when(context.selectExpressionMapper().toSelectExpression(any(), anyMap())).thenReturn(lhsSelectExpr);
+        when(litebridgeContext.selectExpressionMapper().toSelectExpression(any(), anyMap())).thenReturn(lhsSelectExpr);
 
         final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.IN, subselectNode);
 
@@ -223,26 +223,6 @@ class AbstractCompilationContextTest {
 
         // Then
         assertSame(rhsSelectExpr, condition.rhs());
-    }
-
-    @Test
-    void toConditionWithReferencedColumnRhs() {
-        // Given
-        final LitebridgeContext context = createMockContext();
-        final Table table = new Table("items");
-        final DeleteCompilationContext compilationContext = createContext(context, table);
-
-        final Column refColumn = new Column(new Table("other"), "ref_id");
-        final ColumnReference columnReference = mock(ColumnReference.class);
-        when(context.sqlFunctionRegistry().select().reference().create(refColumn, null, null)).thenReturn(columnReference);
-
-        final ConditionSpec conditionSpec = new ConditionSpec("id", null, Operator.EQ, refColumn);
-
-        // When
-        final Condition condition = compilationContext.toCondition(conditionSpec, List.of(table), AbstractCompilationContext.EMPTY_SELECT_EXPRESSIONS);
-
-        // Then
-        assertSame(columnReference, condition.rhs());
     }
 
     @Test

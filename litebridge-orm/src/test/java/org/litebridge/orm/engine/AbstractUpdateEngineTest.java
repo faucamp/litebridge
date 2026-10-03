@@ -74,7 +74,7 @@ class AbstractUpdateEngineTest {
         when(context.transactionManager()).thenReturn(txManager);
         when(context.queryPlanCache()).thenReturn(queryPlanCache);
 
-        final QueryNode node = new UpdateNode(null, "users", null);
+        final QueryNode node = new UpdateNode("users");
         final Update operation = mock(Update.class);
         final PreparedOperation preparedOperation = new PreparedOperation(operation, Collections.emptyList());
         when(compiler.compile(node)).thenReturn(preparedOperation);
@@ -115,7 +115,7 @@ class AbstractUpdateEngineTest {
         when(context.transactionManager()).thenReturn(txManager);
         when(context.queryPlanCache()).thenReturn(queryPlanCache);
 
-        final QueryNode node = new UpdateNode(null, "orders", null);
+        final QueryNode node = new UpdateNode("orders");
         final Update operation = mock(Update.class);
         final PreparedOperation preparedOperation = new PreparedOperation(operation, List.of(new BindValue(1, Types.INTEGER)));
         when(compiler.compile(node)).thenReturn(preparedOperation);
@@ -150,7 +150,7 @@ class AbstractUpdateEngineTest {
         when(context.transactionManager()).thenReturn(txManager);
         when(context.queryPlanCache()).thenReturn(queryPlanCache);
 
-        final QueryNode node = new UpdateNode(null, "users", null);
+        final QueryNode node = new UpdateNode("users");
         final Update operation = mock(Update.class);
         final PreparedOperation preparedOperation = new PreparedOperation(operation, Collections.emptyList());
         when(compiler.compile(node)).thenReturn(preparedOperation);

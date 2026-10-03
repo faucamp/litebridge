@@ -4,9 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.oracle.engine.OracleExecutionEngine;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.ColumnType;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.expression.BindValueExpression;
+import org.litebridge.db.spi.impl.expression.BindValueExpressionImpl;
 import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.query.Condition;
@@ -60,7 +61,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition whereCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.LT,
-                new BindValueExpression(0, 1));
+                new BindValueExpressionImpl(0, 1, new ColumnType(0, 1), null, labelGenerator));
         final ConditionGroup andGroup = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, whereCondition));
 
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
@@ -125,7 +126,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition updateWhere = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.LT,
-                new BindValueExpression(0, 1));
+                new BindValueExpressionImpl(0, 1, new ColumnType(0, 1), null, labelGenerator));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> updateMatched = new Merge.WhenMatched<>(
                 new ConditionGroup(new LogicCondition(LogicOperator.NOOP, updateWhere)),
                 new Merge.MergeUpdate(List.of(new UpdateColumn("BALANCE", null, null, 1))));
@@ -134,7 +135,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition deleteWhere = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.GTE,
-                new BindValueExpression(2, 1));
+                new BindValueExpressionImpl(2, 1, new ColumnType(0, 1), null, labelGenerator));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> deleteMatched = new Merge.WhenMatched<>(
                 new ConditionGroup(new LogicCondition(LogicOperator.NOOP, deleteWhere)),
                 new Merge.MergeDelete());
@@ -217,7 +218,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition whereCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.GTE,
-                new BindValueExpression(0, 1));
+                new BindValueExpressionImpl(0, 1, new ColumnType(0, 1), null, labelGenerator));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> deleteMatched = new Merge.WhenMatched<>(
                 new ConditionGroup(new LogicCondition(LogicOperator.NOOP, whereCondition)),
                 new Merge.MergeDelete());
@@ -247,7 +248,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition whereCondition = new Condition(
                 new SelectColumn(new Column(targetTable, "ACCOUNT_ID"), null, null, labelGenerator),
                 Operator.GTE,
-                new BindValueExpression(1, 1));
+                new BindValueExpressionImpl(1, 1, new ColumnType(0, 1), null, labelGenerator));
         final Merge.WhenMatched<Merge.WhenMatchedOperation> deleteMatched = new Merge.WhenMatched<>(
                 new ConditionGroup(new LogicCondition(LogicOperator.NOOP, whereCondition)),
                 new Merge.MergeDelete());
@@ -330,7 +331,7 @@ class OracleMergeSqlGeneratorTest {
         final Condition notMatchedWhere = new Condition(
                 new SelectColumn(new Column(sourceTable, "PERSON_ID"), null, null, labelGenerator),
                 Operator.GT,
-                new BindValueExpression(1, 1));
+                new BindValueExpressionImpl(1, 1, new ColumnType(0, 1), null, labelGenerator));
         final ConditionGroup notMatchedAnd = new ConditionGroup(new LogicCondition(LogicOperator.NOOP, notMatchedWhere));
 
         final Merge.WhenMatched<Merge.MergeInsert> multiRowInsert = new Merge.WhenMatched<>(

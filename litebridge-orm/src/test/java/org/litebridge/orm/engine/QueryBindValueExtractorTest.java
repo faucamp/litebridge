@@ -146,7 +146,7 @@ class QueryBindValueExtractorTest {
         final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
         final UsingNode using = new UsingNode(root, "source", null, null, null, null, onCondition);
 
-        final UpdateNode update = new UpdateNode(null, "target", null);
+        final UpdateNode update = new UpdateNode("target");
         final SetNode set = new SetNode(update, "balance", 500);
         final ConditionNode whereCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.LT, 5);
         final WhereNode where = new WhereNode(set, whereCondition);

@@ -55,7 +55,7 @@ class UpdateQueryCompilerTest {
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metaData);
 
         final UpdateQueryCompiler compiler = new UpdateQueryCompiler(context);
-        final UpdateNode updateNode = new UpdateNode(null, "items", null);
+        final UpdateNode updateNode = new UpdateNode("items");
 
         // When
         final UpdateCompilationContext compilationContext = compiler.createCompilationContext(updateNode, null);
@@ -70,7 +70,7 @@ class UpdateQueryCompilerTest {
         final LitebridgeContext context = mock(LitebridgeContext.class);
         final UpdateQueryCompiler compiler = new UpdateQueryCompiler(context);
         final UpdateCompilationContext compilationContext = mock(UpdateCompilationContext.class);
-        final UpdateNode updateNode = new UpdateNode(null, "items", null);
+        final UpdateNode updateNode = new UpdateNode("items");
 
         // When
         compiler.applyNode(updateNode, compilationContext);

@@ -1,14 +1,18 @@
 package org.litebridge.orm.engine.compiler;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SelectExpression;
+import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
+import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.Select;
@@ -35,7 +39,6 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
-import org.litebridge.orm.persistence.alias.NoOpAliasGenerator;
 
 import java.sql.Types;
 import java.util.List;
@@ -46,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +61,7 @@ class QueryCompilerTest {
         final Table table = new Table("items");
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
-        final LitebridgeContext context = context(tableRegistry, mock(TableMetaDataCache.class));
+        final LitebridgeContext context = createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, mock(TableMetaDataCache.class));
         final QueryCompiler compiler = new QueryCompiler(context);
         final DeleteNode root = new DeleteNode(null, "items", null);
 
@@ -82,7 +85,7 @@ class QueryCompilerTest {
         final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
-        final QueryCompiler compiler = new QueryCompiler(context(tableRegistry, metadataCache));
+        final QueryCompiler compiler = new QueryCompiler(createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache));
         final InsertNode root = new InsertNode("items", null, new String[]{"name"});
         final InsertValuesNode values = new InsertValuesNode(root, new Object[]{"Ada"});
 
@@ -104,8 +107,8 @@ class QueryCompilerTest {
         final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
-        final QueryCompiler compiler = new QueryCompiler(context(tableRegistry, metadataCache));
-        final UpdateNode root = new UpdateNode(null, "items", null);
+        final QueryCompiler compiler = new QueryCompiler(createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache));
+        final UpdateNode root = new UpdateNode("items");
         final SetNode set = new SetNode(root, "name", "Ada");
 
         // When
@@ -129,14 +132,8 @@ class QueryCompilerTest {
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(target);
         when(tableRegistry.getOrCreateSpiTable("incoming")).thenReturn(source);
         when(metadataCache.ensureTableMetaData(target)).thenReturn(metadata);
-        final LitebridgeContext context = context(tableRegistry, metadataCache);
-        when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
-        final SelectExpressionMapper expressionMapper = mock(SelectExpressionMapper.class);
-        when(expressionMapper.toSelectExpression(any(), anyMap())).thenReturn(mock(SelectExpression.class));
-        final TypeConverter typeConverter = mock(TypeConverter.class);
-        when(typeConverter.getSqlDataType(Integer.class)).thenReturn(Types.INTEGER);
-        when(context.selectExpressionMapper()).thenReturn(expressionMapper);
-        when(context.typeConverter()).thenReturn(typeConverter);
+        final LitebridgeContext context = createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache);
+
         final QueryCompiler compiler = new QueryCompiler(context);
         final MergeNode root = new MergeNode("items", null, null, null);
         final ConditionNode condition = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.EQ, 1);
@@ -167,18 +164,8 @@ class QueryCompilerTest {
         when(tableRegistry.getOrCreateSpiTable("incoming")).thenReturn(source);
         when(metadataCache.ensureTableMetaData(target)).thenReturn(targetMetadata);
         when(metadataCache.ensureTableMetaData(source)).thenReturn(sourceMetadata);
-
-        final LitebridgeContext context = context(tableRegistry, metadataCache);
-        when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
-        final SelectExpressionMapper expressionMapper = mock(SelectExpressionMapper.class);
-        when(expressionMapper.toSelectExpression(any(), anyMap())).thenReturn(mock(SelectExpression.class));
-        final TypeConverter typeConverter = mock(TypeConverter.class);
-        when(typeConverter.getSqlDataType(Integer.class)).thenReturn(Types.INTEGER);
-        when(typeConverter.convert(any(), eq(Types.INTEGER))).thenAnswer(inv -> inv.getArgument(0));
-        when(context.selectExpressionMapper()).thenReturn(expressionMapper);
-        when(context.typeConverter()).thenReturn(typeConverter);
-
-        final QueryCompiler compiler = new QueryCompiler(context);
+        final LitebridgeContext litebridgeContext = createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache);
+        final QueryCompiler compiler = new QueryCompiler(litebridgeContext);
 
         // MERGE INTO items USING incoming ON incoming.id = 1
         final MergeNode root = new MergeNode("items", null, null, null);
@@ -186,7 +173,7 @@ class QueryCompilerTest {
         final UsingNode using = new UsingNode(root, "incoming", null, null, null, null, onCondition);
 
         // WHEN MATCHED (UPDATE SET balance = 500 WHERE id < 5)
-        final UpdateNode updateNode = new UpdateNode(null, "items", null);
+        final UpdateNode updateNode = new UpdateNode("items");
         final SetNode setNode = new SetNode(updateNode, "balance", 500);
         final ConditionNode whereCondition = new ConditionNode(null, LogicOperator.AND, "id", null, Operator.LT, 5);
         final WhereNode whereNode = new WhereNode(setNode, whereCondition);
@@ -240,9 +227,7 @@ class QueryCompilerTest {
         final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
-        final LitebridgeContext context = context(tableRegistry, metadataCache);
-        when(context.aliasGenerator()).thenReturn(new NoOpAliasGenerator());
-        when(context.selectExpressionMapper()).thenReturn(mock(SelectExpressionMapper.class));
+        final LitebridgeContext context = createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache);
         final QueryCompiler compiler = new QueryCompiler(context);
         final SelectNode root = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
@@ -262,9 +247,7 @@ class QueryCompilerTest {
         final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
-        final LitebridgeContext context = context(tableRegistry, metadataCache);
-        when(context.aliasGenerator()).thenReturn(new NoOpAliasGenerator());
-        when(context.selectExpressionMapper()).thenReturn(mock(SelectExpressionMapper.class));
+        final LitebridgeContext context = createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache);
         final QueryCompiler compiler = new QueryCompiler(context);
         final SelectNode root = new SelectNode("items", null, null, new ExpressionSpec[0], null);
 
@@ -286,7 +269,7 @@ class QueryCompilerTest {
         final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
-        final QueryCompiler compiler = new QueryCompiler(context(tableRegistry, metadataCache));
+        final QueryCompiler compiler = new QueryCompiler(createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache));
         final InsertNode root = new InsertNode("items", null, new String[0]);
 
         // When
@@ -307,8 +290,8 @@ class QueryCompilerTest {
         final TableMetaDataCache metadataCache = mock(TableMetaDataCache.class);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
-        final QueryCompiler compiler = new QueryCompiler(context(tableRegistry, metadataCache));
-        final UpdateNode root = new UpdateNode(null, "items", null);
+        final QueryCompiler compiler = new QueryCompiler(createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache));
+        final UpdateNode root = new UpdateNode("items");
 
         // When
         final PreparedOperation first = compiler.compile(root);
@@ -329,7 +312,7 @@ class QueryCompilerTest {
         when(tableRegistry.getOrmTable("items")).thenReturn(null);
         when(tableRegistry.getOrCreateSpiTable("items")).thenReturn(table);
         when(metadataCache.ensureTableMetaData(table)).thenReturn(metadata);
-        final LitebridgeContext context = context(tableRegistry, metadataCache);
+        final LitebridgeContext context = createLitebridgeContext(LitebridgeContext.Mode.SQL, tableRegistry, metadataCache);
         final QueryCompiler compiler = new QueryCompiler(context);
         final MergeNode root = new MergeNode("items", null, null, null);
         final UsingNode using = new UsingNode(root, "items", null, null, null, null, null);
@@ -354,16 +337,29 @@ class QueryCompilerTest {
         assertThrows(IllegalArgumentException.class, () -> compiler.compile(unsupportedRoot));
     }
 
-    private static LitebridgeContext context(final TableRegistry tableRegistry,
-                                             final TableMetaDataCache metadataCache) {
-        final LitebridgeContext context = mock(LitebridgeContext.class);
-        when(context.tableRegistry()).thenReturn(tableRegistry);
-        when(context.tableMetaDataCache()).thenReturn(metadataCache);
-        when(context.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
+    private static LitebridgeContext createLitebridgeContext(final LitebridgeContext.Mode mode,
+                                                             final TableRegistry tableRegistry,
+                                                             final TableMetaDataCache metadataCache) {
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        when(litebridgeContext.mode()).thenReturn(mode);
+        when(litebridgeContext.tableRegistry()).thenReturn(tableRegistry);
+        when(litebridgeContext.tableMetaDataCache()).thenReturn(metadataCache);
+        when(litebridgeContext.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
+
         final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         when(databaseProvider.metaData()).thenReturn(providerMetaData);
-        when(context.databaseProvider()).thenReturn(databaseProvider);
-        return context;
+        when(litebridgeContext.databaseProvider()).thenReturn(databaseProvider);
+
+        final SelectExpressionMapper expressionMapper = mock(SelectExpressionMapper.class);
+        when(expressionMapper.toSelectExpression(any(), anyMap())).thenReturn(mock(SelectExpression.class));
+        lenient().when(litebridgeContext.selectExpressionMapper()).thenReturn(expressionMapper);
+        lenient().when(litebridgeContext.typeConverter()).thenReturn(new DefaultTypeConverter());
+
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final SqlFunctionRegistry sqlFunctionRegistry = new SqlFunctionRegistryFactory(labelGenerator, mock(SelectSqlGenerator.class)).create();
+        lenient().when(litebridgeContext.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
+
+        return litebridgeContext;
     }
 }

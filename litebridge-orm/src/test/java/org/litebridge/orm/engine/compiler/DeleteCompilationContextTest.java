@@ -79,6 +79,7 @@ class DeleteCompilationContextTest {
         final TableMetaData tableMetaData = new TableMetaData(table, List.of("user_id"), List.of(colMeta));
 
         when(ormTable.getMetaData()).thenReturn(tableMetaData);
+        when(ormTable.hasField("id")).thenReturn(true);
         when(ormTable.columnMetaDataForField("id")).thenReturn(colMeta);
         when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.DTO);
         when(litebridgeContext.aliasGenerator()).thenReturn(new DefaultAliasGenerator());

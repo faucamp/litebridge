@@ -498,7 +498,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                 continue;
             }
 
-            if (matchesSelectTarget(columnName, st)) {
+            if (matchesTable(columnName, table)) {
                 selectTarget = st;
                 break;
             }
@@ -512,12 +512,14 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
     }
 
     protected final boolean matchesSelectTarget(final String columnName, final SelectTarget selectTarget) {
+        return matchesTable(columnName, getTable(selectTarget));
+    }
+
+    protected final boolean matchesTable(final String columnName, final Table table) {
         if (columnName.isEmpty()) {
             // Aggregate function or similar (e.g. COUNT(*)); return the "FROM" target (first)
             return true;
         }
-
-        final Table table = getTable(selectTarget);
 
         if (table.isVirtual()) {
             return true;

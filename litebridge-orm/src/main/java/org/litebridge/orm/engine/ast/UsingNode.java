@@ -21,6 +21,20 @@ public record UsingNode(MergeNode previous,
                         @Nullable String alias,
                         QueryNode on) implements QueryNode {
 
+    public UsingNode(final MergeNode previous,
+                     final QueryNode query,
+                     @Nullable final String alias,
+                     final QueryNode on) {
+        this(previous, null, null, query, null, alias, on);
+    }
+
+    public UsingNode(final MergeNode previous,
+                     final ValuesSpec values,
+                     @Nullable final String alias,
+                     final QueryNode on) {
+        this(previous, null, null, null, values, alias, on);
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof UsingNode(

@@ -91,7 +91,7 @@ class MergeQueryCompilerTest {
 
         // When
         compiler.applyNode(new MergeNode("items", null, null, null), compilationContext);
-        compiler.applyNode(new UpdateNode(null, "items", null), compilationContext);
+        compiler.applyNode(new UpdateNode("items"), compilationContext);
 
         // Then: no interaction on compilationContext
     }

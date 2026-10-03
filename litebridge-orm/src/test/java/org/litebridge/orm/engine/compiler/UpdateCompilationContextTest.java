@@ -71,7 +71,7 @@ class UpdateCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
 
-        final UpdateNode updateNode = new UpdateNode(null, "items", null);
+        final UpdateNode updateNode = new UpdateNode("items");
         final UpdateCompilationContext compilationContext = new UpdateCompilationContext(updateNode, context);
 
         final SetNode setNode = new SetNode(updateNode, "name", "Alice");
@@ -101,7 +101,7 @@ class UpdateCompilationContextTest {
         when(ormTable.columnMetaDataForField("name")).thenReturn(col);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
-        final UpdateNode updateNode = new UpdateNode(null, null, UserDto.class);
+        final UpdateNode updateNode = new UpdateNode(UserDto.class, null);
         final UpdateCompilationContext compilationContext = new UpdateCompilationContext(updateNode, context);
 
         final SetNode setNode = new SetNode(updateNode, "name", null, "Bob", MathOperator.ADD);
@@ -133,7 +133,7 @@ class UpdateCompilationContextTest {
         when(ormTable.columnMetaDataForField("age")).thenReturn(ageCol);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
-        final UpdateNode updateNode = new UpdateNode(null, null, UserDto.class);
+        final UpdateNode updateNode = new UpdateNode(UserDto.class, null);
         final UpdateCompilationContext compilationContext = new UpdateCompilationContext(updateNode, context);
 
         final SetNode set1 = new SetNode(updateNode, new SelectColumnSpec(new Column(table, "age")), 25);
@@ -159,7 +159,7 @@ class UpdateCompilationContextTest {
         when(context.tableRegistry().getOrCreateSpiTable("items")).thenReturn(table);
         when(context.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
 
-        final UpdateNode updateNode = new UpdateNode(null, "items", null);
+        final UpdateNode updateNode = new UpdateNode("items");
         final UpdateCompilationContext compilationContext = new UpdateCompilationContext(updateNode, context);
 
         final SetNode setNode = new SetNode(updateNode, new ExpressionSpecArray(new ExpressionSpec[0]), "val");
@@ -187,7 +187,7 @@ class UpdateCompilationContextTest {
         when(colExpr.column()).thenReturn(idCol.column());
         when(context.selectExpressionMapper().toSelectExpression(any(), anyMap())).thenReturn(colExpr);
 
-        final UpdateNode updateNode = new UpdateNode(null, "items", null);
+        final UpdateNode updateNode = new UpdateNode("items");
         final UpdateCompilationContext compilationContext = new UpdateCompilationContext(updateNode, context);
 
         assertNotNull(compilationContext.ensureWhereConditionGroupStack());
