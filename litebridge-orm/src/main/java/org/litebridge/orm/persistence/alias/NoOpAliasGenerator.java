@@ -11,11 +11,6 @@ import org.litebridge.db.spi.Table;
 public final class NoOpAliasGenerator implements AliasGenerator {
 
     @Override
-    public @Nullable Column column(final String alias) {
-        return null;
-    }
-
-    @Override
     public @Nullable String columnAlias(final Column column) {
         return null;
     }

@@ -9,8 +9,6 @@ import org.litebridge.db.spi.Table;
  */
 public sealed interface AliasGenerator permits DefaultAliasGenerator, NoOpAliasGenerator {
 
-    @Nullable Column column(final String alias);
-
     @Nullable String columnAlias(Column column);
 
     @Nullable String tableAlias(Table table);

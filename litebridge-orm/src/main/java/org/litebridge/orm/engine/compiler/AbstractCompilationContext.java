@@ -138,12 +138,6 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         } else if (value instanceof ExpressionSpec expressionSpec) {
             final ExpressionSpec rhsExpressionSpec = resolveConditionExpressionSpec(expressionSpec, selectTargets, operator);
             return new Condition(lhsSelectExpression, operator, selectExpressionMapper.toSelectExpression(rhsExpressionSpec, selectExpressions.aliases()));
-        } else if (value instanceof Column referencedColumn) {
-            // Reference to a selected column
-            //TODO: alias regression
-            throw new UnsupportedOperationException("Deprecated");
-//            final ColumnReference columnReference = litebridgeContext.sqlFunctionRegistry().select().reference().create(referencedColumn, null, null);
-//            return new Condition(lhsSelectExpression, operator, columnReference);
         }
 
         // Store bind values and return condition

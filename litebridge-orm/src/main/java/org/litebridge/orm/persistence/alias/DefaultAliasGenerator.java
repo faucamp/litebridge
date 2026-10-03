@@ -48,15 +48,6 @@ public final class DefaultAliasGenerator implements AliasGenerator {
     }
 
     @Override
-    public @Nullable Column column(final String alias) {
-        return scope.current().columnAliasMap.entrySet().stream()
-                .filter(e -> e.getValue().equals(alias))
-                .findFirst()
-                .map(Map.Entry::getKey)
-                .orElse(null);
-    }
-
-    @Override
     public @Nullable String columnAlias(final Column column) {
         return scope.current().columnAliasMap.get(column);
     }
