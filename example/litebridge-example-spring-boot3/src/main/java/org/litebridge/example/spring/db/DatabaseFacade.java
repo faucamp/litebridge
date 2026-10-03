@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
+@SuppressWarnings("unused")
 public class DatabaseFacade {
 
     private final Litebridge litebridge;

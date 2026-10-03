@@ -1,5 +1,6 @@
 package org.litebridge.example.common.dto;
 
+@SuppressWarnings("unused")
 public class Account {
 
     private Long id;

@@ -70,7 +70,7 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) {
         return null;
     }
 

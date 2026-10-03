@@ -13,10 +13,6 @@ public class AliasReferenceImpl extends AbstractAliasedExpression implements Ali
         super(alias, tableAlias, labelGenerator);
     }
 
-    public AliasReferenceImpl(final String alias, final LabelGenerator labelGenerator) {
-        this(alias, null, labelGenerator);
-    }
-
     @Override
     public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         if (alias == null) {

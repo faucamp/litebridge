@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 @Table("LB.ACCOUNT")
+@SuppressWarnings("unused")
 public class Account {
 
     @Column(value = "ACCOUNT_ID", generateUsingSequence = "LB.ACCOUNT_SEQ")
@@ -72,3 +73,4 @@ public class Account {
                 .toString();
     }
 }
+
