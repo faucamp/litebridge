@@ -71,8 +71,6 @@ public final class DefaultAliasGenerator implements AliasGenerator {
 
     @Override
     public String newAlias(final String name) {
-        //TODO: cleanup
-//        final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, v -> aliasTransformer.transformAlias(StringUtils.abbreviate(v))));
         final String alias = Objects.requireNonNull(aliasMap.computeIfAbsent(name, StringUtils::abbreviate));
         final int count = aliasCount.compute(alias, (k, v) -> v == null ? 0 : v + 1);
 

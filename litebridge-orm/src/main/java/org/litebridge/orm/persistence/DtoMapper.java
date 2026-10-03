@@ -744,7 +744,6 @@ public class DtoMapper {
                 }
 
                 final Table table = tableRegistry.getOrCreateSpiTable(tableName);
-                //TODO: dropping the "alias"/label here
                 return new Column(table, columnName);
             } else {
                 if (rootTableMetaData.hasColumn(columnName)) {

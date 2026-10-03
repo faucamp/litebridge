@@ -35,12 +35,11 @@ class DefaultAliasGeneratorTest {
         // Then
         assertEquals("ttmv", result);
 
-        //TODO: re-enable
-//        // When 2
-//        final String result2 = defaultAliasGenerator.newColumnAlias(column);
-//
-//        // Then 2
-//        assertEquals("ttmv1", result2);
+        // When 2
+        final String result2 = defaultAliasGenerator.newColumnAlias(column);
+
+        // Then 2
+        assertEquals("ttmv1", result2);
     }
 
     private static class TestDto {
