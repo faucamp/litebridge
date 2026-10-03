@@ -701,7 +701,8 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 selectExpressions.add(selectExpression);
             }
 
-            if (selectExpression instanceof AliasedExpression aliasedExpression) {
+            if (selectExpression instanceof AliasedExpression aliasedExpression && aliasedExpression.alias() != null) {
+                //noinspection DataFlowIssue
                 aliases.put(aliasedExpression.alias(), aliasedExpression);
             }
         });

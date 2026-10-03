@@ -27,7 +27,7 @@ public final class LiteralExpressionSpec<T> extends AbstractAliasable implements
         }
     }
 
-    public T value() {
+    public @Nullable T value() {
         return value;
     }
 

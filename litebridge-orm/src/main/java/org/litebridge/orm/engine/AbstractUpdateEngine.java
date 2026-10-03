@@ -74,7 +74,7 @@ abstract sealed class AbstractUpdateEngine permits AbstractInsertEngine, DeleteE
      * @throws IllegalStateException If an error occurs during SQL execution, including database or query issues.
      */
     protected final <T extends Result> T execute(final QueryNode node,
-                                                 final Function<PreparedOperation, UpdateMetaData> updateMetaDataCreator,
+                                                 final Function<PreparedOperation, @Nullable UpdateMetaData> updateMetaDataCreator,
                                                  final Class<T> resultType,
                                                  final LitebridgeContext litebridgeContext) {
         final int nodeHash = node.hashCode();

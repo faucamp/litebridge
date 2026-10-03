@@ -8,7 +8,6 @@ import org.jspecify.annotations.Nullable;
  * @param dtoClass        Mapped DTO class to update.
  * @param contextDtoClass The parent/context of the mapped DTO class.
  * @param table           the table to update
- * @param dtoClass        class of the DTO to update
  */
 public record UpdateNode(@Nullable Class<?> dtoClass,
                          @Nullable Class<?> contextDtoClass,

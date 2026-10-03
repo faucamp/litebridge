@@ -124,7 +124,6 @@ public class Litebridge extends LitebridgeCore {
      *
      * @param dto the entity/mapped DTO to be merged into the database.
      *            It must correspond to a registered ORM table.
-     * @throws SQLException if a database access error occurs during the merge process.
      */
     public void merge(final Object dto) {
         try {

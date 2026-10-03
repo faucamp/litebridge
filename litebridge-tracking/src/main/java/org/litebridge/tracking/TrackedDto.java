@@ -123,6 +123,7 @@ public final class TrackedDto<DTO> {
         }
 
         fieldSnapshots = new ArrayList<>();
+        //noinspection DataFlowIssue
         fields.forEach(field -> fieldSnapshots.add(new FieldSnapshot(field, 0)));
     }
 

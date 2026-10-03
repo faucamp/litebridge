@@ -284,8 +284,22 @@ class PersistenceFacadeTest {
         category.products = new ArrayList<>(List.of(product));
         product.category = category;
 
-        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories", Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"))), List.of("ID"));
-        final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
+        final FieldAccessor productDtoIdFieldAccessor = changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "id");
+        final FieldAccessor categoryDtoProductsFieldAccessor = changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products");
+        final OrmTable categoryTable = createOrmTable(changeTracker,
+                CategoryDto.class,
+                "categories",
+                Map.of("id", numeric("ID"),
+                        "name", varchar("NAME"),
+                        "products", new MappedOneToMany(productDtoIdFieldAccessor, categoryDtoProductsFieldAccessor)),
+                List.of("ID"));
+        final OrmTable productTable = createOrmTable(changeTracker,
+                ProductDto.class,
+                "products",
+                Map.of("id", numeric("ID"),
+                        "name", varchar("NAME"),
+                        "category", numeric("CAT_ID")),
+                List.of("ID"));
 
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
         when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);
@@ -668,7 +682,15 @@ class PersistenceFacadeTest {
         category.products = new ArrayList<>(List.of(product));
         product.category = category;
 
-        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories", Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(null, changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"))), List.of("ID"));
+        final FieldAccessor productDtoIdFieldAccessor = changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "id");
+        final FieldAccessor categoryDtoProductsFieldAccessor = changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products");
+        final OrmTable categoryTable = createOrmTable(changeTracker,
+                CategoryDto.class,
+                "categories",
+                Map.of("id", numeric("ID"),
+                        "name", varchar("NAME"),
+                        "products", new MappedOneToMany(productDtoIdFieldAccessor, categoryDtoProductsFieldAccessor)),
+                List.of("ID"));
         final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products", Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CAT_ID")), List.of("ID"));
 
         when(tableRegistry.getOrmTableOrThrow(CategoryDto.class)).thenReturn(categoryTable);

@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.merge;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectApiImpl;
@@ -57,13 +56,14 @@ public final class DtoMergeUsingStep<DTO> extends MergeUsingStep<DTO, DtoMergeUp
     public DtoMergeOnStep<DTO> using(final FromTargetSpec fromTargetSpec) {
         return switch (fromTargetSpec) {
             case QueryAliasSpec queryAliasSpec -> usingQueryImpl(queryAliasSpec.query(), queryAliasSpec.alias());
-            case DtoAliasSpec<?> dtoAliasSpec -> new DtoMergeOnStep<>(dtoAliasSpec.dtoClass(), dtoAliasSpec.alias(), mergeNode, litebridgeContext);
+            case DtoAliasSpec<?> dtoAliasSpec ->
+                    new DtoMergeOnStep<>(dtoAliasSpec.dtoClass(), dtoAliasSpec.alias(), mergeNode, litebridgeContext);
             case ValuesSpec valuesSpec -> new DtoMergeOnStep<>(valuesSpec, mergeNode, litebridgeContext);
             default -> throw new IllegalArgumentException("Unsupported DTO-mode FromTargetSpec: " + fromTargetSpec);
         };
     }
 
-    private @NonNull DtoMergeOnStep<DTO> usingQueryImpl(final Function<SelectApi, SelectTerminal<?>> subselect, final @Nullable String alias) {
+    private DtoMergeOnStep<DTO> usingQueryImpl(final Function<SelectApi, SelectTerminal<?>> subselect, final @Nullable String alias) {
         final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
         final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
         return new DtoMergeOnStep<>(subselectNode, alias, mergeNode, litebridgeContext);

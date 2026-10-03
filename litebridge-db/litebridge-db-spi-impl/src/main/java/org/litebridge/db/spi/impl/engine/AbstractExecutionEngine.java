@@ -230,7 +230,6 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                                                  final ConnectionProvider connectionProvider) throws SQLException {
         if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues())) {
             getLogger().trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues().stream()
-                    .filter(Objects::nonNull)
                     .map(bindValue -> bindValue.value() != null ? bindValue.value() : "<null>")
                     .toList());
         } else {

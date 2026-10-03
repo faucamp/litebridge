@@ -142,7 +142,7 @@ public final class ColumnMetaData extends ColumnType implements MappedFieldTarge
      * @return the size of the column.
      */
     public int getSize() {
-        return size;
+        return Objects.requireNonNullElse(size, 0);
     }
 
     /**

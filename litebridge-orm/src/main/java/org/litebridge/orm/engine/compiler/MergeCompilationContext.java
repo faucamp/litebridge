@@ -188,7 +188,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 columnMetaData = targetTableMetaData.column(setNode.column());
             }
         } else {
-            final ExpressionSpec expressionSpec = setNode.expressionSpec();
+            final ExpressionSpec expressionSpec = Objects.requireNonNull(setNode.expressionSpec());
 
             if (expressionSpec instanceof QueryField queryField) {
                 final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
@@ -242,11 +242,6 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                     final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
                     final String fieldName = QueryFieldInspector.getFieldName(queryField);
                     final ColumnMetaData columnMetaData = targetOrmTable.columnMetaDataForField(fieldName);
-
-                    if (columnMetaData == null) {
-                        throw new IllegalArgumentException("No column found for field: " + fieldName);
-                    }
-
                     columnMetaDataList.add(columnMetaData);
                 } else {
                     throw new UnsupportedOperationException("Unsupported expression spec: " + expressionSpec);
@@ -338,8 +333,6 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 andConditionGroup = null;
             }
 
-            final List<UpdateColumn> updatedColumns = getUpdateColumns(whenMatchedSpec);
-
             if (whenMatchedSpec.isMatched()) {
                 // When matched
                 final Merge.WhenMatchedOperation operation;
@@ -347,12 +340,14 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 if (whenMatchedSpec.isDelete()) {
                     operation = new Merge.MergeDelete();
                 } else {
+                    final List<UpdateColumn> updatedColumns = Objects.requireNonNull(getUpdateColumns(whenMatchedSpec));
                     operation = new Merge.MergeUpdate(updatedColumns);
                 }
 
                 whenMatchedList.add(new Merge.WhenMatched<>(andConditionGroup, operation));
             } else {
                 // When not matched
+                final List<UpdateColumn> updatedColumns = Objects.requireNonNull(getUpdateColumns(whenMatchedSpec));
                 final Merge.WhenMatched<Merge.MergeInsert> whenNotMatched = new Merge.WhenMatched<>(andConditionGroup, new Merge.MergeInsert(updatedColumns, 1));
                 whenNotMatchedList.add(whenNotMatched);
             }

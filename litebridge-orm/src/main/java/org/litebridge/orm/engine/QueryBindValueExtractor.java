@@ -6,8 +6,6 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.db.spi.query.Values;
-import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
@@ -26,7 +24,6 @@ import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
-import org.litebridge.orm.expression.select.ValuesSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -251,8 +248,7 @@ public final class QueryBindValueExtractor {
                         }
                     }
                 }
-                case null, default -> {
-                }
+                default -> { /* Ignore */ }
             }
         }
 

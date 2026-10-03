@@ -42,7 +42,7 @@ public class LimitClauseTerminalImpl<DTO>
      * @param litebridgeContext    the Litebridge context
      */
     public LimitClauseTerminalImpl(final Integer limit,
-                                   final QueryNode node,
+                                   final @Nullable QueryNode node,
                                    final SelectEngineTerminal selectEngineTerminal,
                                    final LitebridgeContext litebridgeContext) {
         super(node, selectEngineTerminal, litebridgeContext);

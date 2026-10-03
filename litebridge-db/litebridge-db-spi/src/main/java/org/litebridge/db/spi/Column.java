@@ -35,6 +35,7 @@ public record Column(String name, Table table) {
     }
 
     public boolean hasTable() {
+        //noinspection ConstantValue
         return table != null && table != NO_TABLE;
     }
 

@@ -255,7 +255,7 @@ class MergeCompilationContextTest {
         when(ormTable.getMetaData()).thenReturn(metaData);
         when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
-        when(ormTable.columnMetaDataForField("unknown")).thenReturn(null);
+        when(ormTable.columnMetaDataForField("unknown")).thenThrow(new IllegalArgumentException());
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
 

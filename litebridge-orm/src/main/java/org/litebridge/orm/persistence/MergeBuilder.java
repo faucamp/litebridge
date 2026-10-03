@@ -123,6 +123,7 @@ final class MergeBuilder extends InsertBuilder {
             }
         }
 
+        //noinspection DataFlowIssue
         mergeOnConditionClauseTerminal = Objects.requireNonNull(mergeOnConditionClauseTerminal);
         final MergeTerminal mergeTerminal;
 

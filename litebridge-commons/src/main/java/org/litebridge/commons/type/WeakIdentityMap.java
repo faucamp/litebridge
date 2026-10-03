@@ -111,7 +111,7 @@ public final class WeakIdentityMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public Set<Entry<K, V>> entrySet() {
+    public Set<Entry<K, @Nullable V>> entrySet() {
         return keySet().stream().map(key -> Map.entry(key, get(key)))
                 .collect(Collectors.toSet());
     }

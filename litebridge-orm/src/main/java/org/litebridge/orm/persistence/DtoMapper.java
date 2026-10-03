@@ -436,7 +436,7 @@ public class DtoMapper {
                     final Object[] pkValues = new Object[fieldMapping.columnIndexes().length];
 
                     for (int j = 0; j < pkValues.length; j++) {
-                        pkValues[j] = row.value(fieldMapping.columnIndexes()[j]);
+                        pkValues[j] = Objects.requireNonNull(row.value(fieldMapping.columnIndexes()[j]));
                     }
 
                     pk = new CompositePk(pkValues);
@@ -555,7 +555,7 @@ public class DtoMapper {
 
         // Late reverse updates for already-instantiated DTOs
         for (LateReverseCollectionUpdate update : lateReverseUpdates) {
-            updateReverseCollection(update.hostPartialDto.getDto(), update.relatedDto, update.relatedCollectionField);
+            updateReverseCollection(Objects.requireNonNull(update.hostPartialDto.getDto()), update.relatedDto, update.relatedCollectionField);
         }
     }
 
@@ -582,7 +582,7 @@ public class DtoMapper {
             partialDto.setDto(dto);
 
             // Populate fields
-            for (Map.Entry<FieldAccessor, Object> entry : dtoData.values().entrySet()) {
+            for (Map.Entry<FieldAccessor, @Nullable Object> entry : dtoData.values().entrySet()) {
                 final FieldAccessor accessor = entry.getKey();
                 Object value = entry.getValue();
 
@@ -969,7 +969,7 @@ public class DtoMapper {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(final @Nullable Object obj) {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
             var that = (PartiallyConstructedDto) obj;
@@ -1083,7 +1083,7 @@ public class DtoMapper {
             return "FieldMapping[" +
                     "fieldAccessor=" + fieldAccessor + ", " +
                     "columns=" + columns + ", " +
-                    "columnIndexes=" + columnIndexes + ", " +
+                    "columnIndexes=" + Arrays.toString(columnIndexes) + ", " +
                     "isBasicType=" + isBasicType + ", " +
                     "isRelatedDto=" + isRelatedDto + ", " +
                     "relatedCollectionField=" + relatedCollectionField + ", " +
@@ -1161,7 +1161,7 @@ public class DtoMapper {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(final @Nullable Object obj) {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
             var that = (MappingData) obj;
@@ -1184,9 +1184,9 @@ public class DtoMapper {
                     "dtoClass=" + dtoClass + ", " +
                     "table=" + table + ", " +
                     "ormTable=" + ormTable + ", " +
-                    "pkColumnIndexes=" + pkColumnIndexes + ", " +
+                    "pkColumnIndexes=" + Arrays.toString(pkColumnIndexes) + ", " +
                     "fieldMappings=" + fieldMappings + ", " +
-                    "constructorArgIndices=" + constructorArgIndices + ']';
+                    "constructorArgIndices=" + Arrays.toString(constructorArgIndices) + ']';
         }
     }
 

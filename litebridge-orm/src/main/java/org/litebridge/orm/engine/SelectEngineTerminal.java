@@ -244,7 +244,7 @@ public class SelectEngineTerminal {
             } else if (dtoClass == Row.class) {
                 // Multipe type overrides
                 return (List<DTO>) rows.stream()
-                        .map(row -> convertRowValue(row, selectNode.resultTypes(), typeConverter))
+                        .map(row -> convertRowValue(row, Objects.requireNonNull(selectNode.resultTypes()), typeConverter))
                         .toList();
             } else {
                 // Single type override

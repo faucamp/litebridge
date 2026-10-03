@@ -94,11 +94,9 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
                     .toList();
         }
 
-        if (this.bindValues != null) {
-            bindValues.addAll(this.bindValues);
-            this.bindValues.clear();
-            this.bindValues.addAll(bindValues);
-        }
+        bindValues.addAll(this.bindValues);
+        this.bindValues.clear();
+        this.bindValues.addAll(bindValues);
 
         final ConditionGroup conditionGroup = where != null ? toConditionGroup(where.current(), table, EMPTY_SELECT_EXPRESSIONS) : EMPTY_CONDITION_GROUP;
         return new Update(table, updateColumns, conditionGroup);

@@ -301,7 +301,7 @@ public class PersistenceFacade {
 
         final StatementChain statementChain = statementBuilder.statementChain();
         boolean columnsAdded = false;
-        final LinkedHashMap<String, Object> insertValues = isInsert ? new LinkedHashMap<>() : null;
+        final LinkedHashMap<String, @Nullable Object> insertValues = isInsert ? new LinkedHashMap<>() : null;
 
         for (Map.Entry<FieldAccessor, MappedFieldTarget> entry : ormTable.mappedFieldTargets()) {
             final FieldAccessor fieldAccessor = entry.getKey();
@@ -335,6 +335,7 @@ public class PersistenceFacade {
                 if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                     updateBuilder.setField(fieldAccessor.name(), value);
                 } else {
+                    //noinspection DataFlowIssue
                     insertValues.put(fieldAccessor.name(), value);
                 }
 
@@ -373,6 +374,7 @@ public class PersistenceFacade {
                                                     if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                                         updateBuilder.setField(fieldAccessor.name(), pkValue);
                                                     } else {
+                                                        //noinspection DataFlowIssue
                                                         insertValues.put(fieldAccessor.name(), pkValue);
                                                     }
                                                 }
@@ -413,6 +415,7 @@ public class PersistenceFacade {
                                                     if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                                         updateBuilder.setField(fieldAccessor.name(), pkValue);
                                                     } else {
+                                                        //noinspection DataFlowIssue
                                                         insertValues.put(fieldAccessor.name(), pkValue);
                                                     }
                                                 }
@@ -450,6 +453,7 @@ public class PersistenceFacade {
                             if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                                 updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
                             } else {
+                                //noinspection DataFlowIssue
                                 insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
                             }
                         });
@@ -519,17 +523,11 @@ public class PersistenceFacade {
                                         && !CollectionUtils.isEmpty(insertResult.generatedKeys())
                                         && !insertResult.generatedKeys().getFirst().isEmpty()) {
                                     final Object pkValue = insertResult.generatedKeys().getFirst().values().iterator().next();
-
-                                    if (mappedOneToMany.mappedByField() != null) {
-                                        dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkValue);
-                                    }
+                                    dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkValue);
                                 } else {
                                     final ColumnMetaData pkColumn = primaryKeyColumns.getFirst();
                                     final FieldAccessor pkField = table.getFieldForColumnName(pkColumn.name());
-
-                                    if (mappedOneToMany.mappedByField() != null) {
-                                        dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkField.get(dto));
-                                    }
+                                    dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkField.get(dto));
                                 }
                             }));
                         }
@@ -704,7 +702,7 @@ public class PersistenceFacade {
                                         mutableCollection.addAll(collection);
                                     }
 
-                                    LOGGER.trace("Adding DTO to reverse mapping collection '{}': {}", collectionField.name(), dto);
+                                    LOGGER.trace("Adding DTO to newly-initialised reverse mapping collection '{}': {}", collectionField.name(), dto);
                                     mutableCollection.add(dto);
 
                                     final Map<FieldAccessor, @Nullable Object> updatedFields = new HashMap<>();
@@ -908,7 +906,7 @@ public class PersistenceFacade {
      * Adds primary key conditions for the given DTO and table to an {@link UpdateBuilder} or {@link DeleteBuilder}.
      *
      * @param dto              the DTO to add primary key conditions for
-     * @param ormTable            the ORM table corresponding to the DTO
+     * @param ormTable         the ORM table corresponding to the DTO
      * @param statementBuilder the statement builder to add conditions to. Must be an {@link UpdateBuilder} or {@link DeleteBuilder}.
      * @param <DTO>            class of the DTO
      */
