@@ -31,6 +31,14 @@ public class ManyToManyBuilderJoinColumnStep {
      * configuration of the inverse join column in the many-to-many relationship.
      */
     public ManyToManyBuilderInverseJoinColumnStep joinColumn(final String column) {
-        return new ManyToManyBuilderInverseJoinColumnStep(joinTable, column);
+        return new ManyToManyBuilderInverseJoinColumnStep(joinTable, new String[]{column});
+    }
+
+    public ManyToManyBuilderInverseJoinColumnStep joinColumns(final String... columns) {
+        if (columns.length == 0) {
+            throw new IllegalArgumentException("At least one join column must be specified");
+        }
+
+        return new ManyToManyBuilderInverseJoinColumnStep(joinTable, columns);
     }
 }

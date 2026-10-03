@@ -263,10 +263,10 @@ public final class TableMapper {
 
         final MappedManyToMany mappedManyToMany = new MappedManyToMany(
                 joinOrmTable,
-                manyToMany.joinColumn(),
+                manyToMany.joinColumns(),
                 leftCollectionFieldAccessor,
                 rightOrmTable,
-                manyToMany.inverseJoinColumn());
+                manyToMany.inverseJoinColumns());
         mappedFields.put(leftCollectionFieldAccessor, mappedManyToMany);
     }
 
@@ -299,13 +299,16 @@ public final class TableMapper {
     }
 
     private MappedTable mapManyToManyJoinTable(final ManyToMany manyToMany, final MethodHandles.Lookup lookup) {
-        final ColumnSpec joinColumnSpec = new ColumnSpec(manyToMany.joinColumn(), null, manyToMany.joinColumn());
-        final ColumnSpec inverseJoinColumnSpec = new ColumnSpec(manyToMany.inverseJoinColumn(), null, manyToMany.inverseJoinColumn());
+        final String[] joinColumns = manyToMany.joinColumns();
+        final String[] inverseJoinColumns = manyToMany.inverseJoinColumns();
+        final Map<FieldMapping, ColumnMapping> columnSpecMap = new HashMap<>(joinColumns.length * 2);
 
-        final TableSpec tableSpec = new TableSpec(manyToMany.joinTable(), Map.of(
-                new NoFieldMapping(), joinColumnSpec,
-                new NoFieldMapping(), inverseJoinColumnSpec));
+        for (int i = 0; i < joinColumns.length; i++) {
+            columnSpecMap.put(new NoFieldMapping(), new ColumnSpec(joinColumns[i], null, joinColumns[i]));
+            columnSpecMap.put(new NoFieldMapping(), new ColumnSpec(inverseJoinColumns[i], null, inverseJoinColumns[i]));
+        }
 
+        final TableSpec tableSpec = new TableSpec(manyToMany.joinTable(), columnSpecMap);
         final Class<?> hiddenJoinClass = Proxy.newProxyInstance(HiddenJoinEntity.class.getClassLoader(),
                         new Class<?>[]{HiddenJoinEntity.class},
                         (proxy, method, args) -> {

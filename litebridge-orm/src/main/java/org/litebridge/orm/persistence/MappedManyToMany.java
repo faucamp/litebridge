@@ -15,16 +15,16 @@ import java.util.function.Supplier;
  * field that represents the relationship in the application layer. It also includes mechanisms
  * to lazily resolve the target table associated with the many-to-many relationship.
  *
- * @param joinOrmTable      The intermediary table that connects two entities in a many-to-many relationship.
- * @param joinColumn        The column in the join table that links it to the source entity.
- * @param collection        The field in the source entity that holds the collection representing the relationship.
- * @param targetOrmTable:   The table representing the target entity in the relationship, resolved lazily.
- * @param inverseJoinColumn The column in the join table that links it to the target entity.
+ * @param joinOrmTable       The intermediary table that connects two entities in a many-to-many relationship.
+ * @param joinColumns        The column(s) in the join table that link it to the source entity.
+ * @param collection         The field in the source entity that holds the collection representing the relationship.
+ * @param targetOrmTable:    The table representing the target entity in the relationship, resolved lazily.
+ * @param inverseJoinColumns The column(s) in the join table that link it to the target entity.
  */
 public record MappedManyToMany(OrmTable joinOrmTable,
-                               String joinColumn,
+                               String[] joinColumns,
                                FieldAccessor collection,
 
                                Supplier<OrmTable> targetOrmTable,
-                               String inverseJoinColumn) implements MappedFieldTarget {
+                               String[] inverseJoinColumns) implements MappedFieldTarget {
 }

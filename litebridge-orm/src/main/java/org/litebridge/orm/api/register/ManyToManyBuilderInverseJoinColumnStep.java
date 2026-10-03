@@ -21,11 +21,11 @@ import org.litebridge.orm.api.spec.ManyToMany;
 public final class ManyToManyBuilderInverseJoinColumnStep {
 
     private final String joinTable;
-    private final String joinColumn;
+    private final String[] joinColumns;
 
-    ManyToManyBuilderInverseJoinColumnStep(final String joinTable, final String joinColumn) {
+    ManyToManyBuilderInverseJoinColumnStep(final String joinTable, final String[] joinColumns) {
         this.joinTable = joinTable;
-        this.joinColumn = joinColumn;
+        this.joinColumns = joinColumns;
     }
 
     /**
@@ -42,6 +42,14 @@ public final class ManyToManyBuilderInverseJoinColumnStep {
      * and inverse join column.
      */
     public ManyToMany inverseJoinColumn(final String column) {
-        return new ManyToMany(joinTable, joinColumn, column);
+        return new ManyToMany(joinTable, joinColumns, new String[]{column});
+    }
+
+    public ManyToMany inverseJoinColumns(final String... columns) {
+        if (columns.length == 0) {
+            throw new IllegalArgumentException("At least one inverse join column must be specified");
+        }
+
+        return new ManyToMany(joinTable, joinColumns, columns);
     }
 }

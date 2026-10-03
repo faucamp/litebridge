@@ -7,6 +7,7 @@ import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkFkTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkLookup;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimple;
+import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimpleM2M;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -138,5 +140,61 @@ class CompositePkTest extends AbstractE2eTest {
         assertNull(result2.lookup());
         assertEquals(test1.testId(), result2.testId());
         assertEquals(test1.description(), result2.description());
+    }
+
+
+    @TestTemplate
+    @DisplayName("Many-to-many join with composite PKs")
+    void compositePk_manyToManyJoin(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String compPkSimpleTable = tableMapper.qualifyName("COMP_PK_SIMPLE");
+        final String compJoinTable = tableMapper.qualifyName("COMP_JOIN_TABLE");
+
+        // Given
+        litebridge.register(CompositePkSimpleM2M.class, rc -> rc
+                .mapToTable(compPkSimpleTable)
+                .with(spec -> spec.mapField("pk1").toColumn(tableMapper.transformColumnName("PK1")))
+                .with(spec -> spec.mapField("pk2").toColumn(tableMapper.transformColumnName("PK2")))
+                .with(spec -> spec.mapField("description").toColumn(tableMapper.transformColumnName("TEST_DESC")))
+                .with(spec -> spec.mapField("others").manyToMany(m -> m
+                        .joinTable(compJoinTable)
+                        .joinColumns(
+                                tableMapper.transformColumnName("LEFT_PK1"),
+                                tableMapper.transformColumnName("LEFT_PK2"))
+                        .inverseJoinColumns(
+                                tableMapper.transformColumnName("RIGHT_PK1"),
+                                tableMapper.transformColumnName("RIGHT_PK2")))));
+
+        final CompositePkSimpleM2M dto1 = new CompositePkSimpleM2M();
+        dto1.setPk1(1L);
+        dto1.setPk2(2L);
+        dto1.setDescription("test");
+
+        final CompositePkSimpleM2M dto2 = new CompositePkSimpleM2M();
+        dto2.setPk1(100L);
+        dto2.setPk2(200L);
+        dto1.setDescription("other");
+
+        dto1.setOthers(List.of(dto2));
+        dto2.setOthers(List.of(dto1));
+
+        // When
+        litebridge.save(dto1);
+
+        // Then
+        final CompositePkSimpleM2M result = litebridge.select(CompositePkSimpleM2M.class)
+                .where("pk1").eq(1L)
+                .and("pk2").eq(2L)
+                .oneOrThrow();
+        assertEquals(1L, result.getPk1());
+        assertEquals(2L, result.getPk2());
+        assertEquals(dto1.getDescription(), result.getDescription());
+        assertNotNull(result.getOthers());
+        assertEquals(1, result.getOthers().size());
+        final CompositePkSimpleM2M resultOther = result.getOthers().getFirst();
+        assertEquals(100L, resultOther.getPk1());
+        assertEquals(200L, resultOther.getPk2());
+        assertNotNull(resultOther.getOthers());
+        assertEquals(1, resultOther.getOthers().size());
+        assertEquals(result, resultOther.getOthers().getFirst());
     }
 }

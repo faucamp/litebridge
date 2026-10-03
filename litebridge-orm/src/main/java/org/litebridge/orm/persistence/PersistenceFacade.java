@@ -577,8 +577,8 @@ public class PersistenceFacade {
 
                                 // Add join table entry
                                 final LinkedHashMap<String, @Nullable Object> joinTableInsertValues = new LinkedHashMap<>();
-                                addManyToManyJoinValue(leftDto, mappedManyToMany.joinColumn(), joinTableInsertValues, tableProvider);
-                                addManyToManyJoinValue(value, mappedManyToMany.inverseJoinColumn(), joinTableInsertValues, tableProvider);
+                                addManyToManyJoinValue(leftDto, mappedManyToMany.joinColumns(), joinTableInsertValues, tableProvider);
+                                addManyToManyJoinValue(value, mappedManyToMany.inverseJoinColumns(), joinTableInsertValues, tableProvider);
                                 joinTableInsertBuilder.addRow(joinTableInsertValues);
                             }));
                         }
@@ -656,18 +656,15 @@ public class PersistenceFacade {
         return currentDto;
     }
 
-    private void addManyToManyJoinValue(final Object dto, final String joinColumnName, final LinkedHashMap<String, @Nullable Object> rowValues, final TableProvider tableProvider) {
+    private void addManyToManyJoinValue(final Object dto, final String[] joinColumnNames, final LinkedHashMap<String, @Nullable Object> rowValues, final TableProvider tableProvider) {
         final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
         final List<ColumnMetaData> primaryKeyColumns = ormTable.getMetaData().primaryKey();
 
-        if (primaryKeyColumns.size() != 1) {
-            //TODO: add support for composite primary keys in many-to-many joins
-            throw new UnsupportedOperationException("Composite primary keys are not yet supported for many-to-many relationships; table: " + ormTable.getMetaData().name());
+        for (int i = 0; i < joinColumnNames.length; i++) {
+            final ColumnMetaData pkColumn = primaryKeyColumns.get(i);
+            final FieldAccessor pkField = ormTable.getFieldForColumnName(pkColumn.name());
+            rowValues.put(joinColumnNames[i], pkField.get(dto));
         }
-
-        final ColumnMetaData pkColumn = primaryKeyColumns.getFirst();
-        final FieldAccessor pkField = ormTable.getFieldForColumnName(pkColumn.name());
-        rowValues.put(joinColumnName, pkField.get(dto));
     }
 
     @SuppressWarnings("unchecked")
