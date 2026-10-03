@@ -8,6 +8,12 @@ public record AliasReferenceSpec(@Nullable String alias,
                                  @Nullable String tableAlias)
         implements ExpressionSpec, SelectTargetSpec {
 
+    public AliasReferenceSpec {
+        if (alias == null && expression == null) {
+            throw new IllegalArgumentException("AliasReferenceSpec must have either an alias or an expression");
+        }
+    }
+
     public AliasReferenceSpec(final String alias, final String tableAlias) {
         this(alias, null, tableAlias);
     }

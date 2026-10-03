@@ -7,6 +7,8 @@ import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
+import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.DelegateExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -28,14 +30,17 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Maps high-level {@link ExpressionSpec} query expressions to dialect-specific {@link SelectExpression} instances.
  */
 public final class SelectExpressionMapper {
 
+    private static final Select EMPTY_SELECT = new Select(SelectTarget.voidTarget(), Collections.emptyList());
     private final SqlFunctionRegistry sqlFunctionRegistry;
     private final ProtoExpressionResolver protoExpressionResolver;
 
@@ -155,11 +160,9 @@ public final class SelectExpressionMapper {
                     return columnExpression;
                 }
             }
-        } else if (aliasReferenceSpec.expression() != null) {
-            alias = toSelectExpression(aliasReferenceSpec.expression(), selectExpressionAliasMap)
-                    .toSql(null, null, null);
         } else {
-            alias = null;
+            alias = toSelectExpression(Objects.requireNonNull(aliasReferenceSpec.expression()), selectExpressionAliasMap)
+                    .toSql(EMPTY_SELECT, ClauseType.WHERE);
         }
 
         return sqlFunctionRegistry.select().aliasReference().create(alias, tableAlias);
