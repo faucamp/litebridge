@@ -2,6 +2,7 @@ package org.litebridge.orm.e2e.compositepk;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkFkTest;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class CompositePkTest extends AbstractE2eTest {
@@ -150,7 +152,7 @@ class CompositePkTest extends AbstractE2eTest {
         final String compPkSimpleTable = tableMapper.qualifyName("COMP_PK_SIMPLE");
         final String compJoinTable = tableMapper.qualifyName("COMP_JOIN_TABLE");
 
-        // Given
+        // Register DTO mapping
         litebridge.register(CompositePkSimpleM2M.class, rc -> rc
                 .mapToTable(compPkSimpleTable)
                 .with(spec -> spec.mapField("pk1").toColumn(tableMapper.transformColumnName("PK1")))
@@ -165,6 +167,7 @@ class CompositePkTest extends AbstractE2eTest {
                                 tableMapper.transformColumnName("RIGHT_PK1"),
                                 tableMapper.transformColumnName("RIGHT_PK2")))));
 
+        // Create DTOs
         final CompositePkSimpleM2M dto1 = new CompositePkSimpleM2M();
         dto1.setPk1(1L);
         dto1.setPk2(2L);
@@ -178,27 +181,43 @@ class CompositePkTest extends AbstractE2eTest {
         dto1.setOthers(List.of(dto2));
         dto2.setOthers(List.of(dto1));
 
-        // When
+        // Save both DTOs using cascading
         litebridge.save(dto1);
 
-        // Then
-        assertEquals(2, litebridge.select().from(compPkSimpleTable).list().size());
+        // Retrieve first DTO and related DTO via a join
+        {
+            assertEquals(2, litebridge.select().from(compPkSimpleTable).list().size());
 
-        final CompositePkSimpleM2M result = litebridge.select(CompositePkSimpleM2M.class)
-                .join(CompositePkSimpleM2M.class).on("others")
-                .where("pk1").eq(1L)
-                .and("pk2").eq(2L)
-                .oneOrThrow();
-        assertEquals(1L, result.getPk1());
-        assertEquals(2L, result.getPk2());
-        assertEquals(dto1.getDescription(), result.getDescription());
-        assertNotNull(result.getOthers());
-        assertEquals(1, result.getOthers().size());
-        final CompositePkSimpleM2M resultOther = result.getOthers().getFirst();
-        assertEquals(100L, resultOther.getPk1());
-        assertEquals(200L, resultOther.getPk2());
-        assertNotNull(resultOther.getOthers());
-        assertEquals(1, resultOther.getOthers().size());
-        assertEquals(result, resultOther.getOthers().getFirst());
+            final CompositePkSimpleM2M result = litebridge.select(CompositePkSimpleM2M.class)
+                    .join(CompositePkSimpleM2M.class).on("others")
+                    .where("pk1").eq(1L)
+                    .and("pk2").eq(2L)
+                    .oneOrThrow();
+            assertEquals(1L, result.getPk1());
+            assertEquals(2L, result.getPk2());
+            assertEquals(dto1.getDescription(), result.getDescription());
+            assertNotNull(result.getOthers());
+            assertEquals(1, result.getOthers().size());
+            final CompositePkSimpleM2M resultOther = result.getOthers().getFirst();
+            assertEquals(100L, resultOther.getPk1());
+            assertEquals(200L, resultOther.getPk2());
+            assertNotNull(resultOther.getOthers());
+            assertEquals(1, resultOther.getOthers().size());
+            assertEquals(result, resultOther.getOthers().getFirst());
+        }
+
+        // Retrieve first DTO only
+        {
+            assertEquals(2, litebridge.select().from(compPkSimpleTable).list().size());
+
+            final CompositePkSimpleM2M result = litebridge.select(CompositePkSimpleM2M.class)
+                    .where("pk1").eq(1L)
+                    .and("pk2").eq(2L)
+                    .oneOrThrow();
+            assertEquals(1L, result.getPk1());
+            assertEquals(2L, result.getPk2());
+            assertEquals(dto1.getDescription(), result.getDescription());
+            assertTrue(CollectionUtils.isEmpty(result.getOthers()));
+        }
     }
 }
