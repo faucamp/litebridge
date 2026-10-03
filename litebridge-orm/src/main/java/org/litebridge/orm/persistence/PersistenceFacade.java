@@ -342,7 +342,6 @@ public class PersistenceFacade {
                 columnsAdded = true;
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
-                //FNA: from
                 tableProvider.pushContext(ormTable);
                 final MappedFieldTarget target = entry.getValue();
                 final ColumnMetaData columnMetaData = target instanceof ColumnAndInlineTable cit ? cit.column() : (ColumnMetaData) target;
@@ -925,7 +924,6 @@ public class PersistenceFacade {
             final LogicOperator logicOperator = first ? LogicOperator.NOOP : LogicOperator.AND;
 
             if (pkValue != null) {
-                //FNA: here
                 if (ClassUtils.isBasicType(field.type())) {
                     conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, pkValue);
                     continue;
