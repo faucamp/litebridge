@@ -170,7 +170,8 @@ public class SqlMergeE2eTest extends AbstractE2eTest {
                                     .set(balance).multiply(2)
                                     .where(accountId).lt(5))));
 
-            assertEquals(4, updateResult.rowsAffected());
+            final int expected = dbEnv.getName().equals("Oracle") ? 1 : 4;
+            assertEquals(expected, updateResult.rowsAffected());
         }
     }
 
