@@ -39,6 +39,7 @@ public class OrmTable {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrmTable.class);
 
     private final Class<?> dtoClass;
+    private final @Nullable Class<?> contextDtoClass;
     private final TableMetaData metaData;
     private final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap;
     private final Map<String, MappedFieldTarget> fieldNameTargetMap;
@@ -67,11 +68,13 @@ public class OrmTable {
      * @param classFieldAccessorCache the cache for field accessors
      */
     public OrmTable(final Class<?> dtoClass,
+                    final @Nullable Class<?> contextDtoClass,
                     final TableMetaData metaData,
                     final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap,
                     final ChangeTracker changeTracker,
                     final ClassFieldAccessorCache classFieldAccessorCache) {
         this.dtoClass = dtoClass;
+        this.contextDtoClass = contextDtoClass;
         this.manyToManyJoinTable = Proxy.isProxyClass(dtoClass);
         this.metaData = metaData;
         this.classFieldAccessorCache = classFieldAccessorCache;
@@ -150,6 +153,10 @@ public class OrmTable {
      */
     public Class<?> dtoClass() {
         return dtoClass;
+    }
+
+    public @Nullable Class<?> contextDtoClass() {
+        return contextDtoClass;
     }
 
     /**

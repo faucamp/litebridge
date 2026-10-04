@@ -119,7 +119,7 @@ public final class RegistrationEngine {
             }
 
             LOGGER.trace("Registering DtoTableSpec for DTO class '{}'", dtoClass);
-            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, dtoTableSpec.tableSpec(), allDtoClasses);
+            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, null, dtoTableSpec.tableSpec(), allDtoClasses);
             final OrmTable ormTable = mappedTable.ormTable();
             tableRegistry.addTable(dtoTableSpec.dtoClass(), ormTable);
 

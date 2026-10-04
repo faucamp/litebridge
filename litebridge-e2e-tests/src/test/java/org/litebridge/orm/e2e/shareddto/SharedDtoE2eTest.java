@@ -65,6 +65,9 @@ class SharedDtoE2eTest extends AbstractE2eTest {
         litebridge.save(application);
         litebridge.save(server);
 
+        assertEquals(1, litebridge.select(Application.class).list().size());
+        assertEquals(1, litebridge.select(Server.class).list().size());
+
         // Load back DTOs
         final Application resultApplication = litebridge.select(Application.class)
                 .join(Status.class).on("status")

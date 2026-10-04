@@ -1,5 +1,6 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.commons.ModuleUtils;
@@ -82,7 +83,11 @@ public final class TableMapper {
      * @throws IllegalArgumentException if the DTO class is invalid or the table specification is incomplete
      * @throws IllegalStateException    if the table metadata cannot be read due to a database access issue
      */
-    public MappedTable mapToTable(final MethodHandles.Lookup lookup, final Class<?> dtoClass, final TableSpec tableSpec, final Set<Class<?>> allDtoClasses) {
+    public MappedTable mapToTable(final MethodHandles.Lookup lookup,
+                                  final Class<?> dtoClass,
+                                  final @Nullable Class<?> contextDtoClass,
+                                  final TableSpec tableSpec,
+                                  final Set<Class<?>> allDtoClasses) {
         // Up-front validation
         Objects.requireNonNull(lookup, "MethodHandles lookup is required for reflection");
         Objects.requireNonNull(dtoClass, "DTO class cannot be null");
@@ -102,7 +107,7 @@ public final class TableMapper {
         final TableMetaData tableMetaData = tableMetaDataCache.ensureTableMetaData(tableSpec.toTable());
 
         final MappedDto mappedDto = mapFields(lookup, dtoClass, tableMetaData, tableSpec.fieldColumnMap(), allDtoClasses);
-        final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, mappedDto.mappedFields(), changeTracker, classFieldAccessorCache);
+        final OrmTable ormTable = new OrmTable(dtoClass, contextDtoClass, tableMetaData, mappedDto.mappedFields(), changeTracker, classFieldAccessorCache);
         return new MappedTable(ormTable, mappedDto.manyToOneDependencies());
     }
 
@@ -170,7 +175,8 @@ public final class TableMapper {
 
     private MappedColumn createMappedColumn(final ColumnSpec columnSpec,
                                             final FieldMapping fieldMapping,
-                                            final MethodHandles.Lookup lookup, final Class<?> dtoClass,
+                                            final MethodHandles.Lookup lookup,
+                                            final Class<?> dtoClass,
                                             final TableMetaData tableMetaData,
                                             final Set<String> unmappedColumns,
                                             final Map<FieldAccessor, MappedFieldTarget> mappedFields,
@@ -221,7 +227,7 @@ public final class TableMapper {
                 if (columnSpec.mappedTable() != null) {
                     // In-line DTO-table mapping
                     try {
-                        nestedTable = mapToTable(lookup, columnSpec.mappedTable().dtoClass(), columnSpec.mappedTable().tableSpec(), allDtoClasses);
+                        nestedTable = mapToTable(lookup, columnSpec.mappedTable().dtoClass(), dtoClass, columnSpec.mappedTable().tableSpec(), allDtoClasses);
                         manyToOneDependencies.addAll(nestedTable.manyToOneDependencies());
                     } catch (Exception ex) {
                         throw new IllegalStateException("Failed to map nested DTO class '" + columnSpec.mappedTable().dtoClass() + "' to table: " + columnSpec.mappedTable().tableSpec(), ex);
@@ -237,7 +243,15 @@ public final class TableMapper {
                 throw new IllegalArgumentException(String.format("No \"join on\" field specified for referenced DTO '%s' in field '%s' of DTO '%s'", targetDtoClass.getName(), fieldAccessor.name(), dtoClass.getName()));
             }
 
-            columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
+            final OrmTable targetOrmTable;
+
+            if (nestedTable != null) {
+                targetOrmTable = nestedTable.ormTable();
+            } else {
+                targetOrmTable = tableRegistry.getOrmTableOrThrow(targetDtoClass);
+            }
+
+            columnMetaData.setJoinColumnSupplier(() -> targetOrmTable.getMetaData().column(columnSpec.joinColumn()));
         } else if (columnSpec.joinColumn() != null) {
             final Class<?> targetDtoClass = fieldAccessor instanceof NoOpFieldAccessor ? dtoClass : fieldAccessor.type();
             columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
@@ -396,7 +410,7 @@ public final class TableMapper {
                 .getClass();
 
         try {
-            return mapToTable(lookup, hiddenJoinClass, tableSpec, Collections.emptySet());
+            return mapToTable(lookup, hiddenJoinClass, null, tableSpec, Collections.emptySet());
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to map many-to-many join table from spec: " + manyToMany, ex);
         }
