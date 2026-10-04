@@ -5,6 +5,7 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.ForeignKeyConstraint;
+import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -33,11 +34,15 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.ValuesSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
+import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -177,37 +182,66 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     public void whenMatchedUpdateSet(final SetNode setNode) {
         final WhenMatchedSpec whenMatchedSpec = whenMatchedSpecs.getLast();
         final Table targetTable = getTable(target);
-        final ColumnMetaData columnMetaData;
+        final List<ColumnMetaData> columnMetaDatas;
 
         if (setNode.column() != null) {
             if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
                 final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
-                columnMetaData = targetOrmTable.columnMetaDataForField(setNode.column());
+                columnMetaDatas = getColumnMetaDataListForField(setNode.column(), targetOrmTable);
             } else {
                 final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
-                columnMetaData = targetTableMetaData.column(setNode.column());
+                columnMetaDatas = Collections.singletonList(targetTableMetaData.column(setNode.column()));
             }
         } else {
             final ExpressionSpec expressionSpec = Objects.requireNonNull(setNode.expressionSpec());
 
             if (expressionSpec instanceof QueryField queryField) {
                 final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
-                columnMetaData = targetOrmTable.columnMetaDataForField(QueryFieldInspector.getFieldName(queryField));
+                columnMetaDatas = getColumnMetaDataListForField(QueryFieldInspector.getFieldName(queryField), targetOrmTable);
             } else if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
                 final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
-                columnMetaData = targetTableMetaData.column(columnExpressionSpec.getColumn().name());
+                columnMetaDatas = Collections.singletonList(targetTableMetaData.column(columnExpressionSpec.getColumn().name()));
             } else {
                 throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());
             }
         }
 
-        if (setNode.mathOperator() != null) {
-            whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator()));
+        final Object rawValue = setNode.value();
+        final List<@Nullable Object> values = new ArrayList<>(columnMetaDatas.size());
+
+        if (rawValue instanceof LinkedHashMap<?, ?> map) {
+            values.addAll(map.sequencedValues());
+        } else if (rawValue instanceof Collection<?> collection) {
+            values.addAll(collection);
         } else {
-            whenMatchedSpec.addUpdateColumn(columnMetaData);
+            values.add(rawValue);
         }
 
-        whenMatchedSpec.addBindValue(new BindValue(setNode.value(), columnMetaData.getDataType()));
+        for (int i = 0; i < values.size(); i++) {
+            final ColumnMetaData columnMetaData = columnMetaDatas.get(i);
+            final Object value = values.get(i);
+
+            if (setNode.mathOperator() != null) {
+                whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator()));
+            } else {
+                whenMatchedSpec.addUpdateColumn(columnMetaData);
+            }
+
+            whenMatchedSpec.addBindValue(new BindValue(value, columnMetaData.getDataType()));
+        }
+    }
+
+    private List<ColumnMetaData> getColumnMetaDataListForField(final String field, final OrmTable ormTable) {
+        final MappedFieldTarget mappedFieldTarget = ormTable.mappedFieldTargetForField(field);
+
+        return switch (mappedFieldTarget) {
+            case ColumnMetaData cmd -> Collections.singletonList(cmd);
+            case MappedCompositeKey mappedCompositeKey -> Arrays.stream(mappedCompositeKey.columns())
+                    .map(ColumnMetaData.class::cast)
+                    .toList();
+            default ->
+                    throw new IllegalStateException("Unexpected mapped field target type: " + mappedFieldTarget.getClass().getName());
+        };
     }
 
     public void whenNotMatchedInsert(final InsertNode insertNode) {
@@ -223,7 +257,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             for (String columnName : columnNames) {
                 if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
                     final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
-                    columnMetaDataList.add(targetOrmTable.columnMetaDataForField(columnName));
+                    columnMetaDataList.addAll(getColumnMetaDataListForField(columnName, targetOrmTable));
                 } else {
                     final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
                     columnMetaDataList.add(targetTableMetaData.column(columnName));
@@ -240,8 +274,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                     final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
                     final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
                     final String fieldName = QueryFieldInspector.getFieldName(queryField);
-                    final ColumnMetaData columnMetaData = targetOrmTable.columnMetaDataForField(fieldName);
-                    columnMetaDataList.add(columnMetaData);
+                    columnMetaDataList.addAll(getColumnMetaDataListForField(fieldName, targetOrmTable));
                 } else {
                     throw new UnsupportedOperationException("Unsupported expression spec: " + expressionSpec);
                 }
@@ -258,11 +291,32 @@ final class MergeCompilationContext extends AbstractCompilationContext {
         final WhenMatchedSpec whenMatchedSpec = getWhenMatchedSpec();
         final List<ColumnMetaData> columnMetaDataList = getWhenMatchedSpec().getColumnMetaDataList();
         //noinspection NullableProblems
-        final Object[] values = insertValuesNode.values();
+        final Object[] rawValues = insertValuesNode.values();
+        final Object[] values;
 
-        for (int i = 0; i < values.length; i++) {
-            final int sqlDataType = columnMetaDataList.get(i).getDataType();
-            whenMatchedSpec.addBindValue(new BindValue(values[i], sqlDataType));
+        if (rawValues.length != columnMetaDataList.size()) {
+            // There are composite values that need to be expanded
+            final List<@Nullable Object> valueList = new ArrayList<>(columnMetaDataList.size());
+
+            for (Object rawValue : rawValues) {
+                if (rawValue instanceof LinkedHashMap<?, ?> map) {
+                    valueList.addAll(map.sequencedValues());
+                } else if (rawValue instanceof Collection<?> collection) {
+                    valueList.addAll(collection);
+                } else {
+                    valueList.add(rawValue);
+                }
+            }
+
+            for (int i = 0; i < valueList.size(); i++) {
+                final int sqlDataType = columnMetaDataList.get(i).getDataType();
+                whenMatchedSpec.addBindValue(new BindValue(valueList.get(i), sqlDataType));
+            }
+        } else {
+            for (int i = 0; i < rawValues.length; i++) {
+                final int sqlDataType = columnMetaDataList.get(i).getDataType();
+                whenMatchedSpec.addBindValue(new BindValue(rawValues[i], sqlDataType));
+            }
         }
     }
 

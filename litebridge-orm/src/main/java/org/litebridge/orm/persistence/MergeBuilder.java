@@ -104,7 +104,12 @@ final class MergeBuilder extends InsertBuilder {
             pkFieldNames.add(fieldName);
             final SelectColumnSpec pkColumn = new SelectColumnSpec(ormTable.columnMetaDataForField(fieldName).column());
             final AliasReferenceSpec aliasRef = Fn.aliasRef(tableAlias, fieldName);
-            mergeOnConditionClauseTerminal = mergeOnStep.on(pkColumn).eq(aliasRef);
+
+            if (mergeOnConditionClauseTerminal == null) {
+                mergeOnConditionClauseTerminal = mergeOnStep.on(pkColumn).eq(aliasRef);
+            } else {
+                mergeOnConditionClauseTerminal = mergeOnConditionClauseTerminal.and(pkColumn).eq(aliasRef);
+            }
         }
 
         // Don't update primary key fields

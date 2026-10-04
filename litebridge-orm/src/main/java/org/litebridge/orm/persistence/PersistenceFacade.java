@@ -37,7 +37,9 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -342,123 +344,11 @@ public class PersistenceFacade {
                 columnsAdded = true;
             } else {
                 // Dealing with an embedded DTO - add the context to the table provider
-                tableProvider.pushContext(ormTable);
                 final MappedFieldTarget target = entry.getValue();
-                final ColumnMetaData columnMetaData = target instanceof ColumnAndInlineTable cit ? cit.column() : (ColumnMetaData) target;
+                tableProvider.pushContext(ormTable);
 
                 try {
-                    final OrmTable nestedDtoTable = tableProvider.getTableOrThrow(Objects.requireNonNull(value).getClass());
-
-                    if (!nestedDtoTable.isPersistedDto(value)) {
-                        // Cascade save to the nested DTO
-                        final PipedStatement existingStatement = statementChain.getDependency(value);
-
-                        if (existingStatement == null) {
-                            // Check if the nested DTO's PK is set
-                            final boolean dtoPkSet = isDtoPkSet(value, nestedDtoTable);
-
-                            if (!inProgressDtos.contains(value)) {
-                                // First time we're encountering this nested DTO; create an insert/update statement for it
-                                final StatementBuilder dependencyStatementBuilder = createStatementBuilder(value, inProgressDtos, tableProvider);
-
-                                if (!dtoPkSet) {
-                                    // PK not yet set - pipe the generated key back to the parent DTO
-                                    final PipedStatement dependencyPipe = new PipedStatement(dependencyStatementBuilder, value, updateResult -> {
-                                        if (updateResult instanceof InsertResult insertResult
-                                                && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-
-                                            insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
-
-                                                if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                                    if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                        updateBuilder.setField(fieldAccessor.name(), pkValue);
-                                                    } else {
-                                                        //noinspection DataFlowIssue
-                                                        insertValues.put(fieldAccessor.name(), pkValue);
-                                                    }
-                                                }
-                                            });
-
-                                            updateDtoPrimaryKey(value, insertResult.generatedKeys().getFirst(), tableProvider);
-                                        }
-                                    });
-
-                                    statementChain.addDependency(value, dependencyPipe);
-                                } else {
-                                    // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
-                                    nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
-                                        final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
-                                        final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-
-                                        if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
-                                            } else {
-                                                //noinspection DataFlowIssue
-                                                insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
-                                            }
-                                        }
-                                    });
-
-                                    statementChain.addDependency(value, new PipedStatement(dependencyStatementBuilder, value));
-                                }
-                            } else {
-                                // Statement for the nested DTO is under construction - pipe its PK to this field when available
-                                if (!dtoPkSet) {
-                                    // PK not yet set - pipe the generated key back to the parent DTO
-                                    final PipedStatement dependencyPipe = new PipedStatement(NO_OP_STATEMENT_BUILDER, value, updateResult -> {
-                                        if (updateResult instanceof InsertResult insertResult
-                                                && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
-
-                                            insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
-                                                if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                                    if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                        updateBuilder.setField(fieldAccessor.name(), pkValue);
-                                                    } else {
-                                                        //noinspection DataFlowIssue
-                                                        insertValues.put(fieldAccessor.name(), pkValue);
-                                                    }
-                                                }
-                                            });
-
-                                            updateDtoPrimaryKey(value, insertResult.generatedKeys().getFirst(), tableProvider);
-                                        }
-                                    });
-
-                                    statementChain.addDependency(value, dependencyPipe);
-                                } else {
-                                    // PK already set - set the FK value on the current DTO and ensure the embedded DTO is persisted
-                                    nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
-                                        final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
-                                        final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-                                        if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                                updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
-                                            } else {
-                                                //noinspection DataFlowIssue
-                                                insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
-                                            }
-                                        }
-                                    });
-
-                                    statementChain.addDependency(value, new PipedStatement(NO_OP_STATEMENT_BUILDER, value));
-                                }
-                            }
-                        }
-                    } else {
-                        // Get the primary key
-                        nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
-                            final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
-                            final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
-
-                            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
-                            } else {
-                                //noinspection DataFlowIssue
-                                insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
-                            }
-                        });
-                    }
+                    processRelatedDto(target, fieldAccessor, value, statementBuilder, insertValues, statementChain, inProgressDtos, tableProvider);
                 } finally {
                     tableProvider.popContext();
                 }
@@ -480,6 +370,170 @@ public class PersistenceFacade {
         }
 
         return statementChain;
+    }
+
+    private void processRelatedDto(final MappedFieldTarget target,
+                                   final FieldAccessor fieldAccessor,
+                                   final @Nullable Object value,
+                                   final AbstractStatementBuilder statementBuilder,
+                                   final @Nullable LinkedHashMap<String, @Nullable Object> insertValues,
+                                   final StatementChain statementChain,
+                                   final Set<Object> inProgressDtos,
+                                   final TableProvider tableProvider) {
+
+        final OrmTable nestedDtoTable = tableProvider.getTableOrThrow(Objects.requireNonNull(value).getClass());
+
+        if (!nestedDtoTable.isPersistedDto(value)) {
+            // Cascade save to the nested DTO
+            final PipedStatement existingStatement = statementChain.getDependency(value);
+
+            if (existingStatement != null) {
+                return;
+            }
+
+            // Check if the nested DTO's PK is set
+            final boolean dtoPkSet = isDtoPkSet(value, nestedDtoTable);
+
+            final List<ColumnMetaData> columnMetaDatas = switch (target) {
+                case ColumnAndInlineTable columnAndInlineTable ->
+                        Collections.singletonList(columnAndInlineTable.column());
+                case ColumnMetaData columnMetaData -> Collections.singletonList(columnMetaData);
+                case MappedCompositeKey mappedCompositeKey -> {
+                    final MappedFieldTarget[] mappedFieldTargets = mappedCompositeKey.columns();
+                    final List<ColumnMetaData> columnMetaDataList = new ArrayList<>(mappedFieldTargets.length);
+
+                    for (final MappedFieldTarget mappedFieldTarget : mappedFieldTargets) {
+                        columnMetaDataList.add((ColumnMetaData) mappedFieldTarget);
+                    }
+
+                    yield columnMetaDataList;
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + target);
+            };
+
+            final Set<Object> dtoPksSet = new HashSet<>(columnMetaDatas.size());
+
+            for (ColumnMetaData columnMetaData : columnMetaDatas) {
+                if (!inProgressDtos.contains(value)) {
+                    // First time we're encountering this nested DTO; create an insert/update statement for it
+                    final StatementBuilder dependencyStatementBuilder = createStatementBuilder(value, inProgressDtos, tableProvider);
+
+                    if (!dtoPkSet) {
+                        // PK not yet set - pipe the generated key back to the parent DTO
+                        final PipedStatement dependencyPipe = new PipedStatement(dependencyStatementBuilder, value, updateResult -> {
+                            if (updateResult instanceof InsertResult insertResult
+                                    && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+
+                                insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
+
+                                    if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+                                        if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                                            updateBuilder.setField(fieldAccessor.name(), pkValue);
+                                        } else {
+                                            //noinspection DataFlowIssue
+                                            insertValues.put(fieldAccessor.name(), pkValue);
+                                        }
+                                    }
+                                });
+
+                                updateDtoPrimaryKey(value, insertResult.generatedKeys().getFirst(), tableProvider);
+                            }
+                        });
+
+                        statementChain.addDependency(value, dependencyPipe);
+                    } else {
+                        // PK already set - set the PK value on the current DTO and ensure the embedded DTO is persisted
+                        addPkInsertsOrUpdates(fieldAccessor, value, statementBuilder, insertValues, columnMetaData, nestedDtoTable);
+                        statementChain.addDependency(value, new PipedStatement(dependencyStatementBuilder, value));
+                    }
+                } else {
+                    // Statement for the nested DTO is under construction - pipe its PK to this field when available
+                    if (!dtoPkSet) {
+                        // PK not yet set - pipe the generated key back to the parent DTO
+                        final PipedStatement dependencyPipe = new PipedStatement(NO_OP_STATEMENT_BUILDER, value, updateResult -> {
+                            if (updateResult instanceof InsertResult insertResult
+                                    && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
+
+                                insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
+                                    if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+                                        if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                                            updateBuilder.setField(fieldAccessor.name(), pkValue);
+                                        } else {
+                                            //noinspection DataFlowIssue
+                                            insertValues.put(fieldAccessor.name(), pkValue);
+                                        }
+                                    }
+                                });
+
+                                updateDtoPrimaryKey(value, insertResult.generatedKeys().getFirst(), tableProvider);
+                            }
+                        });
+
+                        statementChain.addDependency(value, dependencyPipe);
+                    } else if (!dtoPksSet.contains(value)) {
+                        // PK already set - set the FK value on the current DTO and ensure the embedded DTO is persisted
+                        addPkInsertsOrUpdates(fieldAccessor, value, statementBuilder, insertValues, columnMetaData, nestedDtoTable);
+                        statementChain.addDependency(value, new PipedStatement(NO_OP_STATEMENT_BUILDER, value));
+                    }
+                }
+
+                dtoPksSet.add(value);
+            }
+        } else {
+            // Get the primary key
+            nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
+                final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+
+                if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                    updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
+                } else {
+                    //noinspection DataFlowIssue
+                    insertValues.put(fieldAccessor.name(), embeddedDtoPkValue);
+                }
+            });
+        }
+    }
+
+    private static void addPkInsertsOrUpdates(final FieldAccessor fieldAccessor,
+                                              final Object value,
+                                              final AbstractStatementBuilder statementBuilder,
+                                              final @Nullable LinkedHashMap<String, @Nullable Object> insertValues,
+                                              final ColumnMetaData columnMetaData,
+                                              final OrmTable nestedDtoTable) {
+        final List<ColumnMetaData> pkColumns = nestedDtoTable.getMetaData().primaryKey();
+
+        if (pkColumns.size() == 1) {
+            // Simple PK
+            final ColumnMetaData pkColumn = pkColumns.getFirst();
+            final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+            final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+
+            if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+                if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                    updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
+                } else {
+                    //noinspection DataFlowIssue
+                    insertValues.putIfAbsent(fieldAccessor.name(), embeddedDtoPkValue);
+                }
+            }
+        } else {
+            // Composite PK
+            final LinkedHashMap<String, Object> compositePk = new LinkedHashMap<>();
+
+            for (ColumnMetaData pkColumn : nestedDtoTable.getMetaData().primaryKey()) {
+                final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
+                compositePk.put(embeddedDtoPkAccessor.name(), Objects.requireNonNull(embeddedDtoPkValue, "Composite PK value null"));
+            }
+
+            if (statementBuilder instanceof UpdateBuilder updateBuilder) {
+                updateBuilder.setField(fieldAccessor.name(), compositePk);
+            } else {
+                //noinspection DataFlowIssue
+                insertValues.put(fieldAccessor.name(), compositePk);
+            }
+        }
     }
 
     private <DTO> void prepareDeleteStatement(final DTO dto, final OrmTable table,
@@ -948,7 +1002,7 @@ public class PersistenceFacade {
     }
 
     private static boolean isDtoPkSet(final Object dto, final OrmTable dtoTable) {
-        return dtoTable.getMetaData().primaryKey().stream().anyMatch(pkColumn -> {
+        return dtoTable.getMetaData().primaryKey().stream().allMatch(pkColumn -> {
             final FieldAccessor embeddedDtoPkAccessor = dtoTable.getFieldForColumnName(pkColumn.name());
             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(dto);
             return !Objects.equals(embeddedDtoPkValue, ClassUtils.getDefaultValue(embeddedDtoPkAccessor.type()));

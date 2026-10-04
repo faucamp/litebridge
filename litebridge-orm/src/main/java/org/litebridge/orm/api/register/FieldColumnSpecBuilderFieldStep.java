@@ -1,9 +1,14 @@
 package org.litebridge.orm.api.register;
 
+import org.litebridge.orm.api.spec.ColumnMapping;
+import org.litebridge.orm.api.spec.ColumnSpec;
+import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.orm.api.spec.ManyToMany;
 import org.litebridge.orm.api.spec.OneToMany;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -53,6 +58,12 @@ public final class FieldColumnSpecBuilderFieldStep {
      */
     public FieldColumnSpecBuilderColumnStep toColumn(final String column) {
         return new FieldColumnSpecBuilderColumnStep(fieldSpec, column);
+    }
+
+    public FieldColumnSpecBuilderTerminal toColumns(final Function<FcsbMultiColumnDefStep, FieldColumnSpecBuilderTerminal> spec) {
+        final List<FieldColumnSpec> fieldColumnSpecs = new ArrayList<>();
+        final FcsbMultiColumnDefStep fcsbMultiColumnDefStep = new FcsbMultiColumnDefStep(fieldSpec, fieldColumnSpecs);
+        return spec.apply(fcsbMultiColumnDefStep);
     }
 
     /**

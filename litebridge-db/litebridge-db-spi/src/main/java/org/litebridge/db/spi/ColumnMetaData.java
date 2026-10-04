@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.function.Supplier;
 
 /**
  * Metadata information for a database column.
@@ -26,7 +27,8 @@ public final class ColumnMetaData extends ColumnType implements MappedFieldTarge
     private final boolean autoIncrement;
     private final @Nullable String defaultValue;
     private @Nullable ColumnValueGenerator generator;
-    private @Nullable String joinColumn;
+    private @Nullable Supplier<ColumnMetaData> joinColumnSupplier;
+    private @Nullable ColumnMetaData joinColumn;
     private @Nullable List<ForeignKeyConstraint> foreignKeyConstraints;
     private @Nullable List<ForeignKeyConstraint> foreignReferences;
 
@@ -182,21 +184,25 @@ public final class ColumnMetaData extends ColumnType implements MappedFieldTarge
     }
 
     /**
-     * Gets the name of the join column, if applicable.
+     * Gets the join column, if applicable.
      *
-     * @return the join column name
+     * @return the join column metadata.
      */
-    public @Nullable String getJoinColumn() {
+    public @Nullable ColumnMetaData getJoinColumn() {
+        if (joinColumn == null && joinColumnSupplier != null) {
+            joinColumn = joinColumnSupplier.get();
+        }
+
         return joinColumn;
     }
 
     /**
-     * Sets the name of the join column.
+     * Provides the supplier for the join column, if applicable.
      *
-     * @param joinColumn the join column name to set
+     * @param joinColumnSupplier the join column supplier to set
      */
-    public void setJoinColumn(final @Nullable String joinColumn) {
-        this.joinColumn = joinColumn;
+    public void setJoinColumnSupplier(final @Nullable Supplier<ColumnMetaData> joinColumnSupplier) {
+        this.joinColumnSupplier = joinColumnSupplier;
     }
 
     /**

@@ -1,11 +1,14 @@
 package org.litebridge.orm.api.register;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.api.spec.ColumnMapping;
 import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.orm.api.spec.TableMapping;
 
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -16,9 +19,10 @@ import java.util.function.Function;
  * This class is immutable and part of a step-by-step fluent API to configure ORM mappings, ensuring
  * that only valid sequences of method calls are made during the configuration process.
  */
-public final class FieldColumnSpecBuilderJoinStep implements FieldColumnSpecBuilderTerminal {
+public sealed class FieldColumnSpecBuilderJoinStep implements FieldColumnSpecBuilderTerminal permits FcsbJoinStepMultiColumn {
 
-    private final FieldSpec fieldSpec;
+    protected final FieldSpec fieldSpec;
+    protected final @Nullable List<FieldColumnSpec> existingColumnMappings;
     private final String column;
     private final String joinColumn;
 
@@ -32,9 +36,17 @@ public final class FieldColumnSpecBuilderJoinStep implements FieldColumnSpecBuil
     public FieldColumnSpecBuilderJoinStep(final FieldSpec fieldSpec,
                                           final String column,
                                           final String joinColumn) {
+        this(fieldSpec, column, joinColumn, null);
+    }
+
+    public FieldColumnSpecBuilderJoinStep(final FieldSpec fieldSpec,
+                                          final String column,
+                                          final String joinColumn,
+                                          final @Nullable List<FieldColumnSpec> columnMappings) {
         this.fieldSpec = fieldSpec;
         this.column = column;
         this.joinColumn = joinColumn;
+        this.existingColumnMappings = columnMappings;
     }
 
     /**

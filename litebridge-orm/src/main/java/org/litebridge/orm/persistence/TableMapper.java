@@ -12,6 +12,7 @@ import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.FieldMapping;
 import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.orm.api.spec.ManyToMany;
+import org.litebridge.orm.api.spec.MultiColumnSpec;
 import org.litebridge.orm.api.spec.NoFieldMapping;
 import org.litebridge.orm.api.spec.OneToMany;
 import org.litebridge.orm.api.spec.TableSpec;
@@ -125,6 +126,8 @@ public final class TableMapper {
                         mapOneToMany(oneToMany, (FieldSpec) fieldMapping, dtoClass, tableMetaData, unmappedColumns, mappedFields, manyToOneDependencies);
                 case ManyToMany manyToMany ->
                         mapManyToMany(manyToMany, (FieldSpec) fieldMapping, lookup, dtoClass, tableMetaData, unmappedColumns, mappedFields, manyToOneDependencies);
+                case MultiColumnSpec multiColumnSpec ->
+                        mapMultiColumnSpec(multiColumnSpec, fieldMapping, lookup, dtoClass, tableMetaData, unmappedColumns, mappedFields, manyToOneDependencies, allDtoClasses);
             }
         });
 
@@ -151,6 +154,28 @@ public final class TableMapper {
                                final Map<FieldAccessor, MappedFieldTarget> mappedFields,
                                final List<FieldAccessor> manyToOneDependencies,
                                final Set<Class<?>> allDtoClasses) {
+        final MappedColumn mappedColumn = createMappedColumn(columnSpec,
+                fieldMapping,
+                lookup,
+                dtoClass,
+                tableMetaData,
+                unmappedColumns,
+                mappedFields,
+                manyToOneDependencies,
+                allDtoClasses);
+
+        mappedFields.put(mappedColumn.fieldAccessor(), mappedColumn.mappedFieldTarget());
+        unmappedColumns.remove(columnSpec.name());
+    }
+
+    private MappedColumn createMappedColumn(final ColumnSpec columnSpec,
+                                            final FieldMapping fieldMapping,
+                                            final MethodHandles.Lookup lookup, final Class<?> dtoClass,
+                                            final TableMetaData tableMetaData,
+                                            final Set<String> unmappedColumns,
+                                            final Map<FieldAccessor, MappedFieldTarget> mappedFields,
+                                            final List<FieldAccessor> manyToOneDependencies,
+                                            final Set<Class<?>> allDtoClasses) {
         if (!tableMetaData.hasColumn(columnSpec.name())) {
             if (fieldMapping instanceof FieldSpec fieldSpec) {
                 throw new IllegalArgumentException(String.format("Column '%s', mapped by %s '%s' of DTO '%s', does not exist in table: '%s'", columnSpec.name(), (fieldSpec.property() ? "property" : "field"), fieldSpec.name(), dtoClass, tableMetaData.qualifiedName()));
@@ -180,17 +205,19 @@ public final class TableMapper {
             fieldAccessor = new NoOpFieldAccessor();
         }
 
-        final ColumnMetaData column = Objects.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
+        final ColumnMetaData columnMetaData = Objects.requireNonNull(tableMetaData.column(columnSpec.name()), "Column metadata not found: " + columnSpec.name());
 
         if (columnSpec.generator() != null) {
-            column.setGenerator(columnSpec.generator());
+            columnMetaData.setGenerator(columnSpec.generator());
         }
 
         MappedTable nestedTable = null;
 
         if (!(fieldAccessor instanceof NoOpFieldAccessor) && !ClassUtils.isBasicType(fieldAccessor.type())) {
             // Check for self-referencing DTOs, then if we know how to persist the nested DTO
-            if (fieldAccessor.type() != dtoClass) {
+            final Class<?> targetDtoClass = fieldAccessor.type();
+
+            if (targetDtoClass != dtoClass) {
                 if (columnSpec.mappedTable() != null) {
                     // In-line DTO-table mapping
                     try {
@@ -199,29 +226,78 @@ public final class TableMapper {
                     } catch (Exception ex) {
                         throw new IllegalStateException("Failed to map nested DTO class '" + columnSpec.mappedTable().dtoClass() + "' to table: " + columnSpec.mappedTable().tableSpec(), ex);
                     }
-                } else if (!tableRegistry.containsOrmTable(fieldAccessor.type())
-                        && !allDtoClasses.contains(fieldAccessor.type())) {
+                } else if (!tableRegistry.containsOrmTable(targetDtoClass)
+                        && !allDtoClasses.contains(targetDtoClass)) {
                     // Nested child DTO, but no table mapping exists
-                    throw new IllegalArgumentException(String.format("Referenced DTO not registered: '%s', in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldAccessor.name(), dtoClass.getName()));
+                    throw new IllegalArgumentException(String.format("Referenced DTO not registered: '%s', in field '%s' of DTO '%s'", targetDtoClass.getName(), fieldAccessor.name(), dtoClass.getName()));
                 }
             }
 
             if (columnSpec.joinColumn() == null) {
-                throw new IllegalArgumentException(String.format("No \"join on\" field specified for referenced DTO '%s' in field '%s' of DTO '%s'", fieldAccessor.type().getName(), fieldAccessor.name(), dtoClass.getName()));
+                throw new IllegalArgumentException(String.format("No \"join on\" field specified for referenced DTO '%s' in field '%s' of DTO '%s'", targetDtoClass.getName(), fieldAccessor.name(), dtoClass.getName()));
             }
 
-            column.setJoinColumn(columnSpec.joinColumn());
-        } else {
-            column.setJoinColumn(columnSpec.joinColumn());
+            columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
+        } else if (columnSpec.joinColumn() != null) {
+            final Class<?> targetDtoClass = fieldAccessor instanceof NoOpFieldAccessor ? dtoClass : fieldAccessor.type();
+            columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
         }
+
+        final MappedFieldTarget mappedFieldTarget;
 
         if (nestedTable != null) {
-            mappedFields.put(fieldAccessor, new ColumnAndInlineTable(column, nestedTable.ormTable()));
+            mappedFieldTarget = new ColumnAndInlineTable(columnMetaData, nestedTable.ormTable());
         } else {
-            mappedFields.put(fieldAccessor, column);
+            mappedFieldTarget = columnMetaData;
         }
 
-        unmappedColumns.remove(columnSpec.name());
+        return new MappedColumn(fieldAccessor, mappedFieldTarget);
+    }
+
+    private void mapMultiColumnSpec(final MultiColumnSpec multiColumnSpec,
+                                    final FieldMapping fieldMapping,
+                                    final MethodHandles.Lookup lookup,
+                                    final Class<?> dtoClass,
+                                    final TableMetaData tableMetaData,
+                                    final Set<String> unmappedColumns,
+                                    final Map<FieldAccessor, MappedFieldTarget> mappedFields,
+                                    final List<FieldAccessor> manyToOneDependencies,
+                                    final Set<Class<?>> allDtoClasses) {
+        final ColumnSpec[] columnSpecs = multiColumnSpec.columnSpecs();
+
+        final MappedFieldTarget[] mappedFieldTargets = new MappedFieldTarget[columnSpecs.length];
+        final String[] joinColumns = new String[columnSpecs.length];
+
+        for (int i = 0; i < columnSpecs.length; i++) {
+            final ColumnSpec columnSpec = columnSpecs[i];
+            final MappedColumn mappedColumn = createMappedColumn(columnSpec,
+                    fieldMapping,
+                    lookup,
+                    dtoClass,
+                    tableMetaData,
+                    unmappedColumns,
+                    mappedFields,
+                    manyToOneDependencies,
+                    allDtoClasses);
+            mappedFieldTargets[i] = mappedColumn.mappedFieldTarget();
+            unmappedColumns.remove(columnSpec.name());
+
+            if (columnSpec.joinColumn() != null) {
+                joinColumns[i] = columnSpec.joinColumn();
+            }
+        }
+
+        final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(mappedFieldTargets, null, null);
+
+        final FieldAccessor fieldAccessor;
+
+        if (fieldMapping instanceof FieldSpec fieldSpec) {
+            fieldAccessor = fieldAccessor(dtoClass, fieldSpec);
+        } else {
+            fieldAccessor = new NoOpFieldAccessor();
+        }
+
+        mappedFields.put(fieldAccessor, mappedCompositeKey);
     }
 
     private void mapOneToMany(final OneToMany oneToMany,
@@ -357,5 +433,9 @@ public final class TableMapper {
      *                              These relationships are typically mapped using foreign keys.
      */
     public record MappedTable(OrmTable ormTable, List<FieldAccessor> manyToOneDependencies) {
+    }
+
+    private record MappedColumn(FieldAccessor fieldAccessor, MappedFieldTarget mappedFieldTarget) {
+
     }
 }

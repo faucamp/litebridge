@@ -5,12 +5,13 @@ import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.commons.CollectionUtils;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.e2e.AbstractE2eTest;
+import org.litebridge.orm.e2e.compositepk.dto.CompositePkChild;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkFkTest;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkLookup;
+import org.litebridge.orm.e2e.compositepk.dto.CompositePkParent;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimple;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimpleM2M;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
-import org.litebridge.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -145,7 +147,6 @@ class CompositePkTest extends AbstractE2eTest {
         assertEquals(test1.description(), result2.description());
     }
 
-
     @TestTemplate
     @DisplayName("Many-to-many join with composite PKs")
     void compositePk_manyToManyJoin(final DbEnvDtoTableMapper tableMapper) throws Exception {
@@ -218,6 +219,61 @@ class CompositePkTest extends AbstractE2eTest {
             assertEquals(2L, result.getPk2());
             assertEquals(dto1.getDescription(), result.getDescription());
             assertTrue(CollectionUtils.isEmpty(result.getOthers()));
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("One-to-many join with composite PKs")
+    void compositePk_oneToManyJoin(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String compPkParentTable = tableMapper.qualifyName("COMP_PK_SIMPLE");
+        final String compPkChildTable = tableMapper.qualifyName("COMP_PK_CHILD");
+
+        // Register DTO mapping
+        litebridge.register(CompositePkParent.class, rc -> rc
+                .mapToTable(compPkParentTable)
+                .with(spec -> spec.mapField("pk1").toColumn(tableMapper.transformColumnName("PK1")))
+                .with(spec -> spec.mapField("pk2").toColumn(tableMapper.transformColumnName("PK2")))
+                .with(spec -> spec.mapField("description").toColumn(tableMapper.transformColumnName("TEST_DESC")))
+                .with(spec -> spec.mapField("children").oneToMany(c -> c.mappedByField("parent"))));
+
+        litebridge.register(CompositePkChild.class, rc -> rc
+                .mapToTable(compPkChildTable)
+                .with(spec -> spec.mapField("pk1").toColumn(tableMapper.transformColumnName("PK1")))
+                .with(spec -> spec.mapField("pk2").toColumn(tableMapper.transformColumnName("PK2")))
+                .with(spec -> spec.mapField("description").toColumn(tableMapper.transformColumnName("CHILD_DESC")))
+                .with(spec -> spec.mapField("parent")
+                        .toColumns(mc -> mc
+                                .column("PARENT_PK1").joinOn("PK1")
+                                .column("PARENT_PK2").joinOn("PK2"))));
+
+        // Create DTOs
+        final CompositePkParent parent = new CompositePkParent(1L, 2L, "Parent", null);
+        final CompositePkChild child1 = new CompositePkChild(100L, 200L, "Child 1", parent);
+
+        // Save both DTOs using cascading
+        litebridge.save(child1);
+
+        assertEquals(1, litebridge.select().from(compPkChildTable).list().size());
+        assertEquals(1, litebridge.select().from(compPkParentTable).list().size());
+
+        // Retrieve first child DTO and related parent DTO via a join
+        {
+            final CompositePkChild result = litebridge.select(CompositePkChild.class)
+                    .join(CompositePkParent.class).on("parent")
+                    .where("pk1").eq(100L)
+                    .and("pk2").eq(200L)
+                    .oneOrThrow();
+            assertEquals(100L, result.pk1());
+            assertEquals(200L, result.pk2());
+            assertEquals(child1.description(), result.description());
+            assertNotNull(result.parent());
+
+            final CompositePkParent resultParent = result.parent();
+            assertEquals(1L, resultParent.pk1());
+            assertEquals(2L, resultParent.pk2());
+            assertNotNull(resultParent.children());
+            assertEquals(1, resultParent.children().size());
+            assertSame(result, resultParent.children().getFirst());
         }
     }
 }
