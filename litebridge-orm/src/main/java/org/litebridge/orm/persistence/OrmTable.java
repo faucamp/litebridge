@@ -68,6 +68,25 @@ public class OrmTable {
      * @param classFieldAccessorCache the cache for field accessors
      */
     public OrmTable(final Class<?> dtoClass,
+                    final TableMetaData metaData,
+                    final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap,
+                    final ChangeTracker changeTracker,
+                    final ClassFieldAccessorCache classFieldAccessorCache) {
+        this(dtoClass, null, metaData, fieldAccessorTargetMap, changeTracker, classFieldAccessorCache);
+    }
+
+    /**
+     * Constructs a new {@code OrmTable} instance, initializing table metadata, field-to-column mappings,
+     * and a change tracker for managing object state.
+     *
+     * @param dtoClass                the DTO class associated with the table
+     * @param contextDtoClass         Parent/context DTO class.
+     * @param metaData                the metadata describing the table structure
+     * @param fieldAccessorTargetMap  a map associating field accessors with their corresponding column metadata
+     * @param changeTracker           the change tracker to monitor and track modifications made to the table's data
+     * @param classFieldAccessorCache the cache for field accessors
+     */
+    public OrmTable(final Class<?> dtoClass,
                     final @Nullable Class<?> contextDtoClass,
                     final TableMetaData metaData,
                     final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap,

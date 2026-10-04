@@ -374,7 +374,7 @@ class SelectCompilationContextTest {
         final Table userTable = new Table("users");
         final ColumnMetaData idCol = new ColumnMetaData(userTable, "id", true, Types.INTEGER, 0);
         final ColumnMetaData roleIdCol = new ColumnMetaData(userTable, "role_id", true, Types.INTEGER, 0);
-        roleIdCol.setJoinColumn("id");
+        roleIdCol.setJoinColumnSupplier(() -> idCol);
         final TableMetaData userMeta = new TableMetaData(userTable, List.of("id"), List.of(idCol, roleIdCol));
 
         final TableRegistry tableRegistry = context.tableRegistry();
@@ -650,7 +650,7 @@ class SelectCompilationContextTest {
         final Table tenantTable = new Table("tenants");
         final ColumnMetaData tenantIdCol = new ColumnMetaData(tenantTable, "id", true, Types.INTEGER, 0);
         final ColumnMetaData tenantSettingIdCol = new ColumnMetaData(tenantTable, "setting_id", true, Types.INTEGER, 1);
-        tenantSettingIdCol.setJoinColumn("id");
+        tenantSettingIdCol.setJoinColumnSupplier(() -> tenantIdCol);
         final TableMetaData tenantMeta = new TableMetaData(tenantTable, List.of("id"), List.of(tenantIdCol, tenantSettingIdCol));
         final OrmTable tenantOrmTable = mock(OrmTable.class);
         when(tenantOrmTable.getMetaData()).thenReturn(tenantMeta);
@@ -681,7 +681,7 @@ class SelectCompilationContextTest {
         final ColumnMetaData accountIdCol = new ColumnMetaData(accountTable, "id", true, Types.INTEGER, 0);
         final ColumnMetaData accountTenantIdCol = new ColumnMetaData(accountTable, "tenant_id", true, Types.INTEGER, 1);
         final ColumnMetaData accountSettingIdCol = new ColumnMetaData(accountTable, "setting_id", true, Types.INTEGER, 2);
-        accountSettingIdCol.setJoinColumn("id");
+
         final TableMetaData accountMeta = new TableMetaData(accountTable, List.of("id"), List.of(accountIdCol, accountTenantIdCol, accountSettingIdCol));
         final OrmTable accountOrmTable = mock(OrmTable.class);
         when(accountOrmTable.getMetaData()).thenReturn(accountMeta);
@@ -701,6 +701,7 @@ class SelectCompilationContextTest {
         when(accountSettingOrmTable.getMetaData()).thenReturn(accountSettingMeta);
         when(accountSettingOrmTable.mappedColumns()).thenReturn(List.of(accountSettingPkCol));
         when(accountSettingOrmTable.dtoClass()).thenReturn((Class) SettingDto.class);
+        accountSettingIdCol.setJoinColumnSupplier(() -> accountSettingPkCol);
 
         // Table registry stubs
         when(tableRegistry.getOrmTableOrThrow(TenantDto.class)).thenReturn(tenantOrmTable);

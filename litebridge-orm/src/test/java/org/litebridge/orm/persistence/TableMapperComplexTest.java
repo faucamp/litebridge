@@ -49,7 +49,7 @@ class TableMapperComplexTest {
                 .with(spec -> spec.mapField("id").toColumn("ID"));
         final DtoTableSpec orderSpec = new DtoTableSpecBuilder(context).build();
 
-        final TableMapper.MappedTable mappedOrder = mapper.mapToTable(MethodHandles.lookup(), OrderDto.class, orderSpec.tableSpec(), Set.of(OrderDto.class));
+        final TableMapper.MappedTable mappedOrder = mapper.mapToTable(MethodHandles.lookup(), OrderDto.class, null, orderSpec.tableSpec(), Set.of(OrderDto.class));
         when(tableRegistry.getOrmTable(OrderDto.class)).thenReturn(mappedOrder.ormTable());
 
         // Now register Customer with OneToMany to Order
@@ -64,7 +64,7 @@ class TableMapperComplexTest {
                 .build();
 
         // When
-        final TableMapper.MappedTable result = mapper.mapToTable(MethodHandles.lookup(), CustomerDto.class, custSpec.tableSpec(), Set.of(CustomerDto.class));
+        final TableMapper.MappedTable result = mapper.mapToTable(MethodHandles.lookup(), CustomerDto.class, null, custSpec.tableSpec(), Set.of(CustomerDto.class));
 
         // Then
         assertNotNull(result);
@@ -80,7 +80,7 @@ class TableMapperComplexTest {
         final TableMapper mapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
 
         // When / Then
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), String.class, mock(TableSpec.class), Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), String.class, null, mock(TableSpec.class), Collections.emptySet()));
     }
 
     private static class CustomerDto {
@@ -130,7 +130,7 @@ class TableMapperComplexTest {
         final DtoTableSpec tagSpec = new DtoTableSpecBuilder(new RegistrationContext(TagDto.class, mock(DatabaseProvider.class)).mapToTable("tags")
                 .with(spec -> spec.mapField("id").toColumn("ID")))
                 .build();
-        final TableMapper.MappedTable mappedTag = mapper.mapToTable(MethodHandles.lookup(), TagDto.class, tagSpec.tableSpec(), Set.of(TagDto.class));
+        final TableMapper.MappedTable mappedTag = mapper.mapToTable(MethodHandles.lookup(), TagDto.class, null, tagSpec.tableSpec(), Set.of(TagDto.class));
         when(tableRegistry.getOrmTable(TagDto.class)).thenReturn(mappedTag.ormTable());
 
         // Register Customer with ManyToMany to Tag
@@ -143,7 +143,7 @@ class TableMapperComplexTest {
                 .build();
 
         // When
-        final TableMapper.MappedTable result = mapper.mapToTable(MethodHandles.lookup(), CustomerManyToManyDto.class, custSpec.tableSpec(), Set.of(CustomerManyToManyDto.class));
+        final TableMapper.MappedTable result = mapper.mapToTable(MethodHandles.lookup(), CustomerManyToManyDto.class, null, custSpec.tableSpec(), Set.of(CustomerManyToManyDto.class));
 
         // Then
         assertNotNull(result);

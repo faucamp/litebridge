@@ -36,7 +36,7 @@ class TableMapperExtraTest {
         final TableSpec tableSpec = mock(TableSpec.class);
         when(tableSpec.fieldColumnMap()).thenReturn(Collections.emptyMap());
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -55,7 +55,7 @@ class TableMapperExtraTest {
 
         final TableSpec tableSpec = new TableSpec("TEST", Map.of(new FieldSpec("id", false), new ColumnSpec("ID")));
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -73,7 +73,7 @@ class TableMapperExtraTest {
 
         final TableSpec tableSpec = new TableSpec("TEST", Map.of(new FieldSpec("id", false), new ColumnSpec("ID"), new FieldSpec("name", false), new ColumnSpec("MISSING")));
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -91,7 +91,7 @@ class TableMapperExtraTest {
 
         final TableSpec tableSpec = new TableSpec("TEST", Map.of(new FieldSpec("id", false), new ColumnSpec("ID"), new FieldSpec("otherId", false), new ColumnSpec("ID")));
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -115,7 +115,7 @@ class TableMapperExtraTest {
 
         when(tableRegistry.containsOrmTable(ReferencedDto.class)).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithRef.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithRef.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -139,7 +139,7 @@ class TableMapperExtraTest {
 
         when(tableRegistry.containsOrmTable(ReferencedDto.class)).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithRef.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithRef.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -159,7 +159,7 @@ class TableMapperExtraTest {
                 new FieldSpec("id", false), new OneToMany(new FieldSpec("id", false)) // 'id' is not a collection
         ));
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -180,7 +180,7 @@ class TableMapperExtraTest {
                 new FieldSpec("tags", false), new OneToMany(new FieldSpec("id", false)) // 'tags' is List<String>
         ));
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithBasicCollection.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), DtoWithBasicCollection.class, null, tableSpec, Collections.emptySet()));
     }
 
     @Test
@@ -211,7 +211,7 @@ class TableMapperExtraTest {
                 new FieldSpec("id", false), new ManyToMany("join_table", new String[]{"join_col"}, new String[]{"inv_join_col"})
         ));
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Collections.emptySet()));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToTable(MethodHandles.lookup(), TestDto.class, null, tableSpec, Collections.emptySet()));
     }
 
     public static class TestDto {

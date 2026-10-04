@@ -25,9 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,7 +47,7 @@ class RegistrationEngineTest {
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getNestedDtoClasses()).thenReturn(Collections.emptyList());
         final TableMapper.MappedTable mappedTable = new TableMapper.MappedTable(ormTable, Collections.emptyList());
-        when(tableMapper.mapToTable(any(), eq(TestDto.class), any(), anySet())).thenReturn(mappedTable);
+        when(tableMapper.mapToTable(any(), eq(TestDto.class), nullable(Class.class), any(), anySet())).thenReturn(mappedTable);
 
         final RegistrationEngine engine = new RegistrationEngine(databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
 
@@ -55,7 +55,7 @@ class RegistrationEngineTest {
         engine.register(TestDto.class, rc -> rc.mapToTable("test_table").with(f -> f.mapField("id").toColumn("id")));
 
         // Then
-        verify(tableMapper).mapToTable(eq(lookup), eq(TestDto.class), any(), anySet());
+        verify(tableMapper).mapToTable(eq(lookup), eq(TestDto.class), nullable(Class.class), any(), anySet());
         verify(tableRegistry).addTable(TestDto.class, ormTable);
     }
 
@@ -73,7 +73,7 @@ class RegistrationEngineTest {
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getNestedDtoClasses()).thenReturn(Collections.emptyList());
         final TableMapper.MappedTable mappedTable = new TableMapper.MappedTable(ormTable, Collections.emptyList());
-        when(tableMapper.mapToTable(any(), eq(ValidEntity.class), any(), anySet())).thenReturn(mappedTable);
+        when(tableMapper.mapToTable(any(), eq(ValidEntity.class), nullable(Class.class), any(), anySet())).thenReturn(mappedTable);
 
         final RegistrationEngine engine = new RegistrationEngine(databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
 
@@ -81,7 +81,7 @@ class RegistrationEngineTest {
         engine.register(ValidEntity.class);
 
         // Then
-        verify(tableMapper).mapToTable(eq(lookup), eq(ValidEntity.class), any(), anySet());
+        verify(tableMapper).mapToTable(eq(lookup), eq(ValidEntity.class), nullable(Class.class), any(), anySet());
         verify(tableRegistry).addTable(ValidEntity.class, ormTable);
     }
 
@@ -99,14 +99,14 @@ class RegistrationEngineTest {
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getNestedDtoClasses()).thenReturn(Collections.emptyList());
         final TableMapper.MappedTable mappedTable = new TableMapper.MappedTable(ormTable, Collections.emptyList());
-        when(tableMapper.mapToTable(any(), eq(String.class), any(), anySet())).thenReturn(mappedTable);
+        when(tableMapper.mapToTable(any(), eq(String.class), nullable(Class.class), any(), anySet())).thenReturn(mappedTable);
 
         final RegistrationEngine engine = new RegistrationEngine(databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         final DtoTableSpec spec = new DtoTableSpec(String.class, createTableSpec("strings"), Collections.emptyList());
 
         // When / Then
         assertDoesNotThrow(() -> engine.register(spec));
-        verify(tableMapper).mapToTable(eq(lookup), eq(String.class), any(), anySet());
+        verify(tableMapper).mapToTable(eq(lookup), eq(String.class), nullable(Class.class), any(), anySet());
         verify(tableRegistry).addTable(String.class, ormTable);
         verify(accessorCache, never()).registerElevatedLookup(eq(String.class), any());
     }
@@ -125,7 +125,7 @@ class RegistrationEngineTest {
         final OrmTable ormTable = mock(OrmTable.class);
         when(ormTable.getNestedDtoClasses()).thenReturn(List.of(NestedDto.class));
         final TableMapper.MappedTable mappedTable = new TableMapper.MappedTable(ormTable, Collections.emptyList());
-        when(tableMapper.mapToTable(any(), eq(TestDto.class), any(), anySet())).thenReturn(mappedTable);
+        when(tableMapper.mapToTable(any(), eq(TestDto.class), nullable(Class.class), any(), anySet())).thenReturn(mappedTable);
 
         final RegistrationEngine engine = new RegistrationEngine(databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         final DtoTableSpec spec = new DtoTableSpec(TestDto.class, createTableSpec("test_table"), List.of(TestInterface.class));
@@ -161,7 +161,7 @@ class RegistrationEngineTest {
         when(fieldAccessor.genericType()).thenReturn((Class) TargetDto.class);
 
         final TableMapper.MappedTable mappedTable = new TableMapper.MappedTable(dependentOrmTable, List.of(fieldAccessor));
-        when(tableMapper.mapToTable(any(), eq(TestDto.class), any(), anySet())).thenReturn(mappedTable);
+        when(tableMapper.mapToTable(any(), eq(TestDto.class), nullable(Class.class), any(), anySet())).thenReturn(mappedTable);
 
         final RegistrationEngine engine = new RegistrationEngine(databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         final DtoTableSpec spec = new DtoTableSpec(TestDto.class, createTableSpec("test_table"), Collections.emptyList());
@@ -194,7 +194,7 @@ class RegistrationEngineTest {
         final OrmTable dependentOrmTable = mock(OrmTable.class);
         when(dependentOrmTable.getNestedDtoClasses()).thenReturn(Collections.emptyList());
         final TableMapper.MappedTable dependentMapped = new TableMapper.MappedTable(dependentOrmTable, List.of(targetAccessor, otherAccessor));
-        when(tableMapper.mapToTable(any(), eq(TestDto.class), any(), anySet())).thenReturn(dependentMapped);
+        when(tableMapper.mapToTable(any(), eq(TestDto.class), nullable(Class.class), any(), anySet())).thenReturn(dependentMapped);
 
         // Target tables are not yet registered
         when(tableRegistry.getOrmTable(TargetDto.class)).thenReturn(null);
@@ -203,7 +203,7 @@ class RegistrationEngineTest {
         final OrmTable targetOrmTable = mock(OrmTable.class);
         when(targetOrmTable.getNestedDtoClasses()).thenReturn(Collections.emptyList());
         final TableMapper.MappedTable targetMapped = new TableMapper.MappedTable(targetOrmTable, Collections.emptyList());
-        when(tableMapper.mapToTable(any(), eq(TargetDto.class), any(), anySet())).thenReturn(targetMapped);
+        when(tableMapper.mapToTable(any(), eq(TargetDto.class), nullable(Class.class), any(), anySet())).thenReturn(targetMapped);
 
         final RegistrationEngine engine = new RegistrationEngine(databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
 

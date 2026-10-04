@@ -54,7 +54,7 @@ class TableMapperTest {
         TableSpec tableSpec = new TableSpec(null, null, "TEST", Map.of(new org.litebridge.orm.api.spec.FieldSpec("id", false), new org.litebridge.orm.api.spec.ColumnSpec("ID")));
 
         // When
-        TableMapper.MappedTable mappedTable = tableMapper.mapToTable(MethodHandles.lookup(), TestDto.class, tableSpec, Set.of(TestDto.class));
+        TableMapper.MappedTable mappedTable = tableMapper.mapToTable(MethodHandles.lookup(), TestDto.class, null, tableSpec, Set.of(TestDto.class));
 
         // Then
         assertNotNull(mappedTable);
