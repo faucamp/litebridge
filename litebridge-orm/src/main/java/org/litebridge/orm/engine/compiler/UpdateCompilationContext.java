@@ -15,11 +15,15 @@ import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
+import org.litebridge.db.spi.MappedFieldTarget;
+import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.OrmTable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Compilation context for UPDATE statements.
@@ -76,11 +80,41 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
 
         if (ormTable != null) {
             updateColumns = setNodes.stream()
-                    .map(setNode -> {
+                    .flatMap(setNode -> {
                         final String fieldName = getColumn(setNode);
+                        final MappedFieldTarget target = ormTable.mappedFieldTargetForFieldOrNull(fieldName);
+                        if (target instanceof MappedCompositeKey mappedCompositeKey) {
+                            final List<UpdateColumn> result = new ArrayList<>();
+                            for (MappedFieldTarget mft : mappedCompositeKey.columns()) {
+                                if (mft instanceof ColumnMetaData cmd) {
+                                    final Object val;
+                                    if (setNode.value() instanceof Map<?, ?> map) {
+                                        final String joinColName = cmd.getJoinColumn() != null ? cmd.getJoinColumn().name() : null;
+                                        final String pkFieldName = (mappedCompositeKey.targetOrmTable() != null && joinColName != null)
+                                                ? mappedCompositeKey.targetOrmTable().get().getFieldForColumnName(joinColName).name()
+                                                : null;
+
+                                        if (map.containsKey(cmd.name())) {
+                                            val = map.get(cmd.name());
+                                        } else if (joinColName != null && map.containsKey(joinColName)) {
+                                            val = map.get(joinColName);
+                                        } else if (pkFieldName != null && map.containsKey(pkFieldName)) {
+                                            val = map.get(pkFieldName);
+                                        } else {
+                                            val = null;
+                                        }
+                                    } else {
+                                        val = setNode.value();
+                                    }
+                                    bindValues.add(new BindValue(val, cmd.getDataType()));
+                                    result.add(new UpdateColumn(cmd.name(), null, setNode.mathOperator()));
+                                }
+                            }
+                            return result.stream();
+                        }
                         final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(fieldName);
                         bindValues.add(new BindValue(setNode.value(), columnMetaData.getDataType()));
-                        return new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator());
+                        return Stream.of(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator()));
                     })
                     .toList();
         } else {

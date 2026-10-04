@@ -24,3 +24,27 @@ CREATE TABLE lb.comp_pk_simple
 
     PRIMARY KEY (pk1, pk2)
 );
+
+CREATE TABLE lb.comp_pk_child
+(
+    pk1        NUMERIC(10) NOT NULL,
+    pk2        NUMERIC(10) NOT NULL,
+    parent_pk1 NUMERIC(10) NOT NULL,
+    parent_pk2 NUMERIC(10) NOT NULL,
+    child_desc VARCHAR(50),
+
+    PRIMARY KEY (pk1, pk2),
+
+    FOREIGN KEY (parent_pk1, parent_pk2)
+        REFERENCES lb.comp_pk_simple (pk1, pk2)
+);
+
+CREATE TABLE lb.comp_join_table
+(
+    left_pk1  NUMERIC(10) NOT NULL,
+    left_pk2  NUMERIC(10) NOT NULL,
+    right_pk1 NUMERIC(10) NOT NULL,
+    right_pk2 NUMERIC(10) NOT NULL,
+
+    PRIMARY KEY (left_pk1, left_pk2, right_pk1, right_pk2)
+);

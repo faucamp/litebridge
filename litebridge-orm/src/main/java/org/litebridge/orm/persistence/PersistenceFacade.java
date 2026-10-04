@@ -426,13 +426,8 @@ public class PersistenceFacade {
 
                                 insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
 
-                                    if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                        if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                            updateBuilder.setField(fieldAccessor.name(), pkValue);
-                                        } else {
-                                            //noinspection DataFlowIssue
-                                            insertValues.put(fieldAccessor.name(), pkValue);
-                                        }
+                                    if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().name().equalsIgnoreCase(pkColumn.name())) {
+                                        statementBuilder.setField(fieldAccessor.name(), pkValue);
                                     }
                                 });
 
@@ -455,13 +450,8 @@ public class PersistenceFacade {
                                     && !CollectionUtils.isEmpty(insertResult.generatedKeys())) {
 
                                 insertResult.generatedKeys().getFirst().forEach((pkColumn, pkValue) -> {
-                                    if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
-                                        if (statementBuilder instanceof UpdateBuilder updateBuilder) {
-                                            updateBuilder.setField(fieldAccessor.name(), pkValue);
-                                        } else {
-                                            //noinspection DataFlowIssue
-                                            insertValues.put(fieldAccessor.name(), pkValue);
-                                        }
+                                    if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().name().equalsIgnoreCase(pkColumn.name())) {
+                                        statementBuilder.setField(fieldAccessor.name(), pkValue);
                                     }
                                 });
 
@@ -509,7 +499,7 @@ public class PersistenceFacade {
             final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
-            if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().equals(pkColumn.name())) {
+            if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().name().equalsIgnoreCase(pkColumn.name())) {
                 if (statementBuilder instanceof UpdateBuilder updateBuilder) {
                     updateBuilder.setField(fieldAccessor.name(), embeddedDtoPkValue);
                 } else {
@@ -977,17 +967,16 @@ public class PersistenceFacade {
             if (pkValue != null) {
                 if (ClassUtils.isBasicType(field.type())) {
                     conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, pkValue);
-                    continue;
-                }
+                } else {
+                    // Dealing with an embedded DTO - add the context to the table provider
+                    tableProvider.pushContext(ormTable);
+                    final OrmTable relatedDtoTable = tableProvider.getTableOrThrow(pkValue.getClass());
 
-                // Dealing with an embedded DTO - add the context to the table provider
-                tableProvider.pushContext(ormTable);
-                final OrmTable relatedDtoTable = tableProvider.getTableOrThrow(pkValue.getClass());
-
-                for (ColumnMetaData relatedDtoPkColumn : relatedDtoTable.getMetaData().primaryKey()) {
-                    final FieldAccessor embeddedDtoPkAccessor = relatedDtoTable.getFieldForColumnName(relatedDtoPkColumn.name());
-                    final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(pkValue);
-                    conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, embeddedDtoPkValue);
+                    for (ColumnMetaData relatedDtoPkColumn : relatedDtoTable.getMetaData().primaryKey()) {
+                        final FieldAccessor embeddedDtoPkAccessor = relatedDtoTable.getFieldForColumnName(relatedDtoPkColumn.name());
+                        final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(pkValue);
+                        conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, embeddedDtoPkValue);
+                    }
                 }
             } else {
                 conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.IS_NULL, null);

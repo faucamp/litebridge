@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +99,7 @@ public class DtoMapper {
 
         // Return all unique DTOs assignable to the requested type from the root mapping
         final List<DTO> result = new ArrayList<>();
-        final Set<Object> seenDtos = new HashSet<>();
+        final Set<Object> seenDtos = Collections.newSetFromMap(new IdentityHashMap<>());
         final MappingData rootMappingData = compilationResult.rootMappingData();
 
         for (final Row row : rows) {
@@ -328,13 +329,20 @@ public class DtoMapper {
             final Column column = fieldMapping.columns().get(i);
             final String label = fieldMapping.columnLabels().get(i);
             final ColumnMetaData columnMetaData = ormTable.getColumnMetaData(column.name());
-            final ForeignKeyConstraint constraint = columnMetaData.getForeignKeyConstraints().stream()
-                    .filter(fk -> fk.foreignKey().table().equals(targetOrmTable.getMetaData().table()))
-                    .findFirst()
-                    .orElse(null);
+            final Column targetCol;
 
-            if (constraint != null) {
-                final FieldAccessor targetPkField = targetOrmTable.getFieldForColumnName(constraint.foreignKey().name());
+            if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().table().equals(targetOrmTable.getMetaData().table())) {
+                targetCol = columnMetaData.getJoinColumn().column();
+            } else {
+                final ForeignKeyConstraint constraint = columnMetaData.getForeignKeyConstraints().stream()
+                        .filter(fk -> fk.foreignKey().table().equals(targetOrmTable.getMetaData().table()))
+                        .findFirst()
+                        .orElse(null);
+                targetCol = constraint != null ? constraint.foreignKey() : null;
+            }
+
+            if (targetCol != null) {
+                final FieldAccessor targetPkField = targetOrmTable.getFieldForColumnName(targetCol.name());
                 final int pkIndex = targetPkFields.indexOf(targetPkField);
                 if (pkIndex != -1) {
                     sortedColumns[pkIndex] = column;
@@ -543,9 +551,19 @@ public class DtoMapper {
             }
         }
 
+        final List<DeferredCollectionAddition> deferredAdditions = new ArrayList<>();
+
         // Instantiate all DTOs
         for (final PartiallyConstructedDto partialDto : allPartialDtos) {
-            instantiateDto(partialDto);
+            instantiateDto(partialDto, deferredAdditions);
+        }
+
+        // Process deferred collection additions for cyclic dependencies
+        for (DeferredCollectionAddition addition : deferredAdditions) {
+            final Object itemDto = addition.itemPartialDto().getDto();
+            if (itemDto != null && !addition.collection().contains(itemDto)) {
+                addition.collection().add(itemDto);
+            }
         }
 
         // Late reverse updates for already-instantiated DTOs
@@ -555,102 +573,116 @@ public class DtoMapper {
     }
 
     @SuppressWarnings("unchecked")
-    private Object instantiateDto(final PartiallyConstructedDto partialDto) {
+    private Object instantiateDto(final PartiallyConstructedDto partialDto, final List<DeferredCollectionAddition> deferredAdditions) {
         if (partialDto.getDto() != null) {
             return partialDto.getDto();
         }
 
-        final MappingData mappingData = partialDto.mappingData();
-        final Class<?> dtoClass = mappingData.dtoClass();
-        final DtoData dtoData = partialDto.dtoData();
-        final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(dtoClass, mappingData.contextDtoClass());
+        if (partialDto.isInstantiating()) {
+            return partialDto;
+        }
 
-        if (constructorMappingInfo.defaultConstructorUsed()) {
+        partialDto.setInstantiating(true);
+
+        try {
+            final MappingData mappingData = partialDto.mappingData();
+            final Class<?> dtoClass = mappingData.dtoClass();
+            final DtoData dtoData = partialDto.dtoData();
+            final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(dtoClass, mappingData.contextDtoClass());
+
+            final Map<FieldAccessor, Collection<Object>> instantiatedCollections = new HashMap<>();
+
+            for (Map.Entry<FieldAccessor, Collection<Object>> entry : dtoData.collections().entrySet()) {
+                final FieldAccessor accessor = entry.getKey();
+                final Collection<Object> finalCollection = (Collection<Object>) ClassUtils.newInstance(accessor.type());
+                instantiatedCollections.put(accessor, finalCollection);
+            }
+
             final Object dto;
 
-            try {
-                dto = constructorMappingInfo.constructor().invoke();
-            } catch (Throwable e) {
-                throw new IllegalStateException("Failed to construct DTO: " + dtoClass, e);
-            }
-
-            partialDto.setDto(dto);
-
-            // Populate fields
-            for (Map.Entry<FieldAccessor, @Nullable Object> entry : dtoData.values().entrySet()) {
-                final FieldAccessor accessor = entry.getKey();
-                Object value = entry.getValue();
-
-                if (value instanceof PartiallyConstructedDto depPartialDto) {
-                    value = instantiateDto(depPartialDto);
+            if (constructorMappingInfo.defaultConstructorUsed()) {
+                try {
+                    dto = constructorMappingInfo.constructor().invoke();
+                } catch (Throwable e) {
+                    throw new IllegalStateException("Failed to construct DTO: " + dtoClass, e);
                 }
 
-                if (value != null || !accessor.type().isPrimitive()) {
-                    accessor.set(dto, value);
+                partialDto.setDto(dto);
+
+                // Populate scalar fields
+                for (Map.Entry<FieldAccessor, @Nullable Object> entry : dtoData.values().entrySet()) {
+                    final FieldAccessor accessor = entry.getKey();
+                    Object value = entry.getValue();
+
+                    if (value instanceof PartiallyConstructedDto depPartialDto) {
+                        value = instantiateDto(depPartialDto, deferredAdditions);
+                    }
+
+                    if (value != null || !accessor.type().isPrimitive()) {
+                        accessor.set(dto, value);
+                    }
                 }
+
+                for (Map.Entry<FieldAccessor, Collection<Object>> entry : instantiatedCollections.entrySet()) {
+                    entry.getKey().set(dto, entry.getValue());
+                }
+            } else {
+                final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>();
+                for (Map.Entry<FieldAccessor, Object> entry : dtoData.values().entrySet()) {
+                    final FieldAccessor accessor = entry.getKey();
+                    Object value = entry.getValue();
+
+                    if (value instanceof PartiallyConstructedDto depPartialDto) {
+                        value = instantiateDto(depPartialDto, deferredAdditions);
+                    }
+
+                    fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(accessor, value));
+                }
+
+                for (Map.Entry<FieldAccessor, Collection<Object>> entry : instantiatedCollections.entrySet()) {
+                    fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(entry.getKey(), entry.getValue()));
+                }
+
+                // Fill in default values for canonical constructor if missing
+                final List<FieldAccessor> canonicalAccessors = constructorMappingInfo.canonicalConstructorFieldAccessors();
+                final Set<FieldAccessor> providedAccessors = new HashSet<>();
+
+                for (DtoConstructor.FieldAccessorValue fav : fieldAccessorValues) {
+                    providedAccessors.add(fav.field());
+                }
+
+                for (FieldAccessor canonicalAccessor : canonicalAccessors) {
+                    if (!providedAccessors.contains(canonicalAccessor)) {
+                        fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(canonicalAccessor, ClassUtils.getDefaultValue(canonicalAccessor.type())));
+                    }
+                }
+
+                dto = constructDto(dtoClass, fieldAccessorValues, dtoConstructor);
+                partialDto.setDto(dto);
             }
 
+            // Populate collection elements after dto instance is created & cached
             for (Map.Entry<FieldAccessor, Collection<Object>> entry : dtoData.collections().entrySet()) {
                 final FieldAccessor accessor = entry.getKey();
                 final Collection<Object> partialCollection = entry.getValue();
-                final Collection<Object> finalCollection = (Collection<Object>) ClassUtils.newInstance(accessor.type());
+                final Collection<Object> finalCollection = instantiatedCollections.get(accessor);
 
                 for (Object item : partialCollection) {
                     if (item instanceof PartiallyConstructedDto itemPartialDto) {
-                        finalCollection.add(instantiateDto(itemPartialDto));
+                        if (itemPartialDto.isInstantiating() && itemPartialDto.getDto() == null) {
+                            deferredAdditions.add(new DeferredCollectionAddition(finalCollection, itemPartialDto));
+                        } else {
+                            finalCollection.add(instantiateDto(itemPartialDto, deferredAdditions));
+                        }
                     } else {
                         finalCollection.add(item);
                     }
                 }
-
-                accessor.set(dto, finalCollection);
             }
+
             return dto;
-        } else {
-            final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>();
-            for (Map.Entry<FieldAccessor, Object> entry : dtoData.values().entrySet()) {
-                final FieldAccessor accessor = entry.getKey();
-                Object value = entry.getValue();
-
-                if (value instanceof PartiallyConstructedDto depPartialDto) {
-                    value = instantiateDto(depPartialDto);
-                }
-
-                fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(accessor, value));
-            }
-            for (Map.Entry<FieldAccessor, Collection<Object>> entry : dtoData.collections().entrySet()) {
-                final FieldAccessor accessor = entry.getKey();
-                final Collection<Object> partialCollection = entry.getValue();
-                final Collection<Object> finalCollection = (Collection<Object>) ClassUtils.newInstance(accessor.type());
-
-                for (Object item : partialCollection) {
-                    if (item instanceof PartiallyConstructedDto itemPartialDto) {
-                        finalCollection.add(instantiateDto(itemPartialDto));
-                    } else {
-                        finalCollection.add(item);
-                    }
-                }
-
-                fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(accessor, finalCollection));
-            }
-
-            // Fill in default values for canonical constructor if missing
-            final List<FieldAccessor> canonicalAccessors = constructorMappingInfo.canonicalConstructorFieldAccessors();
-            final Set<FieldAccessor> providedAccessors = new HashSet<>();
-
-            for (DtoConstructor.FieldAccessorValue fav : fieldAccessorValues) {
-                providedAccessors.add(fav.field());
-            }
-
-            for (FieldAccessor canonicalAccessor : canonicalAccessors) {
-                if (!providedAccessors.contains(canonicalAccessor)) {
-                    fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(canonicalAccessor, ClassUtils.getDefaultValue(canonicalAccessor.type())));
-                }
-            }
-
-            final Object dto = constructDto(dtoClass, fieldAccessorValues, dtoConstructor);
-            partialDto.setDto(dto);
-            return dto;
+        } finally {
+            partialDto.setInstantiating(false);
         }
     }
 
@@ -927,6 +959,7 @@ public class DtoMapper {
         private final Pk primaryKey;
         private final List<SpecificDtoDependency> dependencies;
         private final MappingData mappingData;
+        private boolean instantiating;
 
         private PartiallyConstructedDto(DtoData dtoData,
                                         Pk primaryKey,
@@ -936,6 +969,14 @@ public class DtoMapper {
             this.primaryKey = primaryKey;
             this.dependencies = dependencies;
             this.mappingData = mappingData;
+        }
+
+        public boolean isInstantiating() {
+            return instantiating;
+        }
+
+        public void setInstantiating(final boolean instantiating) {
+            this.instantiating = instantiating;
         }
 
         public DtoData dtoData() {
@@ -1198,5 +1239,9 @@ public class DtoMapper {
 
     private record LateReverseCollectionUpdate(PartiallyConstructedDto hostPartialDto, Object relatedDto,
                                                FieldAccessor relatedCollectionField) {
+    }
+
+    private record DeferredCollectionAddition(Collection<Object> collection,
+                                              PartiallyConstructedDto itemPartialDto) {
     }
 }

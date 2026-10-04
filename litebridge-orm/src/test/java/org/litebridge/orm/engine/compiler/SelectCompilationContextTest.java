@@ -647,10 +647,18 @@ class SelectCompilationContextTest {
         final TableRegistry tableRegistry = context.tableRegistry();
 
         // Tables & MetaData
+        final Table tenantSettingTable = new Table("tenant_settings");
+        final ColumnMetaData tenantSettingPkCol = new ColumnMetaData(tenantSettingTable, "id", true, Types.INTEGER, 0);
+        final TableMetaData tenantSettingMeta = new TableMetaData(tenantSettingTable, List.of("id"), List.of(tenantSettingPkCol));
+        final OrmTable tenantSettingOrmTable = mock(OrmTable.class);
+        when(tenantSettingOrmTable.getMetaData()).thenReturn(tenantSettingMeta);
+        when(tenantSettingOrmTable.mappedColumns()).thenReturn(List.of(tenantSettingPkCol));
+        when(tenantSettingOrmTable.dtoClass()).thenReturn((Class) SettingDto.class);
+
         final Table tenantTable = new Table("tenants");
         final ColumnMetaData tenantIdCol = new ColumnMetaData(tenantTable, "id", true, Types.INTEGER, 0);
         final ColumnMetaData tenantSettingIdCol = new ColumnMetaData(tenantTable, "setting_id", true, Types.INTEGER, 1);
-        tenantSettingIdCol.setJoinColumnSupplier(() -> tenantIdCol);
+        tenantSettingIdCol.setJoinColumnSupplier(() -> tenantSettingPkCol);
         final TableMetaData tenantMeta = new TableMetaData(tenantTable, List.of("id"), List.of(tenantIdCol, tenantSettingIdCol));
         final OrmTable tenantOrmTable = mock(OrmTable.class);
         when(tenantOrmTable.getMetaData()).thenReturn(tenantMeta);
@@ -661,14 +669,6 @@ class SelectCompilationContextTest {
         when(tenantOrmTable.columnMetaDataForField("setting")).thenReturn(tenantSettingIdCol);
         when(tenantOrmTable.mappedFieldTargetForField("setting")).thenReturn(tenantSettingIdCol);
         when(tenantOrmTable.mappedFieldTargetForFieldOrNull("setting")).thenReturn(tenantSettingIdCol);
-
-        final Table tenantSettingTable = new Table("tenant_settings");
-        final ColumnMetaData tenantSettingPkCol = new ColumnMetaData(tenantSettingTable, "id", true, Types.INTEGER, 0);
-        final TableMetaData tenantSettingMeta = new TableMetaData(tenantSettingTable, List.of("id"), List.of(tenantSettingPkCol));
-        final OrmTable tenantSettingOrmTable = mock(OrmTable.class);
-        when(tenantSettingOrmTable.getMetaData()).thenReturn(tenantSettingMeta);
-        when(tenantSettingOrmTable.mappedColumns()).thenReturn(List.of(tenantSettingPkCol));
-        when(tenantSettingOrmTable.dtoClass()).thenReturn((Class) SettingDto.class);
 
         final FieldAccessor mappedByField = mock(FieldAccessor.class);
         when(mappedByField.name()).thenReturn("tenantId");

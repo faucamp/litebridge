@@ -243,15 +243,12 @@ public final class TableMapper {
                 throw new IllegalArgumentException(String.format("No \"join on\" field specified for referenced DTO '%s' in field '%s' of DTO '%s'", targetDtoClass.getName(), fieldAccessor.name(), dtoClass.getName()));
             }
 
-            final OrmTable targetOrmTable;
-
             if (nestedTable != null) {
-                targetOrmTable = nestedTable.ormTable();
+                final OrmTable inlineTargetOrmTable = nestedTable.ormTable();
+                columnMetaData.setJoinColumnSupplier(() -> inlineTargetOrmTable.getMetaData().column(columnSpec.joinColumn()));
             } else {
-                targetOrmTable = tableRegistry.getOrmTableOrThrow(targetDtoClass);
+                columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
             }
-
-            columnMetaData.setJoinColumnSupplier(() -> targetOrmTable.getMetaData().column(columnSpec.joinColumn()));
         } else if (columnSpec.joinColumn() != null) {
             final Class<?> targetDtoClass = fieldAccessor instanceof NoOpFieldAccessor ? dtoClass : fieldAccessor.type();
             columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
@@ -301,8 +298,6 @@ public final class TableMapper {
             }
         }
 
-        final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(mappedFieldTargets, null, null);
-
         final FieldAccessor fieldAccessor;
 
         if (fieldMapping instanceof FieldSpec fieldSpec) {
@@ -310,6 +305,16 @@ public final class TableMapper {
         } else {
             fieldAccessor = new NoOpFieldAccessor();
         }
+
+        final Supplier<OrmTable> targetOrmTableSupplier;
+        if (!(fieldAccessor instanceof NoOpFieldAccessor) && !ClassUtils.isBasicType(fieldAccessor.type())) {
+            final Class<?> targetDtoClass = fieldAccessor.type();
+            targetOrmTableSupplier = () -> tableRegistry.getOrmTableOrThrow(targetDtoClass);
+        } else {
+            targetOrmTableSupplier = null;
+        }
+
+        final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(mappedFieldTargets, targetOrmTableSupplier, joinColumns);
 
         mappedFields.put(fieldAccessor, mappedCompositeKey);
     }

@@ -14,12 +14,16 @@ import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
+import org.litebridge.db.spi.MappedFieldTarget;
+import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -64,8 +68,18 @@ final class InsertCompilationContext implements CompilationContext {
                 if (ormTable != null && !ormTable.isManyToManyJoinTable()) {
                     // Translate field names to column names
                     insertColumns = Arrays.stream(insertNode.columns())
-                            .map(ormTable::columnMetaDataForField)
-                            .map(ColumnMetaData::name)
+                            .flatMap(field -> {
+                                final MappedFieldTarget target = ormTable.mappedFieldTargetForFieldOrNull(field);
+
+                                if (target instanceof MappedCompositeKey mappedCompositeKey) {
+                                    return Arrays.stream(mappedCompositeKey.columns())
+                                            .filter(ColumnMetaData.class::isInstance)
+                                            .map(ColumnMetaData.class::cast)
+                                            .map(ColumnMetaData::name);
+                                }
+
+                                return Arrays.stream(new String[]{ormTable.columnMetaDataForField(field).name()});
+                            })
                             .toList();
                 } else {
                     this.insertColumns = List.of(insertNode.columns());
@@ -146,7 +160,26 @@ final class InsertCompilationContext implements CompilationContext {
         }
     }
 
-    public void addRowBindValues(final List<@Nullable Object> values) {
+    public void addRowBindValues(final List<@Nullable Object> rawValues) {
+        final List<@Nullable Object> values;
+
+        if (rawValues.size() != insertColumns.size()) {
+            // There are composite values that need to be expanded
+            values = new ArrayList<>(insertColumns.size());
+
+            for (Object rawValue : rawValues) {
+                if (rawValue instanceof LinkedHashMap<?, ?> map) {
+                    values.addAll(map.sequencedValues());
+                } else if (rawValue instanceof Collection<?> collection) {
+                    values.addAll(collection);
+                } else {
+                    values.add(rawValue);
+                }
+            }
+        } else {
+            values = rawValues;
+        }
+
         if (values.size() != insertColumns.size()) {
             throw new IllegalArgumentException("Number of values does not match number of columns");
         }

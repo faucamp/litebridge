@@ -232,7 +232,11 @@ final class MergeCompilationContext extends AbstractCompilationContext {
     }
 
     private List<ColumnMetaData> getColumnMetaDataListForField(final String field, final OrmTable ormTable) {
-        final MappedFieldTarget mappedFieldTarget = ormTable.mappedFieldTargetForField(field);
+        final MappedFieldTarget mappedFieldTarget = ormTable.mappedFieldTargetForFieldOrNull(field);
+
+        if (mappedFieldTarget == null) {
+            return Collections.singletonList(ormTable.columnMetaDataForField(field));
+        }
 
         return switch (mappedFieldTarget) {
             case ColumnMetaData cmd -> Collections.singletonList(cmd);

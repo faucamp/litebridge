@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -138,16 +139,37 @@ public class OrmTable {
                     // Related DTO - mark for partial creation later if necessary (e.g. when no JOINs are specified)
                     relatedDtoClasses.add(fieldAccessor.type());
                 }
+            } else if (preprocessedTarget instanceof MappedCompositeKey mappedCompositeKey) {
+                for (MappedFieldTarget targetCol : mappedCompositeKey.columns()) {
+                    if (targetCol instanceof ColumnMetaData column) {
+                        columnMap.put(column.name(), column);
+                        columnNameFieldMap.put(column.name(), fieldAccessor);
+                    }
+                }
+
+                if (!(fieldAccessor instanceof FieldAccessorChain) && !ClassUtils.isBasicType(fieldAccessor.type())) {
+                    relatedDtoClasses.add(fieldAccessor.type());
+                }
             }
         }));
 
         // Add mapped field-target entries in the order of the db expressions
         this.metaData.columns().forEach(column -> processedFieldTargetMap.entrySet().stream()
-                .filter(entry ->
-                        entry.getValue() instanceof ColumnMetaData columnMetaData
-                                && columnMetaData.equals(column))
+                .filter(entry -> {
+                    if (entry.getValue() instanceof ColumnMetaData columnMetaData) {
+                        return columnMetaData.equals(column);
+                    } else if (entry.getValue() instanceof MappedCompositeKey mappedCompositeKey) {
+                        return Arrays.stream(mappedCompositeKey.columns())
+                                .anyMatch(c -> c instanceof ColumnMetaData cmd && cmd.equals(column));
+                    }
+                    return false;
+                })
                 .findFirst()
-                .ifPresent(orderedFieldTargetEntries::add));
+                .ifPresent(entry -> {
+                    if (!orderedFieldTargetEntries.contains(entry)) {
+                        orderedFieldTargetEntries.add(entry);
+                    }
+                }));
 
         // Append remaining entries to the end of the list
         if (orderedFieldTargetEntries.size() < fieldAccessorTargetMap.size()) {
@@ -485,11 +507,21 @@ public class OrmTable {
      * @return the list of mapped column metadata
      */
     public List<ColumnMetaData> mappedColumns() {
-        return fieldTargetEntries.stream()
-                .map(Map.Entry::getValue)
-                .filter(ColumnMetaData.class::isInstance)
-                .map(ColumnMetaData.class::cast)
-                .toList();
+        final List<ColumnMetaData> result = new ArrayList<>();
+
+        for (Map.Entry<FieldAccessor, MappedFieldTarget> entry : fieldTargetEntries) {
+            if (entry.getValue() instanceof ColumnMetaData columnMetaData) {
+                result.add(columnMetaData);
+            } else if (entry.getValue() instanceof MappedCompositeKey mappedCompositeKey) {
+                for (MappedFieldTarget targetCol : mappedCompositeKey.columns()) {
+                    if (targetCol instanceof ColumnMetaData col) {
+                        result.add(col);
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
