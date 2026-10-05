@@ -53,7 +53,7 @@ public abstract class AbstractNumberConverter<T extends Number> implements Conve
     /**
      * Converts a {@link Number} instance to the target type.
      *
-     * @param value the numeric value to convert
+     * @param value the numericO value to convert
      * @return the converted value
      */
     protected abstract T convertNumber(final Number value);

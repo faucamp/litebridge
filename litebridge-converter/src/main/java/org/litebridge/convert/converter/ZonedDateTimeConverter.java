@@ -11,6 +11,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
+/**
+ * A converter for {@link ZonedDateTime} values.
+ */
 public class ZonedDateTimeConverter implements Converter<ZonedDateTime> {
 
     @Override

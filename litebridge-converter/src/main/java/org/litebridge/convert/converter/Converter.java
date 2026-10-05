@@ -38,7 +38,7 @@ public interface Converter<T> extends ConverterFunction<T> {
      * <p>
      * Converters with lower priority values converters are preferred if there are data type overlaps.
      * <p>
-     * As an example, if there are two converters A & B for type {@code String}, if A has a priority of 1
+     * As an example, if there are two converters A and B for type {@code String}, if A has a priority of 1
      * and B has a priority of 2, then A will be chosen to perform the conversion.
      *
      * @return the priority of this converter
