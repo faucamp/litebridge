@@ -1,9 +1,12 @@
 package org.litebridge.orm.expression;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.orm.api.select.SelectApi;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.expression.function.aggregate.AvgSpec;
 import org.litebridge.orm.expression.function.aggregate.CountSpec;
 import org.litebridge.orm.expression.function.aggregate.MaxSpec;
@@ -15,8 +18,20 @@ import org.litebridge.orm.expression.function.scalar.SubstringSpec;
 import org.litebridge.orm.expression.function.scalar.UpperSpec;
 import org.litebridge.orm.expression.intent.ConvertIntent;
 import org.litebridge.orm.expression.intent.ConvertSpec;
+import org.litebridge.orm.expression.select.AliasReferenceSpec;
+import org.litebridge.orm.expression.select.DtoAliasSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
+import org.litebridge.orm.expression.select.LiteralExpressionSpec;
+import org.litebridge.orm.expression.select.QueryAliasSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
+import org.litebridge.orm.expression.select.SqlFromTargetSpec;
+import org.litebridge.orm.expression.select.TableAliasSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Functions: Utility class that provides static methods for constructing query expressions.
@@ -32,18 +47,243 @@ public final class Fn {
     private Fn() {
     }
 
+    // Select targets (FROM/JOIN targets)
+
+    /**
+     * Aliases the specified entity/mapped DTO class.
+     * <p>
+     * The result can be used as a target for a `FROM` or `JOIN` clause.
+     *
+     * @param dtoClass The DTO class to alias.
+     * @param alias    The alias to use for the DTO class.
+     * @param <DTO>    The entity or mapped DTO class to alias.
+     * @return a target specification for the specified DTO class and alias.
+     */
+    public static <DTO> DtoAliasSpec<DTO> alias(final Class<DTO> dtoClass, final String alias) {
+        return new DtoAliasSpec<>(dtoClass, alias);
+    }
+
+    /**
+     * Aliases the specified table.
+     * <p>
+     * The result can be used as a target for a `FROM` or `JOIN` clause.
+     *
+     * @param table Name of the table to alias.
+     * @param alias The alias to use for the table.
+     * @return a target specification for the specified table and alias.
+     */
+    public static SqlFromTargetSpec aliasTable(final String table, final String alias) {
+        return new TableAliasSpec(table, alias);
+    }
+
+    /**
+     * Aliases the specified subquery.
+     * <p>
+     * This allows the results from the subquery to be referenced in the parent query.
+     * It can be used as a target for a `FROM` or `JOIN` clause.
+     *
+     * @param query The subquery to alias.
+     * @param alias The alias to use for the subquery.
+     * @return a target specification for the specified subquery and alias.
+     */
+    public static SqlFromTargetSpec alias(final Function<SelectApi, SelectTerminal<?>> query, final String alias) {
+        return new QueryAliasSpec(query, alias);
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for a single column of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param label      the value's column label
+     * @param value      the value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias, final String label, final @Nullable Object value) {
+        return new ValuesSpec(tableAlias, new String[]{label}, new @Nullable Object[]{value});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2}, new @Nullable Object[]{v1, v2});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3}, new @Nullable Object[]{v1, v2, v3});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @param l4         the fourth value's column label
+     * @param v4         the fourth value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3,
+                                    final String l4, final @Nullable Object v4) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3, l4}, new @Nullable Object[]{v1, v2, v3, v4});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @param l4         the fourth value's column label
+     * @param v4         the fourth value; can be {@code null}
+     * @param l5         the fifth value's column label
+     * @param v5         the fifth value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3,
+                                    final String l4, final @Nullable Object v4,
+                                    final String l5, final @Nullable Object v5) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3, l4, l5}, new @Nullable Object[]{v1, v2, v3, v4, v5});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param l1         the first value's column label
+     * @param v1         the first value; can be {@code null}
+     * @param l2         the second value's column label
+     * @param v2         the second value; can be {@code null}
+     * @param l3         the third value's column label
+     * @param v3         the third value; can be {@code null}
+     * @param l4         the fourth value's column label
+     * @param v4         the fourth value; can be {@code null}
+     * @param l5         the fifth value's column label
+     * @param v5         the fifth value; can be {@code null}
+     * @param l6         the sixth value's column label
+     * @param v6         the sixth value; can be {@code null}
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias,
+                                    final String l1, final @Nullable Object v1,
+                                    final String l2, final @Nullable Object v2,
+                                    final String l3, final @Nullable Object v3,
+                                    final String l4, final @Nullable Object v4,
+                                    final String l5, final @Nullable Object v5,
+                                    final String l6, final @Nullable Object v6) {
+        return new ValuesSpec(tableAlias, new String[]{l1, l2, l3, l4, l5, l6}, new @Nullable Object[]{v1, v2, v3, v4, v5, v6});
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param labels     array of column labels
+     * @param values     array of nullable values
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias, final String[] labels, final @Nullable Object[] values) {
+        return new ValuesSpec(tableAlias, labels, values);
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param values     A map of column labels to nullable values. To preserve ordering, consider using a {@link LinkedHashMap}.
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     */
+    public static ValuesSpec values(final String tableAlias, final Map<String, @Nullable Object> values) {
+        final int size = values.size();
+        final String[] labels = new String[size];
+        final @Nullable Object[] valueArray = new Object[size];
+        int i = 0;
+
+        for (Map.Entry<String, @Nullable Object> entry : values.entrySet()) {
+            labels[i] = entry.getKey();
+            valueArray[i] = entry.getValue();
+            i++;
+        }
+
+        return new ValuesSpec(tableAlias, labels, valueArray);
+    }
     // Field/column selectors
 
     /**
      * Selects a DTO field by name for the DTO class selected in the query.
      * <p>
      * Shorthand for {@link #field(String)}.
+     * <p>
+     * This infers the source entity/mapped DTO class from the available `FROM`/`JOIN` clauses.
      *
      * @param field The name of the DTO field to select.
-     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
+     * @return a query expression selecting the target entity/DTO field
+     * @see Fn#f(Class, String) to specify the parent DTO class explicitly to avoid potential ambiguity.
      */
     public static ExpressionSpec f(final String field) {
-        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, null);
+        return new ProtoColumnExpressionSpec(SelectColumnSpec.class, field, null);
     }
 
     /**
@@ -51,19 +291,23 @@ public final class Fn {
      * <p>
      * Shorthand for {@link #field(Class, String)}.
      *
-     * @param dtoClass The DTO class.
+     * @param dtoClass The DTO class to select from.
      * @param field    The name of the DTO field to select.
-     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
+     * @return a query expression selecting the target entity/DTO field
      */
     public static ExpressionSpec f(final Class<?> dtoClass, final String field) {
-        return new ProtoColumnExpressionSpec(SelectFieldSpec.class, field, null, new Object[]{dtoClass});
+        return new ProtoColumnExpressionSpec(SelectColumnSpec.class, field, null, new Object[]{dtoClass});
     }
 
     /**
-     * Selects a DTO field by name for the DTO class selected in the query.
+     * Selects a DTO field by name for the entity/DTO class selected in the query.
+     * <p>
+     * This infers the source entity/mapped DTO class from the available `FROM`/`JOIN` clauses.
      *
      * @param field The name of the DTO field to select.
-     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
+     * @return a query expression selecting the target entity/DTO field
+     * @see Fn#f(String) Shorthand version.
+     * @see Fn#field(Class, String) to specify the parent DTO class explicitly to avoid potential ambiguity.
      */
     public static ExpressionSpec field(final String field) {
         return f(field);
@@ -74,10 +318,25 @@ public final class Fn {
      *
      * @param dtoClass The DTO class.
      * @param field    The name of the DTO field to select.
-     * @return a {@link SelectFieldSpec} expression instance to select the specified field.
+     * @return a query expression selecting the target entity/DTO field
+     * @see Fn#f(Class, String) Shorthand version.
+     * @see Fn#alias(Class, String, String) to specify a custom alias for the field.
      */
     public static ExpressionSpec field(final Class<?> dtoClass, final String field) {
         return f(dtoClass, field);
+    }
+
+    /**
+     * Selects a DTO field by name for the specified DTO type that is selected/joined in the query, and aliases
+     * it with the specified alias.
+     *
+     * @param dtoClass The DTO class to select from.
+     * @param field    The name of the DTO field to select.
+     * @param alias    The alias to use for the field.
+     * @return a query expression selecting the aliased target entity/DTO field
+     */
+    public static ExpressionSpec alias(final Class<?> dtoClass, final String field, final String alias) {
+        return new ProtoColumnExpressionSpec(SelectColumnSpec.class, field, alias, new Object[]{dtoClass});
     }
 
     /**
@@ -85,10 +344,10 @@ public final class Fn {
      * <p>
      * This is shorthand for {@link #column(String)}.
      * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Column names can be qualified with a table name, e.g. "table.column".
      *
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
      */
     public static ExpressionSpec c(final String column) {
         return ca(column, null);
@@ -97,38 +356,38 @@ public final class Fn {
     /**
      * Selects a database column by name.
      * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Column names can be qualified with a table name, e.g. "table.column".
      *
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
+     * @see Fn#c(String) Shorthand version.
+     * @see Fn#c(String, String) Allows specifying the source table name and column name separately.
      */
     public static ExpressionSpec column(final String column) {
         return c(column);
     }
 
     /**
-     * Selects a database column by name.
+     * Selects a database column by its table and simple column name.
      * <p>
-     * Shorthand for {@link #column(String, String)}
-     * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Shorthand for {@link #column(String, String)}.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
+     * @see Fn#c(String) Generic version that allows qualified column names.
      */
     public static ExpressionSpec c(final String table, final String column) {
         return ca(table, column, null);
     }
 
     /**
-     * Selects a database column by name.
-     * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Selects a database column by its table and simple column name.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
+     * @see Fn#c(String, String) Shorthand version.
      */
     public static ExpressionSpec column(final String table, final String column) {
         return c(table, column);
@@ -143,7 +402,7 @@ public final class Fn {
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
      */
     public static ExpressionSpec c(final Table table, final String column) {
         return ca(table, column, null);
@@ -151,86 +410,81 @@ public final class Fn {
 
     /**
      * Selects a database column by name.
-     * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
      *
      * @param table  The table to select the column from.
      * @param column The name of the column to select.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
      */
     public static ExpressionSpec column(final Table table, final String column) {
         return c(table, column);
     }
 
     /**
-     * Selects a database column by name and alias.
+     * Selects a database column by name and aliases it with the specified alias.
      * <p>
-     * Shorthand for {@link #columnAlias(Table, String, String)} (Table, String, String)}
-     * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Shorthand for {@link #alias(Table, String, String)}.
      *
      * @param table       The table to select the column from.
-     * @param column      The name of the column to select.
+     * @param column      The simple name of the column to select.
      * @param columnAlias The alias to use for the column; may be {@code null}.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
      */
     public static ExpressionSpec ca(final Table table, final String column, final @Nullable String columnAlias) {
-        return new SelectColumnSpec(new Column(table, column, columnAlias));
+        return new SelectColumnSpec(new Column(table, column), columnAlias, null);
     }
 
     /**
-     * Selects a database column by name and alias.
-     * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Selects a database column by name and aliases it with the specified alias.
      *
      * @param table       The table to select the column from.
-     * @param column      The name of the column to select.
+     * @param column      The simple name of the column to select.
      * @param columnAlias The alias to use for the column; may be {@code null}.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
+     * @see #ca(Table, String, String) Shorthand version.
+     * @see #alias(String, String) Generic version that allows qualified column names.
      */
-    public static ExpressionSpec columnAlias(final Table table, final String column, final @Nullable String columnAlias) {
+    public static ExpressionSpec alias(final Table table, final String column, final String columnAlias) {
         return ca(table, column, columnAlias);
     }
 
     /**
-     * Selects a database column by name and alias.
+     * Selects a database column by name and aliases it with the specified alias.
      * <p>
-     * Shorthand for {@link #columnAlias(String, String)}
+     * Shorthand for {@link #alias(String, String)}
      * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Column names can be qualified with a table name, e.g. "table.column".
      *
      * @param column The name of the column to select.
      * @param alias  The alias to use for the column.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
      */
     public static ExpressionSpec ca(final String column, final @Nullable String alias) {
         return new ProtoColumnExpressionSpec(SelectColumnSpec.class, column, alias);
     }
 
     /**
-     * Selects a database column by name and alias.
+     * Selects a database column by name and aliases it with the specified alias.
      * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Column names can be qualified with a table name, e.g. "table.column".
      *
      * @param column The name of the column to select.
      * @param alias  The alias to use for the column.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
+     * @see #ca(String, String) Shorthand version.
      */
-    public static ExpressionSpec columnAlias(final String column, final @Nullable String alias) {
+    public static ExpressionSpec alias(final String column, final String alias) {
         return ca(column, alias);
     }
 
     /**
      * Selects a database column by name and alias.
      * <p>
-     * Shorthand for {@link #columnAlias(Table, String, String)}
-     * <p>
-     * The returned {@link ProtoColumnExpressionSpec} value has no context of the table it is selecting from yet.
+     * Shorthand for {@link #alias(Table, String, String)}
      *
      * @param table       The table to select the column from.
-     * @param column      The name of the column to select.
+     * @param column      The simple name of the column to select.
      * @param columnAlias The alias to use for the column.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
      */
     public static ExpressionSpec ca(final String table, final String column, final @Nullable String columnAlias) {
         return ca(new Table(table), column, columnAlias);
@@ -244,10 +498,84 @@ public final class Fn {
      * @param table       The table to select the column from.
      * @param column      The name of the column to select.
      * @param columnAlias The alias to use for the column.
-     * @return a {@link ProtoColumnExpressionSpec} expression instance to select a specific column.
+     * @return a query expression selecting the target column.
      */
-    public static ExpressionSpec columnAlias(final String table, final String column, final @Nullable String columnAlias) {
+    public static ExpressionSpec alias(final String table, final String column, final @Nullable String columnAlias) {
         return ca(table, column, columnAlias);
+    }
+
+    // Alias references and literals
+
+    /**
+     * References an aliased column in the query.
+     * <p>
+     * This is used to provide aliases as part of conditional statements in various SQL clauses.
+     *
+     * @param alias The alias/label of the column in the query.
+     * @return A reference to an aliased column in the query.
+     */
+    public static AliasReferenceSpec aliasRef(final String alias) {
+        final List<String> aliasParts = StringUtils.split(alias, '.');
+
+        if (aliasParts.size() > 1) {
+            return aliasRef(aliasParts.get(0), aliasParts.get(1));
+        } else {
+            return new AliasReferenceSpec(alias);
+        }
+    }
+
+    /**
+     * References an aliased column in the query in the context of a parent table/subquery.
+     * <p>
+     * This is used to provide aliases as part of conditional statements in various SQL clauses.
+     *
+     * @param tableAlias  The alias/label of the parent table/subquery.
+     * @param columnLabel The label (alias or column name) of the column to reference.
+     * @return A reference to an aliased column in the query.
+     * @see #aliasRef(String, ExpressionSpec) Expression-based alternative.
+     */
+    public static AliasReferenceSpec aliasRef(final String tableAlias, final String columnLabel) {
+        return new AliasReferenceSpec(columnLabel, tableAlias);
+    }
+
+    /**
+     * References an aliased column in the query in the context of a parent table/subquery.
+     * <p>
+     * This is used to provide aliases as part of conditional statements in various SQL clauses.
+     *
+     * @param tableAlias The alias/label of the parent table/subquery.
+     * @param expression Query expression targeting a column in the parent table/subquery.
+     * @return A reference to an aliased column in the query.
+     * @see #aliasRef(String, ExpressionSpec) Simple string-based alternative.
+     */
+    public static AliasReferenceSpec aliasRef(final String tableAlias, final ExpressionSpec expression) {
+        return new AliasReferenceSpec(expression, tableAlias);
+    }
+
+    /**
+     * Specifies a literal value.
+     * <p>
+     * This is used to specify a literal value in a query expression.
+     *
+     * @param value The literal value to wrap.
+     * @param <T>   The type of the literal value.
+     * @return A literal expression specification.
+     */
+    public static <T> LiteralExpressionSpec<T> literal(final @Nullable T value) {
+        return new LiteralExpressionSpec<>(value);
+    }
+
+    /**
+     * Specifies a literal value.
+     * <p>
+     * This is used to specify a literal value in a query expression.
+     *
+     * @param value The literal value to wrap.
+     * @param <T>   The type of the literal value.
+     * @return A literal expression specification.
+     */
+    public static <T> LiteralExpressionSpec<T> literal(final @Nullable T value, final @Nullable String alias) {
+        return new LiteralExpressionSpec<>(value, alias);
     }
 
     // Java helper functions
@@ -262,9 +590,9 @@ public final class Fn {
      * on the ORM side; e.g. {@link #avg(ExpressionSpec)} returns a @{Number} instance by default,
      * with the actual return type being determined by the database. To convert the return type to a {@code Long},
      * {@code convert()} can be used to convert it before returning:
-     * <code>
+     * {@code
      * litebridge.select(Fn.convert(Fn.avg(column), Long.class));
-     * </code>
+     * }
      *
      * @param <T>        The type to convert the expression result to
      * @param expression The target expression result to convert
@@ -492,5 +820,9 @@ public final class Fn {
      */
     public static CurrentTimestampSpec currentTimestamp() {
         return new CurrentTimestampSpec();
+    }
+
+    public static ExistsExpressionSpec exists(final Function<SelectApi, SelectTerminal<?>> query) {
+        return new ExistsExpressionSpec(query);
     }
 }

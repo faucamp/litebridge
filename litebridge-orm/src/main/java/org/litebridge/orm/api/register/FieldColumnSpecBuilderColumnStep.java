@@ -5,6 +5,8 @@ import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.api.spec.FieldSpec;
 
+import java.util.List;
+
 /**
  * A builder step for defining the column specification associated with a field in a data model.
  * This class is part of a fluent interface for constructing field-to-column mappings, offering
@@ -13,14 +15,14 @@ import org.litebridge.orm.api.spec.FieldSpec;
  * Instances of this class are immutable and facilitate chaining to refine the configuration
  * of a field's column mapping.
  */
-public final class FieldColumnSpecBuilderColumnStep implements FieldColumnSpecBuilderTerminal {
-
-    final FieldSpec fieldSpec;
-    final String column;
+public final class FieldColumnSpecBuilderColumnStep extends FcsbColumnJoinStep implements FieldColumnSpecBuilderTerminal {
 
     FieldColumnSpecBuilderColumnStep(final FieldSpec fieldSpec, final String column) {
-        this.fieldSpec = fieldSpec;
-        this.column = column;
+        super(fieldSpec, column);
+    }
+
+    FieldColumnSpecBuilderColumnStep(final FieldSpec fieldSpec, final String column, final List<FieldColumnSpec> existingColumnMappings) {
+        super(fieldSpec, column, existingColumnMappings);
     }
 
     /**
@@ -50,34 +52,6 @@ public final class FieldColumnSpecBuilderColumnStep implements FieldColumnSpecBu
      */
     public FieldColumnSpecBuilderTerminal generate(ColumnValueGenerator generator) {
         return new FieldColumnSpecBuilderTerminalImpl(fieldSpec, new ColumnSpec(column, generator));
-    }
-
-    /**
-     * Defines the join condition for a database column during field-to-column mapping configuration.
-     *
-     * @param column The name of the column from the joining table to be used in the join condition.
-     *               Must not be null or empty.
-     * @return An instance of {@link FieldColumnSpecBuilderJoinStep}, providing methods for further
-     * configuration of the join or finalization of the column specification.
-     */
-    public FieldColumnSpecBuilderJoinStep joinOn(final String column) {
-        return new FieldColumnSpecBuilderJoinStep(fieldSpec, this.column, column);
-    }
-
-    /**
-     * Configures the join condition for a database column using the previously set column
-     * in the current field-to-column mapping configuration (i.e. a {@code JOIN USING} join).
-     * <p>
-     * This method utilizes the existing column specification and establishes a join
-     * condition where the join is based on the given column. The resulting configuration
-     * is represented as an instance of {@link FieldColumnSpecBuilderJoinStep}, providing
-     * further options for refining the join or completing the mapping.
-     *
-     * @return An instance of {@link FieldColumnSpecBuilderJoinStep}, enabling additional
-     * configuration of the database column join or finalization of the specification.
-     */
-    public FieldColumnSpecBuilderJoinStep joinUsing() {
-        return joinOn(this.column);
     }
 
     FieldColumnSpec build() {

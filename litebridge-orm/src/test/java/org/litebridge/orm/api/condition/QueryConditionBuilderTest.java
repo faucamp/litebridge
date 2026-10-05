@@ -1,8 +1,6 @@
 package org.litebridge.orm.api.condition;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.orm.api.dto.condition.CbDtoConditionClauseTerminal;
-import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

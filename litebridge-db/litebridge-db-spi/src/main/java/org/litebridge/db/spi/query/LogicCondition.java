@@ -19,10 +19,10 @@ public record LogicCondition(LogicOperator logicOperator, Condition condition) {
      *
      * @param lhs      The left-hand side expression of the condition.
      * @param operator The operator used to compare or relate the LHS to the value.
-     * @param value    The value or operand to be compared with the LHS. This can be {@code null} for certain operators
+     * @param rhs      The right-hand side value or operand to be compared with the LHS. This can be {@code null} for certain operators
      *                 like {@code IS_NULL} and {@code IS_NOT_NULL}.
      */
-    public LogicCondition(final SelectExpression lhs, final Operator operator, final @Nullable Object value) {
-        this(LogicOperator.NOOP, new Condition(lhs, operator, value));
+    public LogicCondition(final SelectExpression lhs, final Operator operator, final @Nullable SelectExpression rhs) {
+        this(LogicOperator.NOOP, new Condition(lhs, operator, rhs));
     }
 }

@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.select;
 
-import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
@@ -34,7 +33,7 @@ public interface SelectApi {
      * @return A {@link DtoFromClauseTerminal} instance for querying and retrieving data for the specified DTO class.
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
-    <DTO> DtoFromClauseTerminal<DTO> select(Class<DTO> dtoClass, @Nullable RelatedDtoStrategy relatedDtoStrategy);
+    <DTO> DtoFromClauseTerminal<DTO> select(Class<DTO> dtoClass, RelatedDtoStrategy relatedDtoStrategy);
 
     /**
      * Select a contextually-registered Data Transfer Object (DTO) type for database query operations.

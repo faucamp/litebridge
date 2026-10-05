@@ -5,6 +5,7 @@ import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,7 +26,7 @@ class InsertResultTest {
 
         // Then
         assertEquals(rowsAffected, result.rowsAffected());
-        assertEquals(generatedKeys, result.generatedKeys());
+        assertEquals(List.of(generatedKeys), result.generatedKeys());
     }
 
     @Test
@@ -45,6 +46,6 @@ class InsertResultTest {
     void testToString() {
         final InsertResult result = new InsertResult(1, Collections.emptyMap());
         assertTrue(result.toString().contains("InsertResult"));
-        assertTrue(result.toString().contains("generatedKeys={}"));
+        assertTrue(result.toString().contains("generatedKeys=[{}]"));
     }
 }

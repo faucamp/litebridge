@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.expression;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 
 /**
@@ -14,5 +15,5 @@ public interface SelectReferenceExpressionFactory {
      * @param column The selected column to reference.
      * @return A new reference expression.
      */
-    SelectReference create(Column column);
+    ColumnReference create(Column column, @Nullable String alias, @Nullable String tableAlias);
 }

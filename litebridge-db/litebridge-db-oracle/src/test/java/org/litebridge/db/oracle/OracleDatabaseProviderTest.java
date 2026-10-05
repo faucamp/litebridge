@@ -1,177 +1,90 @@
 package org.litebridge.db.oracle;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.db.oracle.function.OracleSqlFunctionRegistryFactory;
-import org.litebridge.db.spi.Column;
-import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.Table;
+import org.litebridge.db.oracle.api.LitebridgeOracle;
+import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridge.db.spi.impl.ColumnIdentifierGenerator;
-import org.litebridge.db.spi.impl.function.SqlFunctionRegistryFactory;
-import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
-import org.litebridge.db.spi.query.LogicCondition;
-import org.litebridge.db.spi.query.Select;
-import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
+import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.orm.LitebridgeBuilder;
+import org.litebridge.orm.config.LitebridgeConfig;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.lang.invoke.MethodHandles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class OracleDatabaseProviderTest {
 
     @Test
-    void getSequenceColumnValueGenerator() {
+    void sequenceColumnValueGenerator() {
         // Given
         final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
+        final String sequence = "myschema.sequence";
 
         // When
-        final SequenceColumnValueGenerator result = oracleDatabaseProvider.getSequenceColumnValueGenerator("test_sequence");
+        final SequenceColumnValueGenerator result = oracleDatabaseProvider.sequenceColumnValueGenerator(sequence);
 
         // Then
         assertInstanceOf(OracleSequenceColumnValueGenerator.class, result);
     }
 
     @Test
-    void extractGeneratedKeys_withGeneratedKeys() throws SQLException {
+    void litebridgeClass_returnsLitebridgeOracleClass() {
         // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        final ResultSet resultSet = mock(ResultSet.class);
-        final Table table = new Table("TEST_TABLE", null);
-        final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
-        final ColumnMetaData otherIdColumn = new ColumnMetaData(table, "OTHER_ID", false, Types.INTEGER);
-
-        when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(true);
-        when(resultSet.getObject(1)).thenReturn(1);
-        when(resultSet.getObject(2)).thenReturn(2);
+        final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
 
         // When
-        Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(List.of(idColumn, otherIdColumn), preparedStatement);
+        final Class<LitebridgeOracle> result = oracleDatabaseProvider.litebridgeClass();
 
         // Then
-        assertEquals(2, result.size());
-        assertEquals(1, result.get(idColumn));
-        assertEquals(2, result.get(otherIdColumn));
-        verify(resultSet, times(1)).close();
+        assertEquals(LitebridgeOracle.class, result);
     }
 
     @Test
-    void extractGeneratedKeys_withoutGeneratedKeys() throws SQLException {
+    void createLitebridge_withValidArgs_returnsInitializedInstance() {
         // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        final ResultSet resultSet = mock(ResultSet.class);
-        final Table table = new Table("TEST_TABLE", null);
-        final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
-
-        when(preparedStatement.getGeneratedKeys()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(false);
+        final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
+        final TransactionManager transactionManager = mock(TransactionManager.class);
+        final LitebridgeConfig config = new LitebridgeConfig();
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final LitebridgeBuilder.ConstructorArgs args = new LitebridgeBuilder.ConstructorArgs(oracleDatabaseProvider, transactionManager, config, lookup);
 
         // When
-        Map<ColumnMetaData, Object> result = provider.extractGeneratedKeys(List.of(idColumn), preparedStatement);
+        final LitebridgeOracle litebridge = oracleDatabaseProvider.createLitebridge(args);
 
         // Then
-        assertTrue(result.isEmpty());
-        verify(resultSet, times(1)).close();
+        assertNotNull(litebridge);
+        assertInstanceOf(LitebridgeOracle.class, litebridge);
     }
 
     @Test
-    void createColumnIdentifierGenerator() {
+    void metaData_configuredWithOracleCapabilities() {
         // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
+        final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
 
         // When
-        final ColumnIdentifierGenerator result = provider.createColumnIdentifierGenerator();
+        final DatabaseProviderMetaData metaData = oracleDatabaseProvider.metaData();
 
         // Then
-        assertInstanceOf(OracleColumnIdentifierGenerator.class, result);
+        assertEquals(DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS, metaData.insertCapability());
+        assertEquals(DatabaseProviderMetaData.MergeCapability.USING_VALUES_SUBQUERY, metaData.mergeCapability());
+        assertTrue(metaData.supportsSequenceColumnValueGenerator());
     }
 
     @Test
-    void createSqlFunctionRegistryFactory() {
+    void providerDelegates_returnConfiguredComponents() {
         // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
+        final OracleDatabaseProvider oracleDatabaseProvider = new OracleDatabaseProvider();
 
-        // When
-        final SqlFunctionRegistryFactory result = provider.createSqlFunctionRegistryFactory();
-
-        // Then
-        assertInstanceOf(OracleSqlFunctionRegistryFactory.class, result);
-    }
-
-    @Test
-    void createSelectSqlGenerator_andUseIt() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final SelectSqlGenerator generator = provider.createSelectSqlGenerator();
-        final Table table = new Table("TEST_TABLE", null);
-        final Column column = new Column(table, "ID");
-        final LogicCondition condition = new LogicCondition(new org.litebridge.db.spi.impl.function.SelectColumn(column, new OracleColumnIdentifierGenerator()), org.litebridge.db.spi.query.Operator.EQ, 1);
-        final Select select = new Select(table,
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Optional.of(new org.litebridge.db.spi.query.ConditionGroup(List.of(condition))),
-                Collections.emptyList(),
-                Optional.empty(),
-                Collections.emptyList(),
-                Optional.empty());
-
-        final ConnectionProvider connectionProvider = mock(ConnectionProvider.class);
-
-        // When
-        // This might trigger ensureTableMetaData lambda
-        try {
-            generator.prepareSql(select, connectionProvider);
-        } catch (Exception e) {
-            // It might fail because of table metadata registry not being mocked, but we just want to hit the lambda
-        }
-
-        // Then
-        assertNotNull(generator);
-    }
-
-    @Test
-    void extractGeneratedKeys_withNullResultSet() throws SQLException {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-        final PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        final Table table = new Table("TEST_TABLE", null);
-        final ColumnMetaData idColumn = new ColumnMetaData(table, "ID", false, Types.INTEGER);
-
-        when(preparedStatement.getGeneratedKeys()).thenReturn(null);
-
-        // When & Then
-        try {
-            provider.extractGeneratedKeys(List.of(idColumn), preparedStatement);
-        } catch (NullPointerException e) {
-            // Expected if JDBC driver returns null and we call .next() on it
-        }
-    }
-
-    @Test
-    void getLogger() {
-        // Given
-        final OracleDatabaseProvider provider = new OracleDatabaseProvider();
-
-        // When
-        var result = provider.getLogger();
-
-        // Then
-        assertNotNull(result);
+        // When / Then
+        assertNotNull(oracleDatabaseProvider.typeConverter());
+        assertNotNull(oracleDatabaseProvider.aliasTransformer());
+        assertNotNull(oracleDatabaseProvider.sqlFunctionRegistry());
     }
 }

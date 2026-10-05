@@ -1,12 +1,16 @@
 package org.litebridge.orm.api.condition;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import java.util.List;
 
@@ -19,23 +23,12 @@ class ConditionApiTest {
     @Test
     @SuppressWarnings("unchecked")
     void testBasicOperators() {
-        final FromClauseEngine engine = mock(FromClauseEngine.class);
-        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
+        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new Column(new Table("TEST"), "COL"));
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
 
         // Using a custom creator to capture the node
         final QueryNode[] capturedNode = new QueryNode[1];
-        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, null, n -> {
-            capturedNode[0] = n;
-            return null;
-        }) {
-            @Override
-            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
-                capturedNode[0] = conditionNode;
-                return null;
-            }
-        };
-
-        capturingClause.eq("val");
+        final AbstractCbConditionClause<Object> capturingClause = createCapturingClause(litebridgeContext, lhs, capturedNode);
         assertEquals(Operator.EQ, ((ConditionNode) capturedNode[0]).operator());
         assertEquals("val", ((ConditionNode) capturedNode[0]).rhs());
 
@@ -64,18 +57,40 @@ class ConditionApiTest {
         assertEquals(Operator.IS_NOT_NULL, ((ConditionNode) capturedNode[0]).operator());
     }
 
+    private static AbstractCbConditionClause<Object> createCapturingClause(final LitebridgeContext litebridgeContext, final ExpressionSpec lhs, final QueryNode[] capturedNode) {
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(
+                litebridgeContext,
+                LogicOperator.NOOP,
+                null,
+                lhs,
+                null) {
+
+            @Override
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(@NonNull QueryNode conditionNode) {
+                capturedNode[0] = conditionNode;
+                return null;
+            }
+        };
+
+        capturingClause.eq("val");
+        return capturingClause;
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     void testInOperators() {
-        final FromClauseEngine engine = mock(FromClauseEngine.class);
-        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
+        final ExpressionSpec lhs = new SelectColumnSpec(new Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+
         final QueryNode[] capturedNode = new QueryNode[1];
-        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, null, n -> {
-            capturedNode[0] = n;
-            return null;
-        }) {
+        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(
+                litebridgeContext,
+                LogicOperator.NOOP,
+                null,
+                lhs, null) {
+
             @Override
-            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
+            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(@NonNull QueryNode conditionNode) {
                 capturedNode[0] = conditionNode;
                 return null;
             }
@@ -95,19 +110,10 @@ class ConditionApiTest {
     @Test
     @SuppressWarnings("unchecked")
     void testNullHandling() {
-        final FromClauseEngine engine = mock(FromClauseEngine.class);
-        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new org.litebridge.db.spi.Column(new org.litebridge.db.spi.Table("TEST"), "COL"));
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        final ExpressionSpec lhs = new org.litebridge.orm.expression.select.SelectColumnSpec(new Column(new Table("TEST"), "COL"));
         final QueryNode[] capturedNode = new QueryNode[1];
-        final AbstractCbConditionClause<Object> capturingClause = new AbstractCbConditionClause<>(engine, LogicOperator.NOOP, lhs, null, n -> {
-            capturedNode[0] = n;
-            return null;
-        }) {
-            @Override
-            protected AbstractCbConditionClauseTerminal<Object> createCbConditionClauseTerminal(QueryNode conditionNode) {
-                capturedNode[0] = conditionNode;
-                return null;
-            }
-        };
+        final AbstractCbConditionClause<Object> capturingClause = createCapturingClause(litebridgeContext, lhs, capturedNode);
 
         capturingClause.eq(null);
         assertEquals(Operator.IS_NULL, ((ConditionNode) capturedNode[0]).operator());

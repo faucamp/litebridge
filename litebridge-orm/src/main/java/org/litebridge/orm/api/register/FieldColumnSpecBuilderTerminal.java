@@ -22,7 +22,5 @@ package org.litebridge.orm.api.register;
  * providing the final entry point to the orchestration of ORM mapping definitions.
  */
 public sealed interface FieldColumnSpecBuilderTerminal
-        permits FieldColumnSpecBuilderTerminalImpl,
-        FieldColumnSpecBuilderColumnStep,
-        FieldColumnSpecBuilderJoinStep {
+        permits FieldColumnSpecBuilderColumnStep, FieldColumnSpecBuilderJoinStep, FieldColumnSpecBuilderTerminalImpl {
 }

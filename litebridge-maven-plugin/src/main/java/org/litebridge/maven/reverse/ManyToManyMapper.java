@@ -22,7 +22,7 @@ public class ManyToManyMapper {
     public static ManyToManyMappingResult extractManyToManyMappings(final Map<String, TableMetaData> tableMetaDataMap) {
         final Map<Table, List<JoinHalf>> referencedTables = new HashMap<>();
         final Set<Table> entityTables = tableMetaDataMap.values().stream()
-                .map(TableMetaData::toTable)
+                .map(TableMetaData::table)
                 .collect(Collectors.toSet());
 
         for (final TableMetaData tableMetaData : tableMetaDataMap.values()) {
@@ -69,8 +69,8 @@ public class ManyToManyMapper {
                 if (joinTableMetaData.columns().size() == 2
                         && joinTableMetaData.columns().stream()
                         .allMatch(jc -> jc.getForeignKeyConstraints().stream()
-                                .map(fkc -> fkc.foreignKey())
-                                .anyMatch(fkColumn -> fkColumn.equals(leftColumn.toColumn()) || fkColumn.equals(rightColumn.toColumn())))) {
+                                .map(ForeignKeyConstraint::foreignKey)
+                                .anyMatch(fkColumn -> fkColumn.equals(leftColumn.column()) || fkColumn.equals(rightColumn.column())))) {
                     // Collapse the join table into a many-to-many
                     entityTables.remove(joinTable);
                     collapsedTables.add(joinTableName);

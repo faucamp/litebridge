@@ -13,9 +13,9 @@ package org.litebridge.orm.api.spec;
  * <p>
  * Implements the {@link ColumnMapping} interface, allowing its usage in column-level mappings.
  *
- * @param joinTable         The name of the join table facilitating the many-to-many relationship.
- * @param joinColumn        The column in the join table that references the primary key of the originating table.
- * @param inverseJoinColumn The column in the join table that references the primary key of the targeted table.
+ * @param joinTable          The name of the join table facilitating the many-to-many relationship.
+ * @param joinColumns        The column(s) in the join table that references the primary key of the originating table.
+ * @param inverseJoinColumns The column(s) in the join table that references the primary key of the targeted table.
  */
-public record ManyToMany(String joinTable, String joinColumn, String inverseJoinColumn) implements ColumnMapping {
+public record ManyToMany(String joinTable, String[] joinColumns, String[] inverseJoinColumns) implements ColumnMapping {
 }

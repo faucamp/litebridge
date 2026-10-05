@@ -16,29 +16,60 @@ import java.util.Map;
  * with different configurations.
  */
 @NullMarked
-public final class TableSpec extends Table {
+public final class TableSpec {
+
+    /**
+     * Database catalog name
+     */
+    private final @Nullable String catalog;
+    /**
+     * Database schema name
+     */
+    private final @Nullable String schema;
+    /**
+     * Table name
+     */
+    private final String name;
 
     /**
      * Field name to ColumnSpec map; key is field name, value is the column definition
      */
     private final Map<FieldMapping, ColumnMapping> fieldColumnMap;
 
+    /**
+     * Creates a new {@code TableSpec} instance with explicit catalog, schema, and table names.
+     *
+     * @param catalog        the database catalog, or {@code null}
+     * @param schema         the database schema, or {@code null}
+     * @param table          the table name
+     * @param fieldColumnMap the mapping between DTO fields and database columns
+     */
     public TableSpec(@Nullable final String catalog,
                      @Nullable final String schema,
                      final String table,
                      final Map<FieldMapping, ColumnMapping> fieldColumnMap) {
-        super(StringUtils.blankIfNull(catalog),
-                StringUtils.blankIfNull(schema),
-                StringUtils.requireNonBlank(table, "Table name cannot be blank"));
+        this.catalog = StringUtils.blankIfNull(catalog);
+        this.schema = StringUtils.blankIfNull(schema);
+        this.name = StringUtils.requireNonBlank(table, "Table name cannot be blank");
         this.fieldColumnMap = Collections.unmodifiableMap(CollectionUtils.requireNonEmpty(fieldColumnMap, "Field-column map cannot be null or empty"));
     }
 
+    /**
+     * Creates a new {@code TableSpec} instance by parsing a qualified or unqualified table name.
+     *
+     * @param name           the table name, optionally qualified with catalog and/or schema (e.g. {@code "schema.table"})
+     * @param fieldColumnMap the mapping between DTO fields and database columns
+     */
     public TableSpec(final String name, final Map<FieldMapping, ColumnMapping> fieldColumnMap) {
         this(StringUtils.splitArray(name, '.', 3, true), fieldColumnMap);
     }
 
     private TableSpec(final String[] catalogSchemaTable, final Map<FieldMapping, ColumnMapping> fieldColumnMap) {
         this(catalogSchemaTable[0], catalogSchemaTable[1], catalogSchemaTable[2], fieldColumnMap);
+    }
+
+    public String name() {
+        return name;
     }
 
     /**
@@ -50,4 +81,7 @@ public final class TableSpec extends Table {
         return fieldColumnMap;
     }
 
+    public Table toTable() {
+        return new Table(catalog, schema, name);
+    }
 }

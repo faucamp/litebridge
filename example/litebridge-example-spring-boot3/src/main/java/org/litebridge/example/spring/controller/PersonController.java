@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -44,7 +43,7 @@ public class PersonController {
 
     @GetMapping("/{personId}")
     @Operation(summary = "Get a Person record by ID")
-    public Optional<Person> getPersonById(@RequestParam final Long personId) {
+    public Optional<Person> getPersonById(@PathVariable final Long personId) {
         return exampleService.getPersonById(personId);
     }
 

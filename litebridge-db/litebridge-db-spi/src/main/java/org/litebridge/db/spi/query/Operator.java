@@ -71,5 +71,9 @@ public enum Operator {
     /**
      * Used to specify expressions for joining tables.
      */
-    USING
+    USING,
+    /**
+     * Check whether a subquery returns any rows.
+     */
+    EXISTS
 }

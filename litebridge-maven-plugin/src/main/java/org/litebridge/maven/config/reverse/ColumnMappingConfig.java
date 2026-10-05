@@ -12,6 +12,7 @@ public final class ColumnMappingConfig {
      * Column name.
      */
     @Parameter(required = true)
+    @SuppressWarnings("NotNullFieldNotInitialized")
     private String column;
 
     /**

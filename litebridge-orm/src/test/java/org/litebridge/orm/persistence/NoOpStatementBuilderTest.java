@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class NoOpStatementBuilderTest {
 
-    private NoOpStatementBuilder noOpStatementBuilder = new NoOpStatementBuilder();
+    private final NoOpStatementBuilder noOpStatementBuilder = new NoOpStatementBuilder();
 
     @Test
     void statementChain() {

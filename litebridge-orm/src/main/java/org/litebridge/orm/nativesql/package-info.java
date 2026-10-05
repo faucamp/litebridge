@@ -1,4 +1,4 @@
 /**
- * Native SQL processing.
+ * Native SQL processing
  */
 package org.litebridge.orm.nativesql;

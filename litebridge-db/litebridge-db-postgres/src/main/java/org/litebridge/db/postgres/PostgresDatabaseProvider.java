@@ -1,63 +1,43 @@
 package org.litebridge.db.postgres;
 
 import org.litebridge.convert.DefaultTypeConverter;
-import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
-import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
+import org.litebridge.db.postgres.expression.function.PostgresSqlFunctionRegistryFactory;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
-import org.litebridge.db.spi.query.UpdateMetaData;
-import org.litebridge.db.spi.sql.PreparedSql;
-import org.litebridge.db.spi.tx.ManagedConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import org.litebridge.db.spi.impl.ContextBuilder;
+import org.litebridge.db.spi.impl.DatabaseProviderContext;
 
 /**
- * PostgresqlDatabaseProvider is a concrete implementation of AbstractDatabaseProvider
- * specifically designed to interact with PostgreSQL database instances.
+ * PostgreSQL database provider for Litebridge.
  */
 public final class PostgresDatabaseProvider extends AbstractDatabaseProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresDatabaseProvider.class);
-
     /**
-     * Constructs a new {@code PostgresDatabaseProvider} using a default type converter.
+     * Constructs a new {@code PostgresDatabaseProvider}.
      */
     public PostgresDatabaseProvider() {
-        super(new DefaultTypeConverter());
+        super(databaseProviderContext());
     }
 
-    @Override
-    protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
-                                                                       final ManagedConnection connection) throws SQLException {
-        final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
+    private static DatabaseProviderContext databaseProviderContext() {
+        final DatabaseProviderMetaData databaseProviderMetaData =
+                new DatabaseProviderMetaData(true,
+                        DatabaseProviderMetaData.MergeCapability.USING_VALUES,
+                        DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
 
-        if (updateMetaData == null) {
-            return connection.prepareStatement(preparedSql.sql());
-        }
+        final ContextBuilder contextBuilder = ContextBuilder.newContext()
+                .withDatabaseProviderMetaData(databaseProviderMetaData)
+                .withAliasTransformer(new PostgresAliasTransformer())
+                .withDatabaseProviderMetaData(databaseProviderMetaData)
+                .withSequenceColumnValueGenerator(PostgresSequenceColumnValueGenerator::new)
+                .withTypeConverter(new DefaultTypeConverter());
 
-        if (updateMetaData.returnGeneratedKeys()) {
-            return connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
-        } else {
-            return connection.prepareStatement(preparedSql.sql());
-        }
-    }
+        final PostgresSqlFunctionRegistryFactory postgresSqlFunctionRegistryFactory =
+                new PostgresSqlFunctionRegistryFactory(contextBuilder.ensureLabelGenerator(),
+                        contextBuilder.ensureSqlGenerator().selectSqlGenerator());
 
-    @Override
-    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
-        return new PostgresSequenceColumnValueGenerator(sequence);
-    }
-
-    @Override
-    protected AliasTransformer createAliasTransformer() {
-        return new PostgresAliasTransformer();
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
+        return contextBuilder
+                .withSqlFunctionRegistryFactory(postgresSqlFunctionRegistryFactory)
+                .build();
     }
 }

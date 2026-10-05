@@ -14,7 +14,6 @@ module litebridge.spring {
     requires spring.core;
     requires spring.beans;
     requires litebridge.annotations;
-    requires litebridge.orm;
     requires org.slf4j;
 
     exports org.litebridge.spring;

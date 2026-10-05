@@ -1,9 +1,14 @@
 package org.litebridge.orm.meta;
 
+import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.expression.Aliasable;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.ProtoColumnExpressionSpec;
 import org.litebridge.orm.expression.intent.ConvertSpec;
+import org.litebridge.orm.expression.select.AliasReferenceSpec;
+
+import java.util.Objects;
 
 /**
  * Basic metamodel field definition.
@@ -21,6 +26,10 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
      * Target field name.
      */
     protected final String field;
+    /**
+     * Pending chained expression spec to use;
+     */
+    protected final @Nullable ExpressionSpec pendingExpressionSpec;
 
     /**
      * Creates a new {@link QueryField} instance.
@@ -31,6 +40,30 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
     public QueryField(final Class<?> dtoClass, final String field) {
         this.dtoClass = dtoClass;
         this.field = field;
+        this.pendingExpressionSpec = null;
+    }
+
+    protected QueryField(final QueryField other, final ExpressionSpec pendingExpressionSpec) {
+        this.dtoClass = other.dtoClass;
+        this.field = other.field;
+        this.pendingExpressionSpec = pendingExpressionSpec;
+    }
+
+    public ExpressionSpec as(final AliasReferenceSpec alias) {
+        return as(Objects.requireNonNull(alias.alias()));
+    }
+
+    public ExpressionSpec as(final String alias) {
+        if (pendingExpressionSpec != null) {
+            if (!(pendingExpressionSpec instanceof Aliasable aliasable)) {
+                throw new IllegalArgumentException("ExpressionSpec is not aliasable");
+            }
+
+            aliasable.setAlias(alias);
+            return pendingExpressionSpec;
+        } else {
+            return Fn.alias(dtoClass, field, alias);
+        }
     }
 
     /**
@@ -44,7 +77,7 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
      * @return a {@link ProtoColumnExpressionSpec} expression instance to convert the return value of the nested expression
      */
     public <T> ConvertSpec<T> convert(final Class<T> returnType) {
-        return Fn.convert(Fn.f(field), returnType);
+        return Fn.convert(Objects.requireNonNullElseGet(pendingExpressionSpec, () -> Fn.field(field)), returnType);
     }
 
     /**
@@ -68,5 +101,9 @@ public sealed class QueryField implements ExpressionSpec permits NumericQueryFie
     @Override
     public String toString() {
         return field;
+    }
+
+    @Nullable ExpressionSpec pendingExpressionSpec() {
+        return pendingExpressionSpec;
     }
 }

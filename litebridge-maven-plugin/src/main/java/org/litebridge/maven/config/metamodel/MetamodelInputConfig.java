@@ -26,6 +26,7 @@ public final class MetamodelInputConfig {
      * Packages to scan for entities/DTOs
      */
     @Parameter(required = true)
+    @SuppressWarnings("NotNullFieldNotInitialized")
     private List<String> inputPackages;
 
     /**

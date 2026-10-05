@@ -1,30 +1,74 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.db.spi.update.Insert;
-import org.litebridge.orm.api.insert.model.InsertSpec;
-import org.litebridge.orm.api.select.ast.InsertNode;
+import org.litebridge.db.spi.update.InsertResult;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.InsertNode;
+import org.litebridge.orm.engine.ast.InsertValuesNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * A builder class for constructing SQL INSERT statements.
- * <p>
- * The {@code InsertBuilder} is responsible for creating instances of the {@link Insert} class
- * by specifying the target table, column values to insert, and whether to return generated keys.
- * <p>
- * Instances of this class support method chaining for a fluent API style.
  */
-final class InsertBuilder extends AbstractStatementBuilder {
+sealed class InsertBuilder extends AbstractStatementBuilder permits MergeBuilder {
 
-    public InsertBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
-        super(table, litebridgeContext);
-        this.node = new InsertNode(null, ormTable.getMetaData().toTable());
+    protected final List<LinkedHashMap<String, @Nullable Object>> rows = new ArrayList<>();
+
+    /**
+     * Constructs a new {@code InsertBuilder}.
+     *
+     * @param ormTable          The ORM table.
+     * @param contextDtoClass   The parent/context DTO class.
+     * @param litebridgeContext Litebridge context.
+     */
+    public InsertBuilder(final OrmTable ormTable,
+                         final @Nullable Class<?> contextDtoClass,
+                         final LitebridgeContext litebridgeContext) {
+        super(ormTable, contextDtoClass, litebridgeContext);
+    }
+
+    public void addRow(final LinkedHashMap<String, @Nullable Object> fieldValues) {
+        rows.add(fieldValues);
+    }
+
+    @Override
+    public void setField(final String fieldName, final @Nullable Object value) {
+        if (!rows.isEmpty()) {
+            rows.getLast().put(fieldName, value);
+            this.node = null;
+        }
     }
 
     @Override
     public PreparedOperation build() {
-        final InsertSpec insertSpec = new InsertSpec(ormTable.getMetaData().toTable(), litebridgeContext.selectExpressionMapper());
-        litebridgeContext.createQueryCompiler().compile(node, insertSpec);
-        return insertSpec.toInsert(litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter());
+        return litebridgeContext.createQueryCompiler().compile(node());
+    }
+
+    @Override
+    public Class<? extends UpdateResult> resultType() {
+        return InsertResult.class;
+    }
+
+    @Override
+    public QueryNode node() {
+        if (node == null) {
+            final String[] insertFields = rows.getFirst()
+                    .sequencedKeySet()
+                    .toArray(String[]::new);
+            node = new InsertNode(ormTable.getMetaData().qualifiedName(), ormTable.dtoClass(), contextDtoClass, insertFields, null);
+
+            for (LinkedHashMap<String, @Nullable Object> fieldValues : rows) {
+                final Object[] values = fieldValues.sequencedValues().toArray(Object[]::new);
+                node = new InsertValuesNode(node, values);
+            }
+        }
+
+        return node;
     }
 }

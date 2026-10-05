@@ -1,0 +1,233 @@
+package org.litebridge.orm.engine.compiler;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.generator.ColumnValueGenerator;
+import org.litebridge.db.spi.sql.BindValue;
+import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.UpdateColumn;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.InsertNode;
+import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.meta.QueryField;
+import org.litebridge.orm.meta.QueryFieldInspector;
+import org.litebridge.db.spi.MappedFieldTarget;
+import org.litebridge.orm.persistence.MappedCompositeKey;
+import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.orm.persistence.TableRegistry;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+
+/**
+ * Compilation context for INSERT statements.
+ */
+final class InsertCompilationContext implements CompilationContext {
+
+    private final Table table;
+    private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
+    private final List<String> insertColumns;
+    private final Set<String> insertColumnNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    private int rows = 0;
+    private boolean returnGeneratedColumns;
+    private @Nullable List<BindValue> bindValues;
+
+    InsertCompilationContext(final InsertNode insertNode,
+                             final LitebridgeContext litebridgeContext) {
+        final OrmTable ormTable;
+        final TableMetaData tableMetaData;
+
+        if (insertNode.dtoClass() != null) {
+            if (insertNode.contextDtoClass() != null) {
+                final TableRegistry tableRegistry = litebridgeContext.tableRegistry();
+                ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(insertNode.dtoClass(), insertNode.contextDtoClass()), () -> tableRegistry.getOrmTableOrThrow(insertNode.dtoClass()));
+            } else {
+                ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
+            }
+
+            tableMetaData = ormTable.getMetaData();
+            this.table = tableMetaData.table();
+        } else {
+            this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(insertNode.table()));
+            tableMetaData = litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
+            ormTable = null;
+        }
+
+        if (insertNode.columns() != null) {
+            if (insertNode.columns().length > 0) {
+                if (ormTable != null && !ormTable.isManyToManyJoinTable()) {
+                    // Translate field names to column names
+                    insertColumns = Arrays.stream(insertNode.columns())
+                            .flatMap(field -> {
+                                final MappedFieldTarget target = ormTable.mappedFieldTargetForFieldOrNull(field);
+
+                                if (target instanceof MappedCompositeKey mappedCompositeKey) {
+                                    return Arrays.stream(mappedCompositeKey.columns())
+                                            .filter(ColumnMetaData.class::isInstance)
+                                            .map(ColumnMetaData.class::cast)
+                                            .map(ColumnMetaData::name);
+                                }
+
+                                return Arrays.stream(new String[]{ormTable.columnMetaDataForField(field).name()});
+                            })
+                            .toList();
+                } else {
+                    this.insertColumns = List.of(insertNode.columns());
+                }
+
+                this.insertColumnNames.addAll(insertColumns);
+
+                // Process insert columns in the order provided
+                for (final String insertColumnName : insertColumns) {
+                    final ColumnMetaData columnMetaData = tableMetaData.column(insertColumnName);
+                    this.columnMetaDataList.add(columnMetaData);
+                }
+
+                // Process any remaining non-nullable columns
+                tableMetaData.columns().stream()
+                        .filter(columnMetaData -> !insertColumnNames.contains(columnMetaData.name()) && !columnMetaData.isNullable())
+                        .forEach(columnMetaData -> {
+                            returnGeneratedColumns = true;
+
+                            if (columnMetaData.isAutoIncrement()) {
+                                return;
+                            }
+
+                            // Non-null value omitted from insert columns; see if it can be generated
+                            if (columnMetaData.getGenerator() != null) {
+                                // Implicit/generated value insert
+                                this.columnMetaDataList.add(columnMetaData);
+                            } else {
+                                throw new IllegalArgumentException("NOT NULL column " + columnMetaData.name() + " omitted from insert into table " + table.qualifiedName() + ", and no value generator present");
+                            }
+                        });
+            } else {
+                // All columns
+                final List<ColumnMetaData> columnMetaDatas = tableMetaData.columns();
+                this.insertColumns = new ArrayList<>(columnMetaDatas.size());
+
+                for (ColumnMetaData columnMetaData : columnMetaDatas) {
+                    this.columnMetaDataList.add(columnMetaData);
+                    this.insertColumns.add(columnMetaData.name());
+                }
+
+                this.insertColumnNames.addAll(insertColumns);
+            }
+        } else {
+            final ExpressionSpec[] expressionSpecs = Objects.requireNonNull(insertNode.expressionSpecs());
+            this.insertColumns = new ArrayList<>(expressionSpecs.length);
+
+            for (ExpressionSpec expressionSpec : expressionSpecs) {
+                if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+                    insertColumns.add(columnExpressionSpec.getColumn().name());
+                } else if (expressionSpec instanceof QueryField queryField) {
+                    final String fieldName = QueryFieldInspector.getFieldName(queryField);
+                    final ColumnMetaData columnMetaData = Objects.requireNonNull(ormTable).columnMetaDataForField(fieldName);
+                    insertColumns.add(columnMetaData.name());
+                } else {
+                    throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());
+                }
+            }
+
+            this.insertColumnNames.addAll(insertColumns);
+
+            // Ensure all NOT NULL columns are accounted for
+            for (ColumnMetaData columnMetaData : tableMetaData.columns()) {
+                if (insertColumnNames.contains(columnMetaData.name())) {
+                    // Explicit insert
+                    this.columnMetaDataList.add(columnMetaData);
+                } else if (!columnMetaData.isNullable() && !columnMetaData.isAutoIncrement()) {
+                    // Non-null value omitted from insert columns; see if it can be generated
+                    if (columnMetaData.getGenerator() != null) {
+                        // Implicit/generated value insert
+                        this.columnMetaDataList.add(columnMetaData);
+                        this.returnGeneratedColumns = true;
+                    } else {
+                        throw new IllegalArgumentException("NOT NULL column " + columnMetaData.name() + " omitted from insert into table " + table.qualifiedName() + ", and no value generator present");
+                    }
+                }
+            }
+        }
+    }
+
+    public void addRowBindValues(final List<@Nullable Object> rawValues) {
+        final List<@Nullable Object> values;
+
+        if (rawValues.size() != insertColumns.size()) {
+            // There are composite values that need to be expanded
+            values = new ArrayList<>(insertColumns.size());
+
+            for (Object rawValue : rawValues) {
+                if (rawValue instanceof LinkedHashMap<?, ?> map) {
+                    values.addAll(map.sequencedValues());
+                } else if (rawValue instanceof Collection<?> collection) {
+                    values.addAll(collection);
+                } else {
+                    values.add(rawValue);
+                }
+            }
+        } else {
+            values = rawValues;
+        }
+
+        if (values.size() != insertColumns.size()) {
+            throw new IllegalArgumentException("Number of values does not match number of columns");
+        }
+
+        ++rows;
+
+        if (this.bindValues == null) {
+            this.bindValues = new ArrayList<>(values.size());
+        }
+
+        for (int i = 0; i < values.size(); i++) {
+            final ColumnMetaData columnMetaData = columnMetaDataList.get(i);
+            final Object value = values.get(i);
+
+            if (value == null && !columnMetaData.isNullable()) {
+                if (columnMetaData.getGenerator() != null) {
+                    // Value will be generated; drop the NULL
+                    this.insertColumnNames.remove(columnMetaData.name());
+                    continue;
+                } else {
+                    throw new IllegalArgumentException("NULL value not allowed for non-nullable column: " + columnMetaData.name());
+                }
+            }
+
+            final BindValue bindValue = new BindValue(values.get(i), columnMetaData.getDataType());
+            this.bindValues.add(bindValue);
+        }
+    }
+
+    @Override
+    public List<BindValue> getBindValues() {
+        return bindValues != null ? bindValues : Collections.emptyList();
+    }
+
+    @Override
+    public Insert toOperation() {
+        final List<UpdateColumn> columns = new ArrayList<>(columnMetaDataList.size());
+
+        for (final ColumnMetaData columnMetaData : columnMetaDataList) {
+            final ColumnValueGenerator columnValueGenerator = columnMetaData.getGenerator();
+
+            if (!insertColumnNames.contains(columnMetaData.name()) && columnValueGenerator != null) {
+                columns.add(new UpdateColumn(columnMetaData.name(), columnValueGenerator, null));
+            } else {
+                columns.add(new UpdateColumn(columnMetaData.name()));
+            }
+        }
+
+        return new Insert(table, columns, rows, returnGeneratedColumns);
+    }
+}

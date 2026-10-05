@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.expression;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 
 /**
@@ -13,21 +14,22 @@ import org.litebridge.db.spi.Column;
  * Classes that extend {@code ColumnExpression} are expected to implement
  * the {@code toSql} method from the {@code SelectExpression} interface.
  */
-public abstract class DelegateColumnExpression extends ColumnExpressionImpl implements DelegateExpression {
+public abstract class DelegateColumnExpression implements ColumnExpression, DelegateExpression {
 
     /**
      * The encapsulated target column expression of this expression.
      */
     protected final ColumnExpression target;
+    protected final @Nullable String alias;
 
     /**
      * Constructor.
      *
      * @param target The encapsulated target column expression for this expression.
      */
-    protected DelegateColumnExpression(final ColumnExpression target) {
-        super(target.column());
+    protected DelegateColumnExpression(final ColumnExpression target, final @Nullable String alias) {
         this.target = target;
+        this.alias = alias;
     }
 
     @Override
@@ -43,5 +45,15 @@ public abstract class DelegateColumnExpression extends ColumnExpressionImpl impl
     @Override
     public final Column column() {
         return target.column();
+    }
+
+    @Override
+    public @Nullable String alias() {
+        return alias;
+    }
+
+    @Override
+    public @Nullable String tableAlias() {
+        return target.tableAlias();
     }
 }

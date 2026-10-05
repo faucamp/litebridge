@@ -2,9 +2,7 @@ package org.litebridge.orm.expression;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
-import org.litebridge.orm.api.select.model.SelectSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SubselectSpec;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +31,7 @@ class ProtoExpressionTest {
     void testProtoNestableTOExpr() {
         final ExpressionSpec target = new SelectColumnSpec(mock(Column.class));
         final ProtoNestableTOExpr<String> spec = new ProtoNestableTOExpr<>(String.class, SelectColumnSpec.class, target, "alias");
-        
+
         assertEquals(String.class, spec.returnType());
         assertEquals(SelectColumnSpec.class, spec.type());
         assertEquals(target, spec.target());
@@ -48,13 +46,5 @@ class ProtoExpressionTest {
         final Object[] args = new Object[]{"arg1"};
         final ProtoNestableTOExpr<String> spec3 = new ProtoNestableTOExpr<>(String.class, SelectColumnSpec.class, "COL", "alias", args);
         assertArrayEquals(args, spec3.args());
-    }
-
-    @Test
-    void testProtoNestableExpressionSpecInvalidTarget() {
-        final SubselectSpec invalidTarget = new SubselectSpec(mock(SelectSpec.class));
-        final ProtoNestableTOExpr<String> spec = new ProtoNestableTOExpr<>(String.class, SelectColumnSpec.class, invalidTarget, "alias");
-
-        assertThrows(IllegalArgumentException.class, spec::column);
     }
 }

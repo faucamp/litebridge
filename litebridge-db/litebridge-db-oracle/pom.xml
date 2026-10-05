@@ -43,6 +43,11 @@
         <!-- Project dependencies -->
         <dependency>
             <groupId>org.litebridgedb</groupId>
+            <artifactId>litebridge-orm</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.litebridgedb</groupId>
             <artifactId>litebridge-converter</artifactId>
         </dependency>
         <dependency>

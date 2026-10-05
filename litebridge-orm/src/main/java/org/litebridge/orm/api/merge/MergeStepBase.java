@@ -1,0 +1,85 @@
+package org.litebridge.orm.api.merge;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.MergeNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.expression.select.ValuesSpec;
+
+import java.util.Objects;
+
+abstract sealed class MergeStepBase permits MergeOnStep {
+
+    /**
+     * The root merge node containing target table information
+     */
+    protected final MergeNode mergeNode;
+    /**
+     * The using table name in SQL mode.
+     */
+    protected final @Nullable String usingTable;
+    /**
+     * The using DTO class in DTO mode.
+     */
+    protected final @Nullable Class<?> usingDtoClass;
+    /**
+     * The using sub-query's terminal node
+     */
+    protected final @Nullable QueryNode usingQueryNode;
+    /**
+     * Using VALUES
+     */
+    protected final @Nullable ValuesSpec usingValues;
+    /**
+     * The Litebridge context.
+     */
+    protected final LitebridgeContext litebridgeContext;
+
+    MergeStepBase(final String usingTable,
+                  final MergeNode mergeNode,
+                  final LitebridgeContext litebridgeContext) {
+        this.mergeNode = mergeNode;
+        this.usingTable = usingTable;
+        this.usingDtoClass = null;
+        this.usingQueryNode = null;
+        this.usingValues = null;
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    MergeStepBase(final Class<?> usingDtoClass,
+                  final MergeNode mergeNode,
+                  final LitebridgeContext litebridgeContext) {
+        this.mergeNode = mergeNode;
+        this.usingTable = null;
+        this.usingDtoClass = usingDtoClass;
+        this.usingQueryNode = null;
+        this.usingValues = null;
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    MergeStepBase(final QueryNode usingQueryNode,
+                  final MergeNode mergeNode,
+                  final LitebridgeContext litebridgeContext) {
+        this.mergeNode = mergeNode;
+        this.usingTable = null;
+        this.usingDtoClass = null;
+        this.usingQueryNode = usingQueryNode;
+        this.usingValues = null;
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    MergeStepBase(final ValuesSpec usingValues,
+                  final MergeNode mergeNode,
+                  final LitebridgeContext litebridgeContext) {
+        this.mergeNode = mergeNode;
+        this.usingTable = null;
+        this.usingDtoClass = null;
+        this.usingQueryNode = null;
+        this.usingValues = usingValues;
+        this.litebridgeContext = litebridgeContext;
+    }
+
+    protected String usingTable() {
+        return Objects.requireNonNull(usingTable);
+    }
+}

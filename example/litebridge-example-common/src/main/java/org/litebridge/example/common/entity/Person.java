@@ -30,7 +30,7 @@ public class Person {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(@Nullable Long id) {
         this.id = id;
     }
 
@@ -71,7 +71,7 @@ public class Person {
         return accounts;
     }
 
-    public void setAccounts(final List<Account> accounts) {
+    public void setAccounts(final @Nullable List<Account> accounts) {
         this.accounts = accounts;
     }
 

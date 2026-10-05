@@ -39,7 +39,7 @@ It simplifies persistence by treating SQL as a first-class citizen, balancing re
   * [Arbitrary SQL queries](#arbitrary-sql-queries)
 <!-- TOC -->
 
-Litebridge supports using both [annotated entities](docs/annotated-entities.md) and unmodified DTOs as database entities.
+Litebridge supports using both [annotated entities](docs/persistence/entity-annotations.md) and unmodified DTOs as database entities.
 This example uses plain DTOs and the fluent registration API.
 
 Given the following example `Person` and `Account` DTO classes:
@@ -312,12 +312,12 @@ litebridge.select("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE").from("LB.PERSON")
 
 Litebridge currently supports the following databases via the following modules:
 
-| Database | Artifact ID |
-| --- | --- |
-| **H2** | `litebridge-db-h2` |
-| **Oracle** | `litebridge-db-oracle` |
+| Database       | Artifact ID              |
+|----------------|--------------------------|
+| **H2**         | `litebridge-db-h2`       |
+| **Oracle**     | `litebridge-db-oracle`   |
 | **PostgreSQL** | `litebridge-db-postgres` |
-| **SQLite** | `litebridge-db-sqlite` |
+| **SQLite**     | `litebridge-db-sqlite`   |
 
 ## Documentation
 

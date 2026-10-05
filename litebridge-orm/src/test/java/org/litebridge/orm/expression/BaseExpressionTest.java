@@ -2,9 +2,6 @@ package org.litebridge.orm.expression;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.orm.expression.function.scalar.UpperSpec;
-import org.litebridge.orm.expression.intent.ConvertIntent;
-import org.litebridge.orm.expression.intent.ConvertSpec;
-import org.litebridge.orm.expression.intent.ExpressionSpecArray;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -88,25 +85,5 @@ class BaseExpressionTest {
         final ProtoNestableTOExpr<String> spec4 = new ProtoNestableTOExpr<>(String.class, UpperSpec.class, "col4", "alias4", args);
         assertEquals("col4", spec4.column());
         assertArrayEquals(args, spec4.args());
-    }
-
-    @Test
-    void testConvertIntent() {
-        // Given
-        final ExpressionSpec target = new SelectColumnSpec(null);
-
-        // When
-        final ConvertIntent<Integer> intent = new ConvertIntent<>(new ExpressionSpec[]{target}, Integer.class);
-
-        // Then
-        final ExpressionSpec[] expectedTarget = new ExpressionSpec[]{target};
-        assertArrayEquals(expectedTarget, intent.target());
-        assertEquals(Integer.class, intent.returnType());
-
-        // When
-        final ExpressionSpecArray spec = intent.toExpression();
-
-        // Then
-        assertArrayEquals(expectedTarget, spec.expressions());
     }
 }

@@ -1,0 +1,71 @@
+package org.litebridge.db.oracle.sql;
+
+import org.litebridge.commons.BooleanUtils;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
+import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
+import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
+import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.update.Insert;
+import org.litebridge.db.spi.update.UpdateColumn;
+
+import java.util.List;
+import java.util.function.BiFunction;
+
+public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
+
+    /**
+     * Creates a new {@code OracleInsertSqlGenerator}.
+     *
+     * @param labelGenerator         the label generator for rendering aliases/identifiers
+     * @param mathOperationGenerator the math operation generator
+     * @param ensureTableMetaData    a function to ensure table metadata
+     */
+    public OracleInsertSqlGenerator(final LabelGenerator labelGenerator,
+                                    final MathOperationGenerator mathOperationGenerator,
+                                    final BiFunction<Table, ConnectionProvider, TableMetaData> ensureTableMetaData) {
+        super(labelGenerator, mathOperationGenerator, ensureTableMetaData, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+    }
+
+    public String createInsertAllClause(final List<Insert> inserts) {
+        final StringBuilder sql = new StringBuilder("INSERT ALL ");
+
+        for (Insert insert : inserts) {
+            BooleanUtils.requireFalse(insert.returnGeneratedKeys(), "INSERT ALL cannot return generated keys");
+            final String intoClause = createInsertIntoClause(insert);
+
+            for (int i = 0; i < insert.rows(); i++) {
+                sql.append(intoClause).append('(');
+
+                for (int j = 0; j < insert.columns().size(); j++) {
+                    final UpdateColumn insertColumn = insert.columns().get(j);
+
+                    if (j > 0) {
+                        sql.append(", ");
+                    }
+
+                    sql.append(getColumnValueFragment(insertColumn));
+                }
+
+                sql.append(") ");
+            }
+        }
+
+        sql.append("SELECT * FROM DUAL");
+        return sql.toString();
+    }
+
+    private String createInsertIntoClause(final Insert insert) {
+        final StringBuilder intoClause = new StringBuilder("INTO ");
+        appendTable(intoClause, insert.table())
+                .append(" (")
+                .append(String.join(", ", insert.columns().stream()
+                        .map(UpdateColumn::name)
+                        .map(labelGenerator::quoteIdentifier)
+                        .toList()))
+                .append(") VALUES ");
+        return intoClause.toString();
+    }
+}

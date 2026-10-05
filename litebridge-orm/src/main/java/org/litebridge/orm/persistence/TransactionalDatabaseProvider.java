@@ -1,7 +1,8 @@
 package org.litebridge.orm.persistence;
 
-import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
@@ -13,8 +14,8 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
-import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.BatchUpdateResult;
+import org.litebridge.db.spi.update.Result;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -78,28 +79,33 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
+    public DatabaseProviderMetaData metaData() {
+        return databaseProvider.metaData();
+    }
+
+    @Override
+    public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.databaseMetaData(transactionManager));
+    }
+
+    @Override
     public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
         return executeAndCleanupIfNeeded(() -> databaseProvider.tableMetaData(table, transactionManager));
     }
 
     @Override
-    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.insert(insert, transactionManager));
+    public <T extends Result> T executeUpdate(PreparedSql preparedSql, Class<T> resultType, ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.executeUpdate(preparedSql, resultType, transactionManager));
     }
 
     @Override
-    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.update(update, transactionManager));
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.executeBatch(preparedSql, transactionManager));
     }
 
     @Override
-    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.delete(delete, transactionManager));
-    }
-
-    @Override
-    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        return executeAndCleanupIfNeeded(() -> databaseProvider.select(preparedSql, transactionManager));
+    public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
+        return executeAndCleanupIfNeeded(() -> databaseProvider.executeQuery(preparedSql, transactionManager));
     }
 
     @Override
@@ -108,33 +114,23 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-        return databaseProvider.nativeSqlQuery(sql, bindParameters, transactionManager);
+    public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequenceName) {
+        return databaseProvider.sequenceColumnValueGenerator(sequenceName);
     }
 
     @Override
-    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-        return databaseProvider.nativeSqlUpdate(sql, bindParameters, transactionManager);
+    public SqlFunctionRegistry sqlFunctionRegistry() {
+        return databaseProvider.sqlFunctionRegistry();
     }
 
     @Override
-    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequenceName) {
-        return databaseProvider.getSequenceColumnValueGenerator(sequenceName);
+    public TypeConverter typeConverter() {
+        return databaseProvider.typeConverter();
     }
 
     @Override
-    public SqlFunctionRegistry getSqlFunctionRegistry() {
-        return databaseProvider.getSqlFunctionRegistry();
-    }
-
-    @Override
-    public TypeConverter getTypeConverter() {
-        return databaseProvider.getTypeConverter();
-    }
-
-    @Override
-    public AliasTransformer getAliasTransformer() {
-        return databaseProvider.getAliasTransformer();
+    public AliasTransformer aliasTransformer() {
+        return databaseProvider.aliasTransformer();
     }
 
     private <T> T executeAndCleanupIfNeeded(final SqlOperationSupplier<T> supplier) throws SQLException {

@@ -187,6 +187,22 @@ public final class StringUtils {
     }
 
     /**
+     * Checks if two strings are equal, ignoring case considerations.
+     *
+     * @param str1 the first string to check; may be null
+     * @param str2 the second string to check; may be null
+     * @return true if the strings are equal, ignoring case; false otherwise.
+     * If both are null, returns true.
+     */
+    public static boolean equalsIgnoreCase(@Nullable final String str1, @Nullable final String str2) {
+        if (str1 == null) {
+            return str2 == null;
+        }
+
+        return str1.equalsIgnoreCase(str2);
+    }
+
+    /**
      * Returns a lowercase string consisting of:
      * <ul>
      *     <li>the first letter of each "word" (a letter that follows a non-letter/digit),</li>
@@ -194,6 +210,9 @@ public final class StringUtils {
      *     <li>and all digits found anywhere in the input.</li>
      * </ul>
      * Non-letter/digit characters act as separators and are otherwise ignored.
+     *
+     * @param str the string to abbreviate; may be null
+     * @return the abbreviated string, or an empty string if {@code str} is null or empty
      */
     public static String abbreviate(final @Nullable String str) {
         if (isEmpty(str)) {
@@ -239,6 +258,25 @@ public final class StringUtils {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Counts the number of occurrences of the specified character in the given string.
+     *
+     * @param input      the string to search
+     * @param searchChar the character to count
+     * @return the number of occurrences of {@code searchChar} in {@code input}
+     */
+    public static int countMatches(final String input, final char searchChar) {
+        int count = 0;
+
+        for (int i = 0; i < input.length(); i++) {
+            if (input.charAt(i) == searchChar) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private static String abbreviateAscii(final String str, final int len) {

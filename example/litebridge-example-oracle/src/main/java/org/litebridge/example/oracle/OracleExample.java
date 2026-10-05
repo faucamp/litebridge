@@ -2,17 +2,18 @@ package org.litebridge.example.oracle;
 
 import org.flywaydb.core.Flyway;
 import org.litebridge.db.oracle.OracleDatabaseProvider;
+import org.litebridge.db.oracle.api.LitebridgeOracle;
 import org.litebridge.example.common.PersistenceExample;
 import org.litebridge.example.common.QueryExample;
 import org.litebridge.example.common.SqlExample;
 import org.litebridge.example.common.mapping.CommonDtoRegistration;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.tx.DefaultTransactionManager;
 import org.litebridge.orm.tx.LitebridgeDriverManagerDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,13 +49,25 @@ public class OracleExample {
     }
 
     private static void runExamples(final DataSource dataSource) {
-        // Initialise litebridgedb and register DTO-table mappings
-        final Litebridge litebridge = new Litebridge(new OracleDatabaseProvider(), new DefaultTransactionManager(dataSource));
+        // Initialise Oracle-extended Litebridge and register DTO-table mappings
+        final LitebridgeOracle litebridge = Litebridge.withDatabase(new OracleDatabaseProvider(), dataSource).build();
         CommonDtoRegistration.registerPersonAndAccount(litebridge);
 
+        // Basic Litebridge functionality
         new PersistenceExample(litebridge).run();
         new QueryExample(litebridge).run();
         new SqlExample(litebridge).run();
+
+        // Oracle-specific functionality
+        litebridge.insertAll(ia -> ia
+                .intoTable("LB.PERSON", i -> i
+                        .into("PERSON_ID", "FIRST_NAME", "SURNAME")
+                        .values(101, "John", "Doe")
+                        .values(102, "Jane", "Doe"))
+                .intoTable("LB.ACCOUNT", i -> i
+                        .into("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+                        .values(101, "John's account", BigInteger.ZERO, 101)
+                        .values(102, "Janes's account", BigInteger.TEN, 102)));
     }
 
     public static void configureDatabase(

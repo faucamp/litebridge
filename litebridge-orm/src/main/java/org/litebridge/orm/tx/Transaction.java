@@ -33,6 +33,11 @@ public final class Transaction implements TransactionControl, AutoCloseable {
     private final TransactionManager transactionManager;
     private boolean completed = false;
 
+    /**
+     * Creates a new {@code Transaction} instance.
+     *
+     * @param transactionManager the transaction manager
+     */
     public Transaction(final TransactionManager transactionManager) {
         this.transactionManager = transactionManager;
     }

@@ -1,0 +1,60 @@
+package org.litebridge.db.oracle.sql;
+
+import org.litebridge.commons.type.ConcurrentLazy;
+import org.litebridge.db.spi.impl.engine.MetaDataEngine;
+import org.litebridge.db.spi.impl.sql.DefaultSqlGenerator;
+import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
+import org.litebridge.db.spi.impl.sql.LabelGenerator;
+import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
+import org.litebridge.db.spi.impl.sql.MergeSqlGenerator;
+import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
+
+/**
+ * SQL generator for Oracle.
+ * <p>
+ * This class customises the SQL generation components by providing Oracle-specific
+ * implementations of {@link SelectSqlGenerator} and {@link InsertSqlGenerator}.
+ *
+ * @see OracleSelectSqlGenerator
+ * @see OracleInsertSqlGenerator
+ */
+public final class OracleSqlGenerator extends DefaultSqlGenerator {
+
+    private final ConcurrentLazy<OracleInsertSqlGenerator> oracleInsertSqlGenerator = new ConcurrentLazy<>(() -> new OracleInsertSqlGenerator(
+            labelGenerator,
+            mathOperationGenerator,
+            metaDataEngine::ensureTableMetaData));
+    private final ConcurrentLazy<OracleSelectSqlGenerator> oracleSelectSqlGenerator = new ConcurrentLazy<>(() -> new OracleSelectSqlGenerator(
+            labelGenerator,
+            mathOperationGenerator,
+            metaDataEngine::ensureTableMetaData));
+
+    public OracleSqlGenerator(final MetaDataEngine metaDataEngine,
+                              final LabelGenerator labelGenerator,
+                              final MathOperationGenerator mathOperationGenerator) {
+        super(metaDataEngine, labelGenerator, mathOperationGenerator);
+    }
+
+    @Override
+    protected SelectSqlGenerator createSelectSqlGenerator() {
+        return oracleSelectSqlGenerator.getOrThrow();
+    }
+
+    @Override
+    protected InsertSqlGenerator createInsertSqlGenerator() {
+        return oracleInsertSqlGenerator.getOrThrow();
+    }
+
+    @Override
+    protected MergeSqlGenerator createMergeSqlGenerator() {
+        return new OracleMergeSqlGenerator(
+                oracleSelectSqlGenerator.getOrThrow(),
+                labelGenerator,
+                mathOperationGenerator,
+                metaDataEngine::ensureTableMetaData);
+    }
+
+    public OracleInsertSqlGenerator oracleInsertSqlGenerator() {
+        return oracleInsertSqlGenerator.getOrThrow();
+    }
+}

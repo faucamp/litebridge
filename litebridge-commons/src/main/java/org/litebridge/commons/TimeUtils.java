@@ -14,6 +14,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Utility class for converting and formatting date and time objects.
+ */
 public final class TimeUtils {
 
     @SuppressWarnings("SuspiciousDateFormat")
@@ -24,6 +27,12 @@ public final class TimeUtils {
     private TimeUtils() {
     }
 
+    /**
+     * Converts a date-time string to a {@link ZonedDateTime}.
+     *
+     * @param dateStr the date-time string to parse; may be null
+     * @return the parsed {@link ZonedDateTime}, or {@code null} if {@code dateStr} is null
+     */
     public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable String dateStr) {
         if (dateStr == null) {
             return null;
@@ -47,6 +56,12 @@ public final class TimeUtils {
         }
     }
 
+    /**
+     * Converts a {@link Date} to a {@link ZonedDateTime} using the system default time zone.
+     *
+     * @param requestedDate the date to convert; may be null
+     * @return the corresponding {@link ZonedDateTime}, or {@code null} if {@code requestedDate} is null
+     */
     public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable Date requestedDate) {
         if (requestedDate == null) {
             return null;
@@ -55,6 +70,12 @@ public final class TimeUtils {
         return ZonedDateTime.ofInstant(requestedDate.toInstant(), ZoneId.systemDefault());
     }
 
+    /**
+     * Converts a {@link LocalDateTime} to a {@link ZonedDateTime} using the system default time zone.
+     *
+     * @param localDateTime the local date-time to convert; may be null
+     * @return the corresponding {@link ZonedDateTime}, or {@code null} if {@code localDateTime} is null
+     */
     public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable LocalDateTime localDateTime) {
         if (localDateTime == null) {
             return null;
@@ -63,6 +84,12 @@ public final class TimeUtils {
         return ZonedDateTime.of(localDateTime, ZoneId.systemDefault());
     }
 
+    /**
+     * Converts a {@link LocalDate} to a {@link ZonedDateTime} at the start of the day in the system default time zone.
+     *
+     * @param localDate the local date to convert; may be null
+     * @return the corresponding {@link ZonedDateTime}, or {@code null} if {@code localDate} is null
+     */
     public static @Nullable ZonedDateTime toZonedDateTime(final @Nullable LocalDate localDate) {
         if (localDate == null) {
             return null;
@@ -71,6 +98,12 @@ public final class TimeUtils {
         return localDate.atStartOfDay().atZone(ZoneId.systemDefault());
     }
 
+    /**
+     * Converts a {@link ZonedDateTime} to a {@link Date}.
+     *
+     * @param zonedDateTime the zoned date-time to convert; may be null
+     * @return the corresponding {@link Date}, or {@code null} if {@code zonedDateTime} is null
+     */
     public static @Nullable Date toDate(final @Nullable ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             return null;
@@ -79,6 +112,12 @@ public final class TimeUtils {
         return Date.from(zonedDateTime.toInstant());
     }
 
+    /**
+     * Converts a {@link LocalDate} to a {@link Date} at the start of the day in the system default time zone.
+     *
+     * @param localDate the local date to convert; may be null
+     * @return the corresponding {@link Date}, or {@code null} if {@code localDate} is null
+     */
     public static @Nullable Date toDate(final @Nullable LocalDate localDate) {
         if (localDate == null) {
             return null;
@@ -87,6 +126,12 @@ public final class TimeUtils {
         return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
+    /**
+     * Converts a {@link LocalDateTime} to a {@link Date} in the system default time zone.
+     *
+     * @param localDateTime the local date-time to convert; may be null
+     * @return the corresponding {@link Date}, or {@code null} if {@code localDateTime} is null
+     */
     public static @Nullable Date toDate(final @Nullable LocalDateTime localDateTime) {
         if (localDateTime == null) {
             return null;
@@ -95,6 +140,12 @@ public final class TimeUtils {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
+    /**
+     * Converts a {@link ZonedDateTime} to a {@link LocalDate}.
+     *
+     * @param zonedDateTime the zoned date-time to convert; may be null
+     * @return the corresponding {@link LocalDate}, or {@code null} if {@code zonedDateTime} is null
+     */
     public static @Nullable LocalDate toLocalDate(final @Nullable ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             return null;
@@ -103,6 +154,12 @@ public final class TimeUtils {
         return zonedDateTime.toLocalDate();
     }
 
+    /**
+     * Converts a date string to a {@link LocalDate}.
+     *
+     * @param dateStr the date string to parse; may be null
+     * @return the parsed {@link LocalDate}, or {@code null} if {@code dateStr} is null
+     */
     public static @Nullable LocalDate toLocalDate(final @Nullable String dateStr) {
         if (dateStr == null) {
             return null;
@@ -126,6 +183,12 @@ public final class TimeUtils {
         }
     }
 
+    /**
+     * Converts a {@link ZonedDateTime} to a {@link LocalDateTime} in the system default time zone.
+     *
+     * @param zonedDateTime the zoned date-time to convert; may be null
+     * @return the corresponding {@link LocalDateTime}, or {@code null} if {@code zonedDateTime} is null
+     */
     public static @Nullable LocalDateTime toLocalDateTime(final @Nullable ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             return null;
@@ -134,6 +197,12 @@ public final class TimeUtils {
         return zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
     }
 
+    /**
+     * Converts a date-time string to a {@link LocalDateTime}.
+     *
+     * @param dateStr the date-time string to parse; may be null
+     * @return the parsed {@link LocalDateTime}, or {@code null} if {@code dateStr} is null
+     */
     public static @Nullable LocalDateTime toLocalDateTime(final @Nullable String dateStr) {
         if (dateStr == null) {
             return null;
@@ -150,6 +219,13 @@ public final class TimeUtils {
         }
     }
 
+    /**
+     * Formats the given temporal object using the specified pattern.
+     *
+     * @param dateToFormat the temporal object to format
+     * @param pattern      the pattern to use for formatting
+     * @return the formatted date-time string
+     */
     public static String format(final Temporal dateToFormat, final String pattern) {
         final DateTimeFormatter dateTimeFormatter = CACHED_DATE_TIME_FORMATTERS.computeIfAbsent(pattern, formatPattern -> DateTimeFormatter.ofPattern(pattern));
         return dateTimeFormatter.format(dateToFormat);

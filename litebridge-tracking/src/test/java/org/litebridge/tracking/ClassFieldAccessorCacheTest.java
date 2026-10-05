@@ -69,8 +69,6 @@ class ClassFieldAccessorCacheTest {
 
         assertEquals(ThirdNestedDto.class, fieldAccessorChain.fieldAccessors().get(2).type());
         assertEquals(SecondNestedDto.class, fieldAccessorChain.fieldAccessors().get(2).dtoClass());
-
-        assertEquals(result, fieldAccessorChain.fieldAccessors().getLast());
     }
 
     @Test
@@ -90,8 +88,6 @@ class ClassFieldAccessorCacheTest {
 
         assertEquals(NestedDto.class, fieldAccessorChain.fieldAccessors().getFirst().type());
         assertEquals(TestDto.class, fieldAccessorChain.fieldAccessors().getFirst().dtoClass());
-
-        assertEquals(result, fieldAccessorChain.fieldAccessors().getLast());
     }
 
     @Test

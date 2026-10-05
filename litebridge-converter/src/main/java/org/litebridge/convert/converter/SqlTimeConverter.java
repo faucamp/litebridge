@@ -26,14 +26,18 @@ public class SqlTimeConverter implements SqlConverter<Time> {
      */
     @Override
     public @Nullable Time convert(final @Nullable Object value) {
-        if (value == null) {
-            return null;
-        }
-
-        if (value instanceof Time time) {
-            return time;
-        } else if (value instanceof LocalTime localTime) {
-            return Time.valueOf(localTime);
+        switch (value) {
+            case null -> {
+                return null;
+            }
+            case Time time -> {
+                return time;
+            }
+            case LocalTime localTime -> {
+                return Time.valueOf(localTime);
+            }
+            default -> {
+            }
         }
 
         final String valueStr = value.toString();

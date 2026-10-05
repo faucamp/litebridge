@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DefaultTypeConverterTest {
@@ -126,7 +127,7 @@ class DefaultTypeConverterTest {
         final Integer result = defaultTypeConverter.convert(null, Integer.class);
 
         // Then
-        assertEquals(null, result);
+        assertNull(result);
     }
 
     @Test
@@ -135,7 +136,7 @@ class DefaultTypeConverterTest {
         final Integer result = (Integer) defaultTypeConverter.convert(null, Types.INTEGER);
 
         // Then
-        assertEquals(null, result);
+        assertNull(result);
     }
 
     @Test

@@ -1,7 +1,6 @@
 package org.litebridge.orm.expression;
 
 import org.litebridge.orm.expression.select.SelectColumnSpec;
-import org.litebridge.orm.expression.select.SelectFieldSpec;
 
 /**
  * A proto-expression capable of nesting other proto-expressions.
@@ -14,8 +13,7 @@ public sealed interface ProtoNestableExpressionSpec extends ProtoExpressionSpec 
     /**
      * The nested target expression.
      * <p>
-     * Target expressions are typically a column name to select via {@link SelectColumnSpec}
-     * or {@link SelectFieldSpec}, but are not limited to these.
+     * Target expressions are typically a column name to select via e.g. {@link SelectColumnSpec}..
      *
      * @return the nested target expression.
      */

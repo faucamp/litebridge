@@ -3,6 +3,8 @@ package org.litebridge.orm.nativesql;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.sql.PreparedSql;
+import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.persistence.TransactionalDatabaseProvider;
@@ -16,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,14 +25,14 @@ class NativeSqlContextTest {
 
     private TransactionalDatabaseProvider databaseProvider;
     private TransactionManager transactionManager;
-    private NativeSqlContext context;
+    private NativeSqlContext nativeSqlContext;
 
     @BeforeEach
     void setUp() {
         databaseProvider = mock(TransactionalDatabaseProvider.class);
         transactionManager = mock(TransactionManager.class);
         when(databaseProvider.transactionManager()).thenReturn(transactionManager);
-        context = new NativeSqlContext(databaseProvider);
+        nativeSqlContext = new NativeSqlContext(databaseProvider);
     }
 
     @Test
@@ -39,10 +40,10 @@ class NativeSqlContextTest {
         // Given
         final String sql = "SELECT * FROM LB.PERSON WHERE SURNAME = ?";
         final List<Row> expectedRows = Collections.emptyList();
-        when(databaseProvider.nativeSqlQuery(eq(sql), any(), eq(transactionManager))).thenReturn(expectedRows);
+        when(databaseProvider.executeQuery(any(PreparedSql.class), any(ConnectionProvider.class))).thenReturn(expectedRows);
 
         // When
-        final List<Row> results = context.query(sql, "Smith");
+        final List<Row> results = nativeSqlContext.query(sql, "Smith");
 
         // Then
         assertNotNull(results);
@@ -54,10 +55,10 @@ class NativeSqlContextTest {
         // Given
         final String sql = "SELECT * FROM LB.PERSON WHERE SURNAME = ?";
         final List<Row> expectedRows = Collections.emptyList();
-        when(databaseProvider.nativeSqlQuery(eq(sql), any(), eq(transactionManager))).thenReturn(expectedRows);
+        when(databaseProvider.executeQuery(any(PreparedSql.class), any(ConnectionProvider.class))).thenReturn(expectedRows);
 
         // When
-        final List<Row> results = context.query(sql, List.of("Smith"));
+        final List<Row> results = nativeSqlContext.query(sql, List.of("Smith"));
 
         // Then
         assertNotNull(results);
@@ -69,10 +70,9 @@ class NativeSqlContextTest {
         // Given
         final String sql = "SELECT * FROM LB.PERSON WHERE SURNAME = :name";
         final List<Row> expectedRows = Collections.emptyList();
-        when(databaseProvider.nativeSqlQuery(eq("SELECT * FROM LB.PERSON WHERE SURNAME = ?"), any(), eq(transactionManager))).thenReturn(expectedRows);
-
+        when(databaseProvider.executeQuery(any(PreparedSql.class), any(ConnectionProvider.class))).thenReturn(expectedRows);
         // When
-        final List<Row> results = context.query(sql, Map.of("name", "Smith"));
+        final List<Row> results = nativeSqlContext.query(sql, Map.of("name", "Smith"));
 
         // Then
         assertNotNull(results);
@@ -83,10 +83,10 @@ class NativeSqlContextTest {
     void query_exception() throws SQLException {
         // Given
         final String sql = "SELECT * FROM INVALID";
-        when(databaseProvider.nativeSqlQuery(eq(sql), any(), eq(transactionManager))).thenThrow(new SQLException("Syntax error"));
+        when(databaseProvider.executeQuery(any(PreparedSql.class), any(ConnectionProvider.class))).thenThrow(new SQLException("Syntax error"));
 
         // When / Then
-        assertThrows(IllegalStateException.class, () -> context.query(sql));
+        assertThrows(IllegalStateException.class, () -> nativeSqlContext.query(sql));
     }
 
     @Test
@@ -94,10 +94,10 @@ class NativeSqlContextTest {
         // Given
         final String sql = "UPDATE LB.PERSON SET SURNAME = ? WHERE PERSON_ID = ?";
         final UpdateResult expectedResult = mock(UpdateResult.class);
-        when(databaseProvider.nativeSqlUpdate(eq(sql), any(), eq(transactionManager))).thenReturn(expectedResult);
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), any(), any(ConnectionProvider.class))).thenReturn(expectedResult);
 
         // When
-        final UpdateResult result = context.execute(sql, "Smith", 1);
+        final UpdateResult result = nativeSqlContext.execute(sql, "Smith", 1);
 
         // Then
         assertNotNull(result);
@@ -109,10 +109,10 @@ class NativeSqlContextTest {
         // Given
         final String sql = "UPDATE LB.PERSON SET SURNAME = ? WHERE PERSON_ID = ?";
         final UpdateResult expectedResult = mock(UpdateResult.class);
-        when(databaseProvider.nativeSqlUpdate(eq(sql), any(), eq(transactionManager))).thenReturn(expectedResult);
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), any(), any(ConnectionProvider.class))).thenReturn(expectedResult);
 
         // When
-        final UpdateResult result = context.execute(sql, List.of("Smith", 1));
+        final UpdateResult result = nativeSqlContext.execute(sql, List.of("Smith", 1));
 
         // Then
         assertNotNull(result);
@@ -124,10 +124,10 @@ class NativeSqlContextTest {
         // Given
         final String sql = "UPDATE LB.PERSON SET SURNAME = :name WHERE PERSON_ID = :id";
         final UpdateResult expectedResult = mock(UpdateResult.class);
-        when(databaseProvider.nativeSqlUpdate(eq("UPDATE LB.PERSON SET SURNAME = ? WHERE PERSON_ID = ?"), any(), eq(transactionManager))).thenReturn(expectedResult);
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), any(), any(ConnectionProvider.class))).thenReturn(expectedResult);
 
         // When
-        final UpdateResult result = context.execute(sql, Map.of("name", "Smith", "id", 1));
+        final UpdateResult result = nativeSqlContext.execute(sql, Map.of("name", "Smith", "id", 1));
 
         // Then
         assertNotNull(result);
@@ -138,9 +138,9 @@ class NativeSqlContextTest {
     void execute_exception() throws SQLException {
         // Given
         final String sql = "UPDATE INVALID SET NAME = 'Test'";
-        when(databaseProvider.nativeSqlUpdate(eq(sql), any(), eq(transactionManager))).thenThrow(new SQLException("Table not found"));
+        when(databaseProvider.executeUpdate(any(PreparedSql.class), any(), any(ConnectionProvider.class))).thenThrow(new SQLException("Table not found"));
 
         // When / Then
-        assertThrows(IllegalStateException.class, () -> context.execute(sql));
+        assertThrows(IllegalStateException.class, () -> nativeSqlContext.execute(sql));
     }
 }

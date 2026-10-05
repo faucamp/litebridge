@@ -1,9 +1,11 @@
 package org.litebridge.orm.persistence;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.orm.api.delete.model.DeleteSpec;
-import org.litebridge.orm.api.select.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+
+import java.util.Objects;
 
 /**
  * A builder class for constructing SQL DELETE statements.
@@ -19,15 +21,20 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
      * @param table             the table to delete from
      * @param litebridgeContext the ORM context
      */
-    public DeleteBuilder(final OrmTable table, final LitebridgeContext litebridgeContext) {
-        super(table, litebridgeContext);
-        this.node = new DeleteNode(null, table.getMetaData().toTable());
+    public DeleteBuilder(final OrmTable table,
+                         final @Nullable Class<?> contextDtoClass,
+                         final LitebridgeContext litebridgeContext) {
+        super(table, contextDtoClass, litebridgeContext);
+        this.node = new DeleteNode(null, table.getMetaData().qualifiedName(), table.dtoClass());
+    }
+
+    @Override
+    public void setField(final String fieldName, final @Nullable Object value) {
+        throw new UnsupportedOperationException("setField is not supported for DeleteBuilder");
     }
 
     @Override
     public PreparedOperation build() {
-        final DeleteSpec deleteSpec = new DeleteSpec(ormTable.getMetaData().toTable(), litebridgeContext.selectExpressionMapper());
-        litebridgeContext.createQueryCompiler().compile(node, deleteSpec);
-        return deleteSpec.toDelete(litebridgeContext.tableMetaDataCache(), litebridgeContext.typeConverter());
+        return litebridgeContext.createQueryCompiler().compile(Objects.requireNonNull(node));
     }
 }

@@ -2,17 +2,16 @@ package org.litebridge.orm.api.condition;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.dto.condition.CbDtoConditionClause;
-import org.litebridge.orm.api.dto.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.select.ast.ConditionGroupNode;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.sql.condition.CbSqlConditionClause;
-import org.litebridge.orm.api.sql.condition.SqlConditionClauseStart;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.persistence.OrmTable;
+
+import java.sql.Types;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -26,19 +25,19 @@ class ConditionImplementationTest {
     @SuppressWarnings("unchecked")
     void testDtoConditionClauses() {
         final OrmTable ormTable = mock(OrmTable.class);
-        final FromClauseEngine engine = mock(FromClauseEngine.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final Table table = new Table("TEST");
-        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "COL", true, java.sql.Types.VARCHAR);
-        when(ormTable.getColumnForFieldName("field")).thenReturn(columnMetaData);
-        when(ormTable.getColumnForFieldName("otherField")).thenReturn(columnMetaData);
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "COL", true, Types.VARCHAR);
+        when(ormTable.columnMetaDataForField("field")).thenReturn(columnMetaData);
+        when(ormTable.columnMetaDataForField("otherField")).thenReturn(columnMetaData);
 
-        final DtoConditionClauseStart<Object> start = new DtoConditionClauseStart<>(ormTable, engine, null);
+        final DtoConditionClauseStart<Object> start = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClause<Object> clause = start.where("field");
 
         assertNotNull(clause);
         assertInstanceOf(CbDtoConditionClause.class, clause);
 
-        final AbstractCbConditionClauseTerminal<Object> terminal = (AbstractCbConditionClauseTerminal<Object>) clause.eq("val");
+        final AbstractCbConditionClauseTerminal<Object> terminal = clause.eq("val");
         assertNotNull(terminal);
         assertInstanceOf(ConditionNode.class, terminal.node());
         assertEquals(Operator.EQ, ((ConditionNode) terminal.node()).operator());
@@ -52,20 +51,20 @@ class ConditionImplementationTest {
     @Test
     @SuppressWarnings("unchecked")
     void testSqlConditionClauses() {
-        final Table table = new Table("TEST");
-        final FromClauseEngine engine = mock(FromClauseEngine.class);
+        final String table = "TEST";
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
 
-        final SqlConditionClauseStart start = new SqlConditionClauseStart(table, engine, null);
-        final AbstractCbConditionClause<org.litebridge.db.spi.Row> clause = start.where("COL");
+        final SqlConditionClauseStart start = new SqlConditionClauseStart(table, null, litebridgeContext);
+        final AbstractCbConditionClause<Row> clause = start.where("COL");
 
         assertNotNull(clause);
         assertInstanceOf(CbSqlConditionClause.class, clause);
 
-        final AbstractCbConditionClauseTerminal<org.litebridge.db.spi.Row> terminal = (AbstractCbConditionClauseTerminal<org.litebridge.db.spi.Row>) clause.eq("val");
+        final AbstractCbConditionClauseTerminal<Row> terminal = clause.eq("val");
         assertNotNull(terminal);
         assertInstanceOf(ConditionNode.class, terminal.node());
 
-        final AbstractCbConditionClause<org.litebridge.db.spi.Row> nextClause = terminal.or("OTHER_COL");
+        final AbstractCbConditionClause<Row> nextClause = terminal.or("OTHER_COL");
         assertNotNull(nextClause);
         assertEquals(LogicOperator.OR, ((ConditionNode) nextClause.eq("x").node()).logicOperator());
     }
@@ -74,14 +73,14 @@ class ConditionImplementationTest {
     @SuppressWarnings("unchecked")
     void testNestedConditions() {
         final OrmTable ormTable = mock(OrmTable.class);
-        final FromClauseEngine engine = mock(FromClauseEngine.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final Table table = new Table("TEST");
         final ColumnMetaData columnMetaData = new ColumnMetaData(table, "COL", true, java.sql.Types.VARCHAR);
-        when(ormTable.getColumnForFieldName("field")).thenReturn(columnMetaData);
+        when(ormTable.columnMetaDataForField("field")).thenReturn(columnMetaData);
 
-        final DtoConditionClauseStart<Object> start = new DtoConditionClauseStart<>(ormTable, engine, null);
+        final DtoConditionClauseStart<Object> start = new DtoConditionClauseStart<>(null, litebridgeContext);
         final AbstractCbConditionClause<Object> clause = start.where("field");
-        final AbstractCbConditionClauseTerminal<Object> terminal = (AbstractCbConditionClauseTerminal<Object>) clause.eq("val");
+        final AbstractCbConditionClauseTerminal<Object> terminal = clause.eq("val");
 
         final AbstractCbConditionClauseTerminal<Object> nestedTerminal = terminal.and(q -> q.where("field").eq("innerVal"));
 

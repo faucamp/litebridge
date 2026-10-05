@@ -32,7 +32,7 @@ import java.util.function.Function;
  * This class supports various registration methods for defining table structures, relationships, and
  * metadata for database operations.
  */
-public class RegistrationEngine {
+public final class RegistrationEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationEngine.class);
 
@@ -119,7 +119,7 @@ public class RegistrationEngine {
             }
 
             LOGGER.trace("Registering DtoTableSpec for DTO class '{}'", dtoClass);
-            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, dtoTableSpec.tableSpec(), allDtoClasses);
+            final TableMapper.MappedTable mappedTable = tableMapper.mapToTable(lookup, dtoClass, null, dtoTableSpec.tableSpec(), allDtoClasses);
             final OrmTable ormTable = mappedTable.ormTable();
             tableRegistry.addTable(dtoTableSpec.dtoClass(), ormTable);
 

@@ -2,42 +2,50 @@ package org.litebridge.orm.api.select.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectTerminal;
-import org.litebridge.orm.api.select.ast.ConditionNode;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.sql.SqlSelector;
-import org.litebridge.orm.api.sql.SqlWhereConditionClauseTerminal;
+import org.litebridge.orm.api.select.sql.SqlWhereConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class ConditionClauseImplTest {
 
     private ConditionClauseImpl<Object, TestConditionClause, TestConditionClauseTerminal> clause;
-    private QueryNode[] capturedNode = new QueryNode[1];
+    private final QueryNode[] capturedNode = new QueryNode[1];
+    private SelectNode selectNode;
 
     @BeforeEach
     void setUp() {
-        final LitebridgeContext context = mock(LitebridgeContext.class);
-        final org.litebridge.orm.engine.FromClauseEngine fromClauseEngine = mock(org.litebridge.orm.engine.FromClauseEngine.class);
-        when(context.fromClauseEngine()).thenReturn(fromClauseEngine);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        selectNode = new SelectNode("TEST_TABLE", null, null, null, null);
 
-        clause = new ConditionClauseImpl<>(context, LogicOperator.NOOP, new SelectColumnSpec(mock(org.litebridge.db.spi.Column.class)), null, n -> {
-            capturedNode[0] = n;
-            return mock(TestConditionClauseTerminal.class);
-        });
+        clause = new ConditionClauseImpl<>(
+                litebridgeContext,
+                LogicOperator.NOOP,
+                null,
+                new SelectColumnSpec(mock(Column.class)),
+                null,
+                n -> {
+                    capturedNode[0] = n;
+                    return mock(TestConditionClauseTerminal.class);
+                });
     }
 
     @Test
@@ -156,17 +164,19 @@ class ConditionClauseImplTest {
     }
 
     private void assertSubselectCondition(final SubselectConditionInvoker invoker, final Operator expectedOperator) {
-        final SqlSelector selector = mock(SqlSelector.class);
-        final org.litebridge.orm.api.sql.SqlSelectSpec spec = mock(org.litebridge.orm.api.sql.SqlSelectSpec.class);
-        when(selector.compile()).thenReturn(spec);
-
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selector);
+        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(
+                selectNode,
+                null,
+                mock(SelectEngineTerminal.class),
+                mock(LitebridgeContext.class));
 
         invoker.apply(subselect -> terminal);
 
         ConditionNode node = (ConditionNode) capturedNode[0];
         assertEquals(expectedOperator, node.operator());
-        assertInstanceOf(SelectTerminal.class, node.rhs());
+        Function<SelectEngine, SelectTerminal<?>> rhs = (Function<SelectEngine, SelectTerminal<?>>) node.rhs();
+        final SelectTerminal<?> selectTerminal = rhs.apply(mock(SelectEngine.class));
+        assertNotNull(selectTerminal);
     }
 
     @FunctionalInterface

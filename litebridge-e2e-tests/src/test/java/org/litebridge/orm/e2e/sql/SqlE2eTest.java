@@ -1,0 +1,713 @@
+package org.litebridge.orm.e2e.sql;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.TestTemplate;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.orm.e2e.AbstractE2eTest;
+import org.litebridge.orm.e2e.basic.dto.Person;
+import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridge.orm.expression.Fn;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.litebridge.orm.expression.Fn.c;
+
+class SqlE2eTest extends AbstractE2eTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SqlE2eTest.class);
+
+    @TestTemplate
+    @DisplayName("Select all records")
+    void select_all(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+        insertTestPersonRecords(personTableName);
+
+        // When
+        LOGGER.info("Selecting all records");
+        final List<Row> result =
+                litebridge.select().from(personTableName)
+                        .orderBy(personId).asc()
+                        .list();
+
+        // Then
+        assertEquals(2, result.size());
+        final Row row1 = result.getFirst();
+        assertEquals(5, row1.size());
+        assertNumberEquals(1, row1.value(personId));
+        assertEquals("Alice", row1.value(firstName));
+        assertEquals("Smith", row1.value(surname));
+        assertNumberEquals(20, row1.value(age));
+        assertEquals("brown", row1.value(eyeColour));
+        final Row row2 = result.get(1);
+        assertEquals(5, row2.size());
+        assertNumberEquals(2, row2.value(personId));
+        assertEquals("Bob", row2.value(firstName));
+        assertEquals("Johnson", row2.value(surname));
+        assertNull(row2.value(eyeColour));
+        assertNumberEquals(30, row2.value(age));
+    }
+
+    @TestTemplate
+    @DisplayName("Select using aliases")
+    void select_aliases(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+        insertTestPersonRecords(personTableName);
+
+        // Aliases only, table alias as context
+        {
+            final Row result =
+                    litebridge.select(
+                                    Fn.ca(personId, "id"),
+                                    Fn.ca(firstName, "firstName"))
+                            .from(Fn.aliasTable(personTableName, "myPerson"))
+                            .where(Fn.aliasRef("myPerson", personId)).lt(10)
+                            .orderBy(Fn.aliasRef("myPerson", personId)).asc()
+                            .firstOrThrow();
+
+            assertEquals(2, result.size());
+            assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
+            assertEquals("Alice", result.value("firstName"));
+        }
+
+        // Aliases only, using direct string-based alias referencing in where/order by clauses
+        // This tests that these alias references are correctly resolved to their contextual equivalents
+        {
+            final Row result =
+                    litebridge.select(
+                                    Fn.ca(personId, "id"),
+                                    Fn.ca(firstName, "firstName"))
+                            .from(Fn.aliasTable(personTableName, "myPerson"))
+                            .where(Fn.aliasRef("id")).lt(10)
+                            .orderBy(Fn.aliasRef("id")).asc()
+                            .firstOrThrow();
+
+            assertEquals(2, result.size());
+            assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
+            assertEquals("Alice", result.value("firstName"));
+        }
+
+        // Mixed used of aliases and column names
+        {
+            final Row result =
+                    litebridge.select(
+                                    Fn.ca(personId, "id"),
+                                    Fn.ca(firstName, "firstName"),
+                                    Fn.c(surname),
+                                    Fn.c(age),
+                                    Fn.ca(eyeColour, "eyeColour"))
+                            .from(Fn.aliasTable(personTableName, "myPerson"))
+                            .where(personId).lt(10)
+                            .orderBy(personId).asc()
+                            .firstOrThrow();
+
+            assertEquals(5, result.size());
+            assertEquals(1L, typeConverter.convert(result.value("id"), Long.class));
+            assertEquals("Alice", result.value("firstName"));
+            assertEquals("Smith", result.value(surname));
+            assertEquals(20, typeConverter.convert(result.value(age), int.class));
+            assertEquals("brown", result.value("eyeColour"));
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Select from a subquery")
+    void select_fromSubquery(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+        insertTestPersonRecords(personTableName);
+        litebridge.insert(personTableName, i -> i
+                .into(personId, firstName, surname, age, eyeColour)
+                .values(3L, "James", "Smith", 26, "brown"));
+
+        // Inline from query
+        final Row result = litebridge.select(surname)
+                .from(Fn.alias(q -> q
+                                .select(Fn.c(surname), Fn.count())
+                                .from(personTableName)
+                                .groupBy(surname),
+                        "myQuery"))
+                .where(Fn.aliasRef("myQuery", Fn.count())).gte(2)
+                .oneOrThrow();
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals("Smith", result.value(surname));
+    }
+
+    @TestTemplate
+    @DisplayName("Select a literal value")
+    void select_literal(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Integer literal
+        {
+            final int result = litebridge.select(Fn.literal(123)).oneOrThrow();
+            assertEquals(123, result);
+        }
+
+        // String literal
+        {
+            final String result = litebridge.select(Fn.literal("Hello World!")).oneOrThrow();
+            assertEquals("Hello World!", result);
+        }
+
+        // String literal that needs escaping
+        {
+            final String result = litebridge.select(Fn.literal("Robert'); DROP TABLE Students;")).oneOrThrow();
+            assertEquals("Robert'); DROP TABLE Students;", result);
+        }
+
+        // Multiple literals
+        {
+            final Row result = litebridge.select(Fn.literal("Hello"), Fn.literal("World!")).oneOrThrow();
+            assertEquals("Hello", result.value(0));
+            assertEquals("World!", result.value(1));
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Select with limit/offset and order by")
+    void select_limitOffset(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personIdColumn = tableMapper.transformColumnName("PERSON_ID");
+        final String firstNameColumn = tableMapper.transformColumnName("FIRST_NAME");
+        final String surnameColumn = tableMapper.transformColumnName("SURNAME");
+        final String ageColumn = tableMapper.transformColumnName("AGE");
+        final String eyeColourColumn = tableMapper.transformColumnName("EYE_COLOUR");
+
+        litebridge.insert(personTableName, i -> i
+                .into(personIdColumn, firstNameColumn, surnameColumn, ageColumn, eyeColourColumn)
+                .values(1L, "Alice", "Smith", 20, "brown")
+                .values(2L, "Bob", "Johnson", 30, null)
+                .values(3L, "Charlie", "Brown", 20, "blue")
+        );
+
+        // No offset/limit
+        final List<Row> result1 =
+                litebridge.select().from(personTableName)
+                        .orderBy(personIdColumn).asc()
+                        .list();
+        assertEquals(3, result1.size());
+
+        // Offset only
+        final List<Row> result2 =
+                litebridge.select().from(personTableName)
+                        .orderBy(personIdColumn).asc()
+                        .offset(1)
+                        .list();
+        assertEquals(2, result2.size());
+        assertNumberEquals(2L, result2.getFirst().value(personIdColumn));
+        assertNumberEquals(3L, result2.getLast().value(personIdColumn));
+
+        // Limit only
+        final List<Row> result3 =
+                litebridge.select().from(personTableName)
+                        .orderBy(personIdColumn).asc()
+                        .limit(1)
+                        .list();
+        assertEquals(1, result3.size());
+        assertNumberEquals(1L, result3.getFirst().value(personIdColumn));
+
+        // Limit and offset
+        final List<Row> result4 =
+                litebridge.select().from(personTableName)
+                        .orderBy(personIdColumn).asc()
+                        .limit(1).offset(1)
+                        .list();
+        assertEquals(1, result4.size());
+        assertNumberEquals(2L, result4.getFirst().value(personIdColumn));
+
+        // Order by multiple columns
+        final List<Row> result5 =
+                litebridge.select().from(personTableName)
+                        .orderBy(ageColumn).desc().then(surnameColumn).asc()
+                        .list();
+        assertEquals(3, result5.size());
+        assertNumberEquals(2L, result5.getFirst().value(personIdColumn));
+        assertNumberEquals(1L, result5.getLast().value(personIdColumn));
+    }
+
+    @TestTemplate
+    @DisplayName("Select specific expressions and filter records using a query")
+    void select_query(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        insertTestPersonRecords(personTableName);
+
+        // When
+        LOGGER.info("Selecting specific expressions and filtering records using a query");
+        final List<Row> result =
+                litebridge.select(firstName, surname, age)
+                        .from(personTableName)
+                        .where(tableMapper.transformColumnName("AGE")).gt(18)
+                        .and(tableMapper.transformColumnName("AGE")).lt(25)
+                        .list();
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals(3, result.getFirst().size());
+        assertEquals("Alice", result.getFirst().value(firstName));
+        assertEquals("Smith", result.getFirst().value(surname));
+        assertNumberEquals(20, result.getFirst().value(age));
+    }
+
+    @TestTemplate
+    @DisplayName("Select records using SQL and map results to Person objects")
+    void select_mapToDto(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        insertTestPersonRecords(personTableName);
+        tableMapper.registerPersonDtoTableMapping(litebridge);
+
+        // When
+        final List<Person> result = litebridge.select(firstName, surname, age)
+                .from(personTableName)
+                .where(age).gt(18)
+                .and(age).lt(25)
+                .orderBy(personId).asc()
+                .stream()
+                .map(row -> litebridge.toDto(row, Person.class))
+                .toList();
+
+        // Then
+        assertEquals(1, result.size());
+        final Person person = result.getFirst();
+        assertEquals("Alice", person.getName());
+        assertEquals("Smith", person.getSurname());
+        assertEquals(20L, person.getAge());
+        assertNull(person.getEyeColour());
+    }
+
+    @TestTemplate
+    @DisplayName("Select with JOIN clause")
+    void select_join(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String accountTableName = tableMapper.qualifyName("ACCOUNT");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        final String surname = tableMapper.transformColumnName("SURNAME");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String accountId = tableMapper.transformColumnName("ACCOUNT_ID");
+        final String accountName = tableMapper.transformColumnName("ACCOUNT_NAME");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
+        insertTestPersonRecords(personTableName);
+        insertTestAccountRecords(accountTableName);
+
+        // Join using
+        {
+            LOGGER.info("Selecting with a JOIN USING clause");
+            final List<Row> result =
+                    litebridge.select(
+                                    c(personTableName, firstName),
+                                    c(personTableName, surname),
+                                    c(personTableName, age),
+                                    c(accountTableName, accountId),
+                                    c(accountTableName, accountName))
+                            .from(personTableName)
+                            .join(accountTableName).using(personId)
+                            .list();
+
+            assertEquals(2, result.size());
+            final Row row1 = result.getFirst();
+            assertEquals(5, row1.size());
+            assertEquals("Alice", row1.value(firstName));
+            assertEquals("Smith", row1.value(surname));
+            assertNumberEquals(20, row1.value(age));
+            assertNumberEquals(1, row1.value(accountId));
+            assertEquals("Alice's Account", row1.value(accountName));
+            final Row row2 = result.get(1);
+            assertEquals(5, row2.size());
+            assertEquals("Bob", row2.value(firstName));
+            assertEquals("Johnson", row2.value(surname));
+            assertNumberEquals(30, row2.value(age));
+            assertNumberEquals(2, row2.value(accountId));
+            assertEquals("Bob's Account", row2.value(accountName));
+        }
+
+        // Join on
+        {
+            // When
+            LOGGER.info("Selecting with a JOIN ON clause");
+            final List<Row> result =
+                    litebridge.select(
+                                    c(personTableName, firstName),
+                                    c(personTableName, surname),
+                                    c(personTableName, age),
+                                    c(accountTableName, accountId),
+                                    c(accountTableName, accountName))
+                            .from(personTableName)
+                            .join(accountTableName).on(c(personTableName, personId)).eq(c(accountTableName, personId))
+                            .list();
+
+            assertEquals(2, result.size());
+            final Row row1 = result.getFirst();
+            assertEquals(5, row1.size());
+            assertEquals("Alice", row1.value(firstName));
+            assertEquals("Smith", row1.value(surname));
+            assertNumberEquals(20, row1.value(age));
+            assertNumberEquals(1, row1.value(accountId));
+            assertEquals("Alice's Account", row1.value(accountName));
+            final Row row2 = result.get(1);
+            assertEquals(5, row2.size());
+            assertEquals("Bob", row2.value(firstName));
+            assertEquals("Johnson", row2.value(surname));
+            assertNumberEquals(30, row2.value(age));
+            assertNumberEquals(2, row2.value(accountId));
+            assertEquals("Bob's Account", row2.value(accountName));
+        }
+
+        // Join with subquery in ON clause
+        {
+            final List<Row> result =
+                    litebridge.select(
+                                    c(personTableName, firstName),
+                                    c(personTableName, surname),
+                                    c(personTableName, age),
+                                    c(accountTableName, accountId),
+                                    c(accountTableName, accountName))
+                            .from(personTableName)
+                            .join(accountTableName).on(c(personTableName, personId)).eq(c(accountTableName, personId))
+                            .and(c(personTableName, personId)).in(q -> q
+                                    .select(personId)
+                                    .from(personTableName)
+                                    .where(c(personTableName, eyeColour)).eq("brown"))
+                            .list();
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Select COUNT()")
+    void selectCount(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+
+        // When
+        LOGGER.info("Selecting specific expressions and filtering records using a query");
+        final Row result = litebridge.select(Fn.count()).from(personTableName)
+                .where(tableMapper.transformColumnName("AGE")).gt(18)
+                .and(tableMapper.transformColumnName("AGE")).lt(25)
+                .oneOrThrow();
+
+        // Then
+        assertEquals(1, result.size());
+        assertInstanceOf(Number.class, result.column(0).value());
+        assertEquals(1L, ((Number) result.column(0).value()).longValue());
+    }
+
+    @TestTemplate
+    @DisplayName("Delete records")
+    void delete(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+        assertEquals(2, litebridge.select().from(personTableName).list().size());
+
+        // When
+        litebridge.delete(personTableName, p -> p.where(tableMapper.transformColumnName("AGE")).gt(20));
+
+        // Then
+        assertEquals(1, litebridge.select().from(personTableName).list().size());
+    }
+
+    @TestTemplate
+    @DisplayName("Update records")
+    void update(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+        assumeTrue(litebridge.select().from(personTableName).where(tableMapper.transformColumnName("AGE")).lt(50).list().size() == 2);
+
+        // When
+        litebridge.update(personTableName, p -> p.set(tableMapper.transformColumnName("AGE")).to(50)
+                .where(tableMapper.transformColumnName("FIRST_NAME")).eq("Bob"));
+
+        // Then
+        assertEquals(1, litebridge.select().from(personTableName).where(tableMapper.transformColumnName("AGE")).lt(50).list().size());
+    }
+
+    @TestTemplate
+    @DisplayName("Update where EXISTS")
+    void update_exists(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String accountTableName = tableMapper.qualifyName("ACCOUNT");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
+        insertTestPersonRecords(personTableName);
+        litebridge.insert(accountTableName, i -> i
+                        .into("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+                        .values(1L, "Alice's Account", 1000L, 1L));
+
+        // Update record where EXISTS
+        {
+            final UpdateResult result = litebridge.update(personTableName, u -> u
+                    .set(firstName).to("James")
+                    .where(Fn.exists(s -> s
+                            .select(Fn.literal(1))
+                            .from(accountTableName)
+                            .where(personId).eq(Fn.c(personTableName, personId)))));
+
+            // Then
+            assertEquals(1, result.rowsAffected());
+
+            final Row resultFirstName = litebridge.select(firstName).from(personTableName).where(personId).eq(1).oneOrThrow();
+            assertEquals("James", resultFirstName.value(0));
+        }
+    }
+
+    @TestTemplate
+    @DisplayName("Select using GROUP BY")
+    void selectGroupBy(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String age = tableMapper.transformColumnName("AGE");
+        final String count = tableMapper.transformColumnName("COUNT(*)");
+
+        litebridge.insert(personTableName, i -> i
+                .into("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE", "EYE_COLOUR")
+                .values(1L, "Alice", "Smith", 20, "brown")
+                .values(2L, "Bob", "Johnson", 30, null)
+                .values(3L, "Charlie", "Brown", 20, "blue")
+        );
+
+        // Select with group by
+        final List<Row> result =
+                litebridge.select(Fn.c(age), Fn.count())
+                        .from(personTableName)
+                        .groupBy(age)
+                        .orderBy(age).asc()
+                        .list();
+
+        assertEquals(2, result.size());
+        assertEquals(2, result.getFirst().columns().size());
+        final Row row1 = result.getFirst();
+        assertEquals(20, ((Number) row1.value(age)).intValue());
+        assertEquals(2, ((Number) row1.value(count)).intValue());
+        final Row row2 = result.get(1);
+        assertEquals(30, ((Number) row2.value(age)).intValue());
+        assertEquals(1, ((Number) row2.value(count)).intValue());
+
+        // Select with group by and having
+        final List<Row> result2 =
+                litebridge.select(Fn.c(age), Fn.count())
+                        .from(personTableName)
+                        .groupBy(age)
+                        .having(Fn.count()).gt(1)
+                        .orderBy(age).asc()
+                        .list();
+
+        assertEquals(1, result2.size());
+        assertEquals(2, result2.getFirst().columns().size());
+        final Row row = result2.getFirst();
+        assertEquals(20, ((Number) row.value(age)).intValue());
+        assertEquals(2, ((Number) row.value(count)).intValue());
+    }
+
+    @TestTemplate
+    @DisplayName("Select IN and NOT IN")
+    void select_in(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Setup data
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+        insertTestPersonRecords(personTableName);
+
+        // Using variable paratemeters/array
+        final List<Row> results = litebridge.select()
+                .from(personTableName)
+                .where(Fn.c(personId)).in(1L, 2L)
+                .list();
+
+        assertEquals(2, results.size());
+
+        final List<Row> results2 = litebridge.select()
+                .from(personTableName)
+                .where(Fn.c(personId)).notIn(1L, 2L)
+                .list();
+
+        assertTrue(results2.isEmpty());
+
+        // Using single value
+        final List<Row> results3 = litebridge.select()
+                .from(personTableName)
+                .where(personId).in(1L)
+                .list();
+
+        assertEquals(1, results3.size());
+
+        final List<Row> results4 = litebridge.select()
+                .from(personTableName)
+                .where(personId).notIn(1L)
+                .list();
+
+        assertEquals(1, results4.size());
+
+        // Using a list
+        final List<Long> ids = List.of(1L, 2L);
+        final List<Row> results5 = litebridge.select()
+                .from(personTableName)
+                .where(personId).in(ids)
+                .list();
+
+        assertEquals(2, results5.size());
+
+        final List<Row> results6 = litebridge.select()
+                .from(personTableName)
+                .where(personId).notIn(ids)
+                .list();
+
+        assertTrue(results6.isEmpty());
+
+        // Using a subselect
+        final List<Row> results7 = litebridge.select()
+                .from(personTableName)
+                .where(personId).in(sub ->
+                        sub.select(personId)
+                                .from(personTableName)
+                                .where(tableMapper.transformColumnName("FIRST_NAME")).eq("Bob"))
+                .list();
+
+        assertEquals(1, results7.size());
+
+        final List<Row> results8 = litebridge.select()
+                .from(personTableName)
+                .where(personId).notIn(sub ->
+                        sub.select(tableMapper.transformColumnName(personId))
+                                .from(personTableName)
+                                .where(tableMapper.transformColumnName("FIRST_NAME")).eq("Alice"))
+                .list();
+
+        assertEquals(1, results8.size());
+    }
+
+    @TestTemplate
+    @DisplayName("Select LIKE")
+    void select_like(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Setup data
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        insertTestPersonRecords(personTableName);
+
+        // Using variable paratemeters/array
+        final Optional<Row> results = litebridge.select()
+                .from(personTableName)
+                .where(Fn.c(tableMapper.transformColumnName("SURNAME"))).like("%ohnso%")
+                .one();
+
+        assertTrue(results.isPresent());
+    }
+
+    @TestTemplate
+    @DisplayName("Native SQL tests")
+    void nativeSql(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String tableName = tableMapper.qualifyName("PERSON");
+        final String personIdColumn = tableMapper.transformColumnName("PERSON_ID");
+        final String firstNameColumn = tableMapper.transformColumnName("FIRST_NAME");
+        final String surnameColumn = tableMapper.transformColumnName("SURNAME");
+
+        // Insert data using native SQL
+        final UpdateResult updateResult = litebridge.nativeSql().execute(
+                "INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?)".formatted(tableName, personIdColumn, firstNameColumn, surnameColumn),
+                123L, "Name1", "Surname1");
+
+        assertEquals(1, updateResult.rowsAffected());
+
+        // Query using a native SQL query, positional bind parameters
+        final List<Row> rows = litebridge.nativeSql().query(
+                "SELECT * FROM %s WHERE %s LIKE ?".formatted(tableName, firstNameColumn),
+                "%me1");
+
+        assertEquals(1, rows.size());
+
+        // Query using a native SQL query, named bind parameters
+        final List<Row> rows2 = litebridge.nativeSql().query(
+                "SELECT * FROM %s WHERE %s LIKE :firstName AND %s = :surname AND %s <> :firstName".formatted(tableName, firstNameColumn, surnameColumn, surnameColumn),
+                Map.of("firstName", "%me1",
+                        "surname", "Surname1"));
+
+        assertEquals(1, rows2.size());
+
+        // Query without bind parameters
+        final List<Row> rows3 = litebridge.nativeSql().query("SELECT COUNT(*) FROM %s".formatted(tableName));
+        assertEquals(1, rows3.size());
+
+        // Native query and map result back to a DTO
+        tableMapper.registerPersonDtoTableMapping(litebridge);
+
+        final Person person = litebridge.nativeSql().query(
+                        "SELECT * FROM %s WHERE %s = ?".formatted(tableName, personIdColumn),
+                        123L)
+                .stream()
+                .map(row -> litebridge.toDto(row, Person.class))
+                .findFirst().orElseThrow();
+
+        assertEquals("Name1", person.getName());
+    }
+
+    @TestTemplate
+    @DisplayName("Insert specific columns")
+    void insert(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        litebridge.insert(tableMapper.qualifyName("PERSON"), i -> i
+                .into("PERSON_ID", "FIRST_NAME", "SURNAME")
+                .values(1, "Alice", "Smith")
+                .values(2, "Bob", "Johnson")
+                .values(3, "Charlie", "Brown"));
+    }
+
+    private void insertTestPersonRecords(final String personTableName) throws SQLException {
+        litebridge.insert(personTableName, i -> i
+                .into("PERSON_ID", "FIRST_NAME", "SURNAME", "AGE", "EYE_COLOUR")
+                .values(1L, "Alice", "Smith", 20, "brown")
+                .values(2L, "Bob", "Johnson", 30, null)
+        );
+    }
+
+    private void insertTestAccountRecords(final String accountTableName) throws SQLException {
+        litebridge.insert(accountTableName, i -> i
+                .into("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+                .values(1L, "Alice's Account", 1000L, 1L)
+                .values(2L, "Bob's Account", 2000L, 2L));
+    }
+
+    private void assertNumberEquals(final long expected, final Object actual) {
+        if (actual instanceof Number number) {
+            assertEquals(expected, number.longValue());
+        } else {
+            assertEquals(BigDecimal.valueOf(expected), actual);
+        }
+    }
+}

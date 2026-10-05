@@ -1,16 +1,18 @@
 package org.litebridge.orm.expression.select;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
-import org.litebridge.orm.expression.ColumnExpressionSpec;
+import org.litebridge.orm.expression.AbstractColumnExpressionSpec;
 
 import java.util.Objects;
 
 /**
  * Expression that selects a database column.
  */
-public sealed class SelectColumnSpec implements ColumnExpressionSpec permits SelectFieldSpec {
+public final class SelectColumnSpec extends AbstractColumnExpressionSpec implements SelectTargetSpec {
 
     private Column column;
+    private @Nullable String alias;
 
     /**
      * Constructor.
@@ -21,6 +23,12 @@ public sealed class SelectColumnSpec implements ColumnExpressionSpec permits Sel
         this.column = column;
     }
 
+    public SelectColumnSpec(final Column column, final @Nullable String alias, final @Nullable String tableAlias) {
+        this.column = column;
+        this.alias = alias;
+        this.tableAlias = tableAlias;
+    }
+
     @Override
     public Column getColumn() {
         return column;
@@ -29,6 +37,16 @@ public sealed class SelectColumnSpec implements ColumnExpressionSpec permits Sel
     @Override
     public void setColumn(final Column column) {
         this.column = column;
+    }
+
+    @Override
+    public @Nullable String getAlias() {
+        return alias;
+    }
+
+    @Override
+    public void setAlias(@Nullable final String alias) {
+        this.alias = alias;
     }
 
     @Override

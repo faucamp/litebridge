@@ -1,0 +1,42 @@
+package org.litebridge.orm.api.condition;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+/**
+ * Implementation of a condition clause for SQL-based queries.
+ */
+public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
+
+    private final SelectNode selectNode;
+
+    /**
+     * Constructs a new {@code CbSqlConditionClause}.
+     *
+     * @param selectNode        the root select query node
+     * @param litebridgeContext the Litebridge context
+     * @param logicOperator     the logical operator (AND/OR)
+     * @param lhsColumn         the left-hand side column name
+     * @param lhsExpression     the left-hand side expression
+     * @param node              the previous node in the chain
+     */
+    public CbSqlConditionClause(final SelectNode selectNode,
+                                final LitebridgeContext litebridgeContext,
+                                final LogicOperator logicOperator,
+                                final @Nullable String lhsColumn,
+                                final @Nullable ExpressionSpec lhsExpression,
+                                final @Nullable QueryNode node) {
+        super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node);
+        this.selectNode = selectNode;
+    }
+
+    @Override
+    protected AbstractCbConditionClauseTerminal<Row> createCbConditionClauseTerminal(final QueryNode conditionNode) {
+        return new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext);
+    }
+}

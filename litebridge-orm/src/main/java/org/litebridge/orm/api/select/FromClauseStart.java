@@ -1,25 +1,80 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SelectNode;
-import org.litebridge.orm.config.RelatedDtoStrategy;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.db.spi.Row;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
+import org.litebridge.orm.api.select.sql.SqlFromClauseTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
+import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
+import org.litebridge.orm.expression.select.DtoAliasSpec;
+import org.litebridge.orm.expression.select.QueryAliasSpec;
+import org.litebridge.orm.expression.select.SqlFromTargetSpec;
+import org.litebridge.orm.expression.select.TableAliasSpec;
+
+import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Entry point for the "FROM" clause of a query.
  */
-public final class FromClauseStart extends AbstractFromClauseStart {
+public final class FromClauseStart extends DelegatingSelectTerminal<Row> {
+
+    private final String @Nullable [] columns;
+    private final ExpressionSpec @Nullable [] expressionSpecs;
+    private final SelectEngineTerminal selectEngineTerminal;
+    private final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator;
 
     /**
-     * Constructs a new {@code FromClauseStart}.
+     * Creates a new {@code FromClauseStart} instance with expression specifications.
      *
-     * @param node             the current query node.
-     * @param fromClauseEngine the from clause engine.
+     * @param expressionSpecs          the expression specifications
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
      */
-    public FromClauseStart(final SelectNode node, final FromClauseEngine fromClauseEngine) {
-        super(node, fromClauseEngine);
+    public FromClauseStart(final ExpressionSpec[] expressionSpecs,
+                           final SelectEngineTerminal selectEngineTerminal,
+                           final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        this(null, expressionSpecs, selectEngineTerminal, litebridgeContextCreator);
+        this.pendingNode = () -> new SelectNode(null, expressionSpecs, null);
+    }
+
+    /**
+     * Creates a new {@code FromClauseStart} instance with column names.
+     *
+     * @param columns                  the column names
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
+     */
+    public FromClauseStart(final String[] columns, final SelectEngineTerminal selectEngineTerminal, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        this(columns, null, selectEngineTerminal, litebridgeContextCreator);
+    }
+
+    /**
+     * Creates a new {@code FromClauseStart} instance.
+     *
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
+     */
+    public FromClauseStart(final SelectEngineTerminal selectEngineTerminal, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        this(null, null, selectEngineTerminal, litebridgeContextCreator);
+    }
+
+    private FromClauseStart(final String @Nullable [] columns,
+                            final ExpressionSpec @Nullable [] expressionSpecs,
+                            final SelectEngineTerminal selectEngineTerminal,
+                            final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        super(selectEngineTerminal, () -> litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
+        this.columns = columns;
+        this.expressionSpecs = expressionSpecs;
+        this.selectEngineTerminal = selectEngineTerminal;
+        this.litebridgeContextCreator = litebridgeContextCreator;
+        this.pendingNode = () -> new SelectNode(null, expressionSpecs, null);
     }
 
     /**
@@ -30,7 +85,13 @@ public final class FromClauseStart extends AbstractFromClauseStart {
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass) {
-        return fromClauseEngine.from(node, dtoClass, (RelatedDtoStrategy) null);
+        final SelectNode selectNode = new SelectNode(dtoClass, null, null, columns, expressionSpecs, null);
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
+    }
+
+    public <DTO> DtoFromClauseTerminal<DTO> from(final DtoAliasSpec<DTO> aliasedDtoClass) {
+        final SelectNode selectNode = new SelectNode(aliasedDtoClass.dtoClass(), null, aliasedDtoClass.alias(), columns, expressionSpecs, null);
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
     }
 
     /**
@@ -42,6 +103,67 @@ public final class FromClauseStart extends AbstractFromClauseStart {
      * @return the DTO from clause terminal.
      */
     public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-        return fromClauseEngine.from(dtoClass, contextDtoClass);
+        final SelectNode selectNode = new SelectNode(dtoClass, contextDtoClass, null, columns, expressionSpecs, null);
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
+    }
+
+    /**
+     * Starts a FROM clause for the given SQL table.
+     *
+     * @param table the table name.
+     * @return the SQL from clause terminal.
+     */
+    public SqlFromClauseTerminal from(final String table) {
+        return fromImpl(table, null);
+    }
+
+    public SqlFromClauseTerminal from(final SqlFromTargetSpec fromTargetSpec) {
+        return switch (fromTargetSpec) {
+            case QueryAliasSpec queryAliasSpec -> fromImpl(queryAliasSpec.query(), queryAliasSpec.alias());
+            case TableAliasSpec tableAliasSpec -> fromImpl(tableAliasSpec.table(), tableAliasSpec.alias());
+        };
+    }
+
+    /**
+     * Specifies a subquery to use as the merge source.
+     *
+     * @param query function building the subquery
+     * @return the merge ON condition clause terminal
+     */
+    public SqlFromClauseTerminal from(final Function<SelectApi, SelectTerminal<?>> query) {
+        return fromImpl(query, null);
+    }
+
+    private SqlFromClauseTerminal fromImpl(final String table, final @Nullable String alias) {
+        final Class<?>[] resultTypes = createResultTypes();
+        final SelectNode selectNode = new SelectNode(table, alias, columns, expressionSpecs, resultTypes);
+        return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
+    }
+
+    private SqlFromClauseTerminal fromImpl(final Function<SelectApi, SelectTerminal<?>> query, final @Nullable String alias) {
+        final Class<?>[] resultTypes = createResultTypes();
+        final LitebridgeContext litebridgeContext = litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL);
+        final SelectTerminal<?> selectTerminal = query.apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode fromQueryTerminalNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
+        final SelectNode selectNode = new SelectNode(fromQueryTerminalNode, alias, columns, expressionSpecs, resultTypes);
+        return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContext);
+    }
+
+    private Class<?> @Nullable [] createResultTypes() {
+        Class<?>[] resultTypes = null;
+
+        if (expressionSpecs != null) {
+            for (int i = 0; i < expressionSpecs.length; i++) {
+                if (expressionSpecs[i] instanceof TypeOverrideExpressionSpec<?> typeOverrideExpression) {
+                    if (resultTypes == null) {
+                        resultTypes = new Class<?>[expressionSpecs.length];
+                    }
+
+                    resultTypes[i] = typeOverrideExpression.returnType();
+                }
+            }
+        }
+
+        return resultTypes;
     }
 }

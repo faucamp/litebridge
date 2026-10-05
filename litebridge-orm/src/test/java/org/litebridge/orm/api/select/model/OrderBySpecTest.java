@@ -3,7 +3,6 @@ package org.litebridge.orm.api.select.model;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.impl.function.SelectColumn;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 

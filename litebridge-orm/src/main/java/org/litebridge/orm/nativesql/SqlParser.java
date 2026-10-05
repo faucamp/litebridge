@@ -1,5 +1,7 @@
 package org.litebridge.orm.nativesql;
 
+import org.litebridge.commons.StringUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -24,16 +26,23 @@ public final class SqlParser {
     private SqlParser() {
     }
 
+    /**
+     * Parses a SQL string with named parameters (e.g. {@code :id}) into a {@link ParsedSql} object
+     * with positional placeholders and extracted parameter names.
+     *
+     * @param sql the raw SQL string containing named parameters
+     * @return a {@link ParsedSql} instance containing the transformed SQL and parameter metadata
+     */
     public static ParsedSql parseSql(final String sql) {
         final StringBuilder outputSql = new StringBuilder();
-        final List<String> extractedVariables = new ArrayList<>();
-
+        final List<String> bindValueNames = new ArrayList<>();
         final Matcher matcher = tokenPattern.matcher(sql);
+
         while (matcher.find()) {
             final String varName = matcher.group(GROUP_VARIABLE);
 
             if (varName != null) {
-                extractedVariables.add(varName);
+                bindValueNames.add(varName);
                 // Replace the named parameter with a positional one
                 matcher.appendReplacement(outputSql, "?");
             } else {
@@ -41,8 +50,17 @@ public final class SqlParser {
                 matcher.appendReplacement(outputSql, matcher.group());
             }
         }
-        matcher.appendTail(outputSql);
 
-        return new ParsedSql(outputSql.toString(), extractedVariables);
+        matcher.appendTail(outputSql);
+        final String result = outputSql.toString();
+        final int bindValueCount;
+
+        if (bindValueNames.isEmpty()) {
+            bindValueCount = StringUtils.countMatches(result, '?');
+        } else {
+            bindValueCount = (int) bindValueNames.stream().distinct().count();
+        }
+
+        return new ParsedSql(result, bindValueCount, bindValueNames);
     }
 }

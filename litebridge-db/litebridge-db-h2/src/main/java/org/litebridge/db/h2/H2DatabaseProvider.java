@@ -1,53 +1,37 @@
 package org.litebridge.db.h2;
 
-import org.litebridge.convert.DefaultTypeConverter;
+import org.litebridge.db.h2.expression.function.H2SqlFunctionRegistryFactory;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
-import org.litebridge.db.spi.query.UpdateMetaData;
-import org.litebridge.db.spi.sql.PreparedSql;
-import org.litebridge.db.spi.tx.ManagedConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import org.litebridge.db.spi.impl.ContextBuilder;
+import org.litebridge.db.spi.impl.DatabaseProviderContext;
+import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
 
 /**
- * H2DatabaseProvider is a concrete implementation of AbstractDatabaseProvider
- * specifically designed to interact with H2 database instances. It handles the
- * creation of prepared statements and logging tailored for H2 database operations.
- * <p>
- * This class provides H2-specific implementations for database
+ * H2 database provider for Litebridge.
  */
 public final class H2DatabaseProvider extends AbstractDatabaseProvider {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(H2DatabaseProvider.class);
 
     /**
      * Creates a new {@code H2DatabaseProvider}.
      */
     public H2DatabaseProvider() {
-        super(new DefaultTypeConverter());
+        super(databaseProviderContext());
     }
 
-    @Override
-    protected PreparedStatement createPreparedStatementUsingConnection(final PreparedSql preparedSql,
-                                                                       final ManagedConnection connection) throws SQLException {
-        final UpdateMetaData updateMetaData = preparedSql.updateMetaData();
+    private static DatabaseProviderContext databaseProviderContext() {
+        final DatabaseProviderMetaData databaseProviderMetaData =
+                new DatabaseProviderMetaData(true,
+                        DatabaseProviderMetaData.MergeCapability.USING_VALUES,
+                        DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
 
-        if (updateMetaData == null) {
-            return connection.prepareStatement(preparedSql.sql());
-        }
+        ContextBuilder context = ContextBuilder.newContext()
+                .withDatabaseProviderMetaData(databaseProviderMetaData);
 
-        if (updateMetaData.returnGeneratedKeys()) {
-            return connection.prepareStatement(preparedSql.sql(), Statement.RETURN_GENERATED_KEYS);
-        } else {
-            return connection.prepareStatement(preparedSql.sql());
-        }
-    }
+        final SqlFunctionRegistryFactory sqlFunctionRegistryFactory
+                = new H2SqlFunctionRegistryFactory(context.ensureLabelGenerator(), context.ensureSqlGenerator().selectSqlGenerator());
 
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
+        return context.withSqlFunctionRegistryFactory(sqlFunctionRegistryFactory)
+                .build();
     }
 }

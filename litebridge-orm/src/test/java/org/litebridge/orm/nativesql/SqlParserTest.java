@@ -36,7 +36,7 @@ class SqlParserTest {
 
         // Then
         assertEquals("SELECT * FROM LB.PERSON WHERE SURNAME = ? OR FIRST_NAME = ? OR AGE = ?", result.sql());
-        assertEquals(List.of("name", "name", "age"), result.bindParameterNames());
+        assertEquals(List.of("name", "name", "age"), result.bindValueNames());
     }
 
     @Test
@@ -49,7 +49,7 @@ class SqlParserTest {
 
         // Then
         assertEquals("SELECT * FROM LB.PERSON WHERE REMARK = 'Do not delete: active user' AND SURNAME = ?", result.sql());
-        assertEquals(List.of("name"), result.bindParameterNames());
+        assertEquals(List.of("name"), result.bindValueNames());
     }
 
     @Test
@@ -62,7 +62,7 @@ class SqlParserTest {
 
         // Then
         assertEquals("SELECT PERSON_ID::text FROM LB.PERSON WHERE SURNAME = ?", result.sql());
-        assertEquals(List.of("name"), result.bindParameterNames());
+        assertEquals(List.of("name"), result.bindValueNames());
     }
 
     @Test
@@ -75,6 +75,6 @@ class SqlParserTest {
 
         // Then
         assertEquals("SELECT * FROM LB.PERSON WHERE SURNAME = ? AND 1=1", result.sql());
-        assertEquals(List.of("name"), result.bindParameterNames());
+        assertEquals(List.of("name"), result.bindValueNames());
     }
 }

@@ -1,0 +1,70 @@
+package org.litebridge.orm.engine.ast;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.Arrays;
+import java.util.Objects;
+
+/**
+ * Represents an INSERT statement in the query AST.
+ * <p>
+ * This is a root node.
+ *
+ * @param table           name of the table to insert into
+ * @param dtoClass        class of the DTO to insert
+ * @param contextDtoClass The parent/context DTO class for determining the correct {@code dtoClass} table mapping (for shared DTOs mapped to multiple distinct tables)
+ * @param columns         names of the columns to insert into
+ * @param expressionSpecs expressions to use instead of columns
+ */
+public record InsertNode(@Nullable String table,
+                         @Nullable Class<?> dtoClass,
+                         @Nullable Class<?> contextDtoClass,
+                         String @Nullable [] columns,
+                         ExpressionSpec @Nullable [] expressionSpecs) implements QueryNode {
+
+    /**
+     * Creates a new {@code InsertNode} instance with column names.
+     *
+     * @param table    the target table name, or {@code null}
+     * @param dtoClass the target DTO class, or {@code null}
+     * @param columns  the column names to insert into
+     */
+    public InsertNode(final @Nullable String table,
+                      final @Nullable Class<?> dtoClass,
+                      final String[] columns) {
+        this(table, dtoClass, null, columns, null);
+    }
+
+    /**
+     * Creates a new {@code InsertNode} instance with expression specifications.
+     *
+     * @param table           the target table name, or {@code null}
+     * @param dtoClass        the target DTO class, or {@code null}
+     * @param expressionSpecs the expression specifications to insert
+     */
+    public InsertNode(final @Nullable String table,
+                      final @Nullable Class<?> dtoClass,
+                      final ExpressionSpec[] expressionSpecs) {
+        this(table, dtoClass, null, null, expressionSpecs);
+    }
+
+    @Override
+    public @Nullable QueryNode previous() {
+        return null;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final InsertNode that)) return false;
+        return Objects.equals(table, that.table)
+                && Arrays.deepEquals(columns, that.columns)
+                && Objects.equals(dtoClass, that.dtoClass)
+                && Arrays.deepEquals(expressionSpecs, that.expressionSpecs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(table, dtoClass, Arrays.hashCode(columns), Arrays.hashCode(expressionSpecs));
+    }
+}

@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.commons.type.ConcurrentLazy;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
@@ -49,8 +48,8 @@ class OrmTableTest {
         // Then
         assertEquals(TestDto.class, ormTable.dtoClass());
         assertEquals(tableMetaData("test_table", idColumn, nameColumn), ormTable.getMetaData());
-        assertSame(idColumn, ormTable.getColumnForFieldName("id"));
-        assertSame(nameColumn, ormTable.getColumnForFieldName("name"));
+        assertSame(idColumn, ormTable.columnMetaDataForField("id"));
+        assertSame(nameColumn, ormTable.columnMetaDataForField("name"));
         assertSame(idColumn, ormTable.getColumnMetaData("id"));
         assertSame(nameField, ormTable.getFieldForColumnName("name"));
         assertSame(idField, ormTable.fieldForColumnNameOrNull("id"));
@@ -65,7 +64,7 @@ class OrmTableTest {
         final OrmTable ormTable = simpleOrmTable();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ormTable.getColumnForFieldName("unknown"));
+        assertThrows(IllegalArgumentException.class, () -> ormTable.columnMetaDataForField("unknown"));
     }
 
     @Test
@@ -194,10 +193,10 @@ class OrmTableTest {
 
         final MappedManyToMany mappedManyToMany = new MappedManyToMany(
                 joinTable,
-                "parent_id",
+                new String[]{"parent_id"},
                 childrenField,
-                new ConcurrentLazy<>(() -> targetTable),
-                "child_id");
+                () -> targetTable,
+                new String[]{"child_id"});
 
         final OrmTable ormTable = new OrmTable(ParentDto.class,
                 tableMetaData("parent_table", idColumn),
@@ -247,7 +246,7 @@ class OrmTableTest {
                 new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         // Then
-        assertSame(nestedColumn, ormTable.getColumnForFieldName("nested"));
+        assertSame(nestedColumn, ormTable.columnMetaDataForField("nested"));
         assertSame(nestedField, ormTable.getFieldForColumnName("nested_id"));
         assertSame(inlineTable, ormTable.getContextTableRegistry().getOrmTable(InlineNestedDto.class));
         assertSame(nestedField, ormTable.mappedFieldTargets().getFirst().getKey());
@@ -255,7 +254,7 @@ class OrmTableTest {
     }
 
     @Test
-    void constructor_withNestedFieldAccessorChain_tracksNestedDtoClassAndParentColumn() {
+    void constructor_withNestedFieldAccessorChain_tracksNestedDtoClassAndSpecificColumn() {
         // Given
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final ClassFieldAccessorCache classFieldAccessorCache = changeTracker.classFieldAccessorCache();
@@ -277,12 +276,12 @@ class OrmTableTest {
 
         // Then
         assertEquals(List.of(AddressDto.class), ormTable.getNestedDtoClasses());
-        assertSame(addressColumn, ormTable.getColumnForFieldName("address.city"));
+        assertSame(cityColumn, ormTable.columnMetaDataForField("address.city"));
         assertSame(cityField, ormTable.getFieldForColumnName("city"));
     }
 
     @Test
-    void getColumnForFieldName_nestedFieldWithoutParentColumnMetaDataThrowsNullPointerException() {
+    void getColumnForFieldName_nestedFieldWithoutMappedPathThrowsNullPointerException() {
         // Given
         final ChangeTracker changeTracker = new ChangeTracker(MethodHandles.lookup());
         final ClassFieldAccessorCache classFieldAccessorCache = changeTracker.classFieldAccessorCache();
@@ -292,12 +291,12 @@ class OrmTableTest {
 
         final OrmTable ormTable = new OrmTable(WithAddressDto.class,
                 tableMetaData("with_address_table", cityColumn),
-                Map.of(cityField, cityColumn),
+                Map.of(), // No mappings
                 changeTracker,
                 classFieldAccessorCache);
 
         // When/Then
-        assertThrows(NullPointerException.class, () -> ormTable.getColumnForFieldName("address.city"));
+        assertThrows(NullPointerException.class, () -> ormTable.columnMetaDataForField("address.city"));
     }
 
     @Test

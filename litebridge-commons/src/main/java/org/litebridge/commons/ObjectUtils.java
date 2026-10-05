@@ -50,6 +50,45 @@ public final class ObjectUtils {
     }
 
     /**
+     * Ensures that the provided object is an instance of the specified type.
+     * <p>
+     * If the object is not an instance of the type, an {@link IllegalArgumentException} is thrown.
+     *
+     * @param <X>  the type of the exception to be thrown if validation fails
+     * @param <T>  the expected type of the object
+     * @param type the expected class type
+     * @param obj  the object to check
+     * @return the object cast to the expected type
+     * @throws X if {@code obj} is not an instance of {@code type}
+     */
+    public static <X extends Throwable, T> T requireInstanceOf(final Class<T> type, @Nullable final Object obj) throws X {
+        return requireInstanceOf(type, obj, () ->
+                new IllegalArgumentException("Not an instance of " + type.getName()));
+    }
+
+    /**
+     * Ensures that the provided object is an instance of the specified type.
+     * <p>
+     * If the object is not an instance of the type, an exception provided by the {@code exceptionSupplier} is thrown.
+     *
+     * @param <X>               the type of the exception to be thrown if validation fails
+     * @param <T>               the expected type of the object
+     * @param type              the expected class type
+     * @param obj               the object to check
+     * @param exceptionSupplier the supplier that provides an exception to be thrown if {@code obj} is not an instance of {@code type}
+     * @return the object cast to the expected type
+     * @throws X if {@code obj} is not an instance of {@code type}
+     */
+    @SuppressWarnings("unchecked")
+    public static <X extends Throwable, T> T requireInstanceOf(final Class<T> type, @Nullable final Object obj, final Supplier<? extends X> exceptionSupplier) throws X {
+        if (type.isInstance(obj)) {
+            return (T) obj;
+        } else {
+            throw exceptionSupplier.get();
+        }
+    }
+
+    /**
      * Retrieves the value of a specified field from the given object.
      * <p>
      * The field is accessed reflectively, and its value is returned as an object of the specified type.

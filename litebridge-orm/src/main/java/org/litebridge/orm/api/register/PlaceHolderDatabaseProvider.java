@@ -1,9 +1,9 @@
 package org.litebridge.orm.api.register;
 
-import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Operation;
-import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
@@ -11,14 +11,11 @@ import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
-import org.litebridge.db.spi.update.Insert;
-import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.update.UpdateResult;
+import org.litebridge.db.spi.update.BatchUpdateResult;
+import org.litebridge.db.spi.update.Result;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -32,63 +29,98 @@ import java.util.List;
  */
 final class PlaceHolderDatabaseProvider implements DatabaseProvider {
 
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
     @Override
-    public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
+    public DatabaseProviderMetaData metaData() {
+        throw new UnsupportedOperationException("N/A");
+    }
+
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
+    @Override
+    public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) {
+        throw new UnsupportedOperationException("N/A");
+    }
+
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param table              Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
+    @Override
+    public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) {
+        throw new UnsupportedOperationException("N/A");
+    }
+
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param preparedSql        Not used
+     * @param resultType         Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
+    @Override
+    public <T extends Result> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public InsertResult insert(final PreparedSql insert, final ConnectionProvider connectionProvider) throws SQLException {
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param preparedSql        Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
     @Override
-    public UpdateResult update(final PreparedSql update, final ConnectionProvider connectionProvider) throws SQLException {
+    public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
-    @Override
-    public List<Row> select(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
+    /**
+     * Throws {@link UnsupportedOperationException}.
+     *
+     * @param operation          Not used
+     * @param connectionProvider Not used
+     * @return this implementation always throws {@link UnsupportedOperationException}
+     */
     @Override
     public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public UpdateResult delete(final PreparedSql delete, final ConnectionProvider connectionProvider) throws SQLException {
+    public TypeConverter typeConverter() {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public List<Row> nativeSqlQuery(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public UpdateResult nativeSqlUpdate(final String sql, final List<@Nullable Object> bindParameters, final ConnectionProvider connectionProvider) throws SQLException {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public TypeConverter getTypeConverter() {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public SequenceColumnValueGenerator getSequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
+    public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
         return new PlaceholderSequenceColumnValueGenerator(sequence);
     }
 
     @Override
-    public SqlFunctionRegistry getSqlFunctionRegistry() {
+    public SqlFunctionRegistry sqlFunctionRegistry() {
         throw new UnsupportedOperationException("N/A");
     }
 
     @Override
-    public AliasTransformer getAliasTransformer() {
+    public AliasTransformer aliasTransformer() {
         throw new UnsupportedOperationException("N/A");
     }
 }

@@ -48,6 +48,7 @@ import java.util.Map;
  * This Mojo is executed during the <i>generate-sources</i> phase of the Maven build lifecycle by default.
  */
 @Mojo(name = "reverse-engineer", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+@SuppressWarnings("NotNullFieldNotInitialized")
 public final class ReverseEngineerMojo extends AbstractMojo {
 
     /**

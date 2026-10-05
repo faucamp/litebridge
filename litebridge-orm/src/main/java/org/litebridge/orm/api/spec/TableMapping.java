@@ -24,6 +24,12 @@ import java.lang.invoke.MethodHandles;
  */
 public record TableMapping(MethodHandles.Lookup lookup, Class<?> dtoClass, TableSpec tableSpec) {
 
+    /**
+     * Creates a new {@code TableMapping} instance using the default public lookup.
+     *
+     * @param dtoClass  the DTO class that represents the mapping target
+     * @param tableSpec the table specification defining the database table and its field mappings
+     */
     public TableMapping(Class<?> dtoClass, TableSpec tableSpec) {
         this(MethodHandles.publicLookup(), dtoClass, tableSpec);
     }

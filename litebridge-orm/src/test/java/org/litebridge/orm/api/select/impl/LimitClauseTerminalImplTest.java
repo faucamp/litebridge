@@ -1,32 +1,44 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.orm.api.select.ast.LimitNode;
-import org.litebridge.orm.api.select.model.SelectSpec;
+import org.litebridge.orm.api.select.SelectTerminal;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.LimitNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class LimitClauseTerminalImplTest {
 
     @Test
     void offset() {
         // Given
-        final AbstractSelector<String, SelectSpec> delegate = mock(AbstractSelector.class);
-        when(delegate.withNode(any())).thenReturn(delegate);
-        final LimitClauseTerminalImpl<String, SelectSpec> terminal = new LimitClauseTerminalImpl<>(delegate);
+        final int offset = 20;
+        final int limit = 10;
+        final QueryNode node = mock(SelectNode.class);
+        final SelectEngineTerminal selectEngineTerminal = mock(SelectEngineTerminal.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+
+        final LimitClauseTerminalImpl<String> terminal = new LimitClauseTerminalImpl<>(
+                limit,
+                node,
+                selectEngineTerminal,
+                litebridgeContext);
 
         // When
-        terminal.offset(20);
+        final SelectTerminal<String> result = terminal.offset(offset);
 
         // Then
-        verify(delegate).withNode(argThat(node ->
-                node instanceof LimitNode limitNode
-                        && limitNode.offset().equals(Optional.of(20))));
+        assertNotNull(result);
+
+        assertInstanceOf(LimitNode.class, terminal.node());
+        final LimitNode limitNode = (LimitNode) terminal.node();
+        assertEquals(offset, limitNode.offset());
+        assertEquals(limit, limitNode.limit());
     }
 }

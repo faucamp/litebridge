@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,7 +40,7 @@ class RegistrationContextTerminalTest {
         // Given
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final SequenceColumnValueGenerator realGenerator = mock(SequenceColumnValueGenerator.class);
-        when(databaseProvider.getSequenceColumnValueGenerator("TEST_SEQ")).thenReturn(realGenerator);
+        when(databaseProvider.sequenceColumnValueGenerator("TEST_SEQ")).thenReturn(realGenerator);
         
         final RegistrationContextTerminal context = new RegistrationContextTerminal(TestDto.class, "TEST_TABLE", databaseProvider, null);
         
@@ -48,7 +49,7 @@ class RegistrationContextTerminalTest {
 
         // Then
         final ColumnMapping columnMapping = context.fieldColumnMap.values().iterator().next();
-        assertTrue(columnMapping instanceof ColumnSpec);
+        assertInstanceOf(ColumnSpec.class, columnMapping);
         assertEquals(realGenerator, ((ColumnSpec) columnMapping).generator());
     }
 

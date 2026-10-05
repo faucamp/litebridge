@@ -60,16 +60,6 @@ public class RevEngOutputConfig extends OutputConfig {
     @Parameter(defaultValue = "true")
     private boolean generateConstructors = true;
 
-    @Override
-    public void setJspecify(final @Nullable RevEngJSpecifyConfig jspecify) {
-        super.setJspecify(jspecify);
-    }
-
-    @Override
-    public @Nullable RevEngJSpecifyConfig getJspecify() {
-        return super.getJspecify();
-    }
-
     public boolean isResolveRelationships() {
         return resolveRelationships;
     }

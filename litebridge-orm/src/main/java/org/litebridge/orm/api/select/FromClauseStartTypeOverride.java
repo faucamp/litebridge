@@ -1,33 +1,49 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.dto.DtoFromClauseTerminal;
-import org.litebridge.orm.api.select.ast.QueryNode;
-import org.litebridge.orm.api.select.ast.SelectNode;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
+import org.litebridge.orm.api.select.sql.SqlFromClauseTerminal;
 import org.litebridge.orm.config.RelatedDtoStrategy;
-import org.litebridge.orm.engine.FromClauseEngine;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.TypeOverride;
+
+import java.util.Arrays;
+import java.util.function.Function;
 
 /**
  * Entry point for the "FROM" clause of a query with a type override.
- * @param <TypeOverride> the type override.
+ *
+ * @param <ReturnType> the type override.
  */
-public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFromClauseStart {
+public final class FromClauseStartTypeOverride<ReturnType> extends DelegatingSelectTerminal<ReturnType> {
 
-    private final Class<TypeOverride> typeOverride;
+    private final Class<ReturnType> typeOverride;
+    private final ExpressionSpec[] expressionSpecs;
+    private final SelectEngineTerminal selectEngineTerminal;
+    private final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator;
 
     /**
      * Constructs a new {@code FromClauseStartTypeOverride}.
      *
-     * @param typeOverride     the type override class.
-     * @param node             the current query node.
-     * @param fromClauseEngine the from clause engine.
+     * @param typeOverride             the type override class.
+     * @param expressionSpecs          the expression specifications
+     * @param selectEngineTerminal     the terminal select engine
+     * @param litebridgeContextCreator the context creator function
      */
-    public FromClauseStartTypeOverride(final Class<TypeOverride> typeOverride,
-                                       final SelectNode node,
-                                       final FromClauseEngine fromClauseEngine) {
-        super(node, fromClauseEngine);
+    public FromClauseStartTypeOverride(final Class<ReturnType> typeOverride,
+                                       final ExpressionSpec[] expressionSpecs,
+                                       final SelectEngineTerminal selectEngineTerminal,
+                                       final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        super(selectEngineTerminal, () -> litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
         this.typeOverride = typeOverride;
+        this.expressionSpecs = expressionSpecs;
+        this.selectEngineTerminal = selectEngineTerminal;
+        this.litebridgeContextCreator = litebridgeContextCreator;
+        this.pendingNode = () -> new SelectNode(null, expressionSpecs, new Class<?>[]{typeOverride});
     }
 
     /**
@@ -36,8 +52,8 @@ public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFro
      * @param dtoClass the DTO class.
      * @return the DTO from clause terminal.
      */
-    public DtoFromClauseTerminal<TypeOverride> from(final Class<?> dtoClass) {
-        return fromClauseEngine.from(node, dtoClass, typeOverride, (RelatedDtoStrategy) null);
+    public DtoFromClauseTerminal<ReturnType> from(final Class<?> dtoClass) {
+        return from(dtoClass, (RelatedDtoStrategy) null);
     }
 
     /**
@@ -45,11 +61,11 @@ public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFro
      *
      * @param dtoClass        the DTO class.
      * @param contextDtoClass the context DTO class.
-     * @param <DTO>           the DTO type.
      * @return the DTO from clause terminal.
      */
-    public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final Class<?> contextDtoClass) {
-        return fromClauseEngine.from(dtoClass, contextDtoClass);
+    public DtoFromClauseTerminal<ReturnType> from(final Class<?> dtoClass, final Class<?> contextDtoClass) {
+        final SelectNode selectNode = new SelectNode(dtoClass, contextDtoClass, null, null, expressionSpecs, new Class<?>[]{typeOverride});
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO));
     }
 
     /**
@@ -57,10 +73,42 @@ public final class FromClauseStartTypeOverride<TypeOverride> extends AbstractFro
      *
      * @param dtoClass           the DTO class.
      * @param relatedDtoStrategy the related DTO strategy.
-     * @param <DTO>              the DTO type.
      * @return the DTO from clause terminal.
      */
-    public <DTO> DtoFromClauseTerminal<DTO> from(final Class<DTO> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
-        return fromClauseEngine.from(node, dtoClass, relatedDtoStrategy);
+    public DtoFromClauseTerminal<ReturnType> from(final Class<?> dtoClass, final @Nullable RelatedDtoStrategy relatedDtoStrategy) {
+        // Check for row column-level type overrides
+        final Class<?>[] expressionReturnTypes = Arrays.stream(expressionSpecs)
+                .filter(TypeOverride.class::isInstance)
+                .map(TypeOverride.class::cast)
+                .map(TypeOverride::returnType)
+                .toArray(Class<?>[]::new);
+
+        final Class<?>[] returnTypes;
+
+        if (expressionReturnTypes.length > 0) {
+            returnTypes = expressionReturnTypes;
+        } else {
+            returnTypes = new Class<?>[]{typeOverride};
+        }
+
+        final SelectNode selectNode = new SelectNode(dtoClass, null, null, null, expressionSpecs, returnTypes);
+        final LitebridgeContext litebridgeContext = litebridgeContextCreator.apply(LitebridgeContext.Mode.DTO);
+
+        if (relatedDtoStrategy != null) {
+            litebridgeContext.setRelatedDtoStrategy(relatedDtoStrategy);
+        }
+
+        return new DtoFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
+    }
+
+    /**
+     * Starts a FROM clause for the given SQL table.
+     *
+     * @param table the table name.
+     * @return the SQL from clause terminal.
+     */
+    public SqlFromClauseTerminal from(final String table) {
+        final SelectNode selectNode = new SelectNode(table, null, null, expressionSpecs, new Class<?>[]{typeOverride});
+        return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
     }
 }

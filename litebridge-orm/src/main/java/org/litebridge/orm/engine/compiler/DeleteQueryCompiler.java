@@ -1,0 +1,48 @@
+package org.litebridge.orm.engine.compiler;
+
+import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.query.SelectTarget;
+import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.DeleteNode;
+import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.engine.ast.WhereNode;
+
+import java.util.List;
+
+/**
+ * Specialised query node compiler for DELETE statements.
+ */
+final class DeleteQueryCompiler extends AbstractQueryCompiler<DeleteCompilationContext> {
+
+    DeleteQueryCompiler(final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
+    }
+
+    @Override
+    DeleteCompilationContext createCompilationContext(final QueryNode rootNode, final @Nullable List<SelectTarget> contextSelectTargets) {
+        if (!(rootNode instanceof DeleteNode deleteNode)) {
+            throw new IllegalArgumentException("Expected DeleteNode, but got " + rootNode);
+        }
+
+        return new DeleteCompilationContext(deleteNode, litebridgeContext);
+    }
+
+    @Override
+    protected void applyNode(final QueryNode node, final DeleteCompilationContext compilationContext) {
+        switch (node) {
+            case WhereNode whereNode -> flattenAndApplyNodes(whereNode.condition(), compilationContext);
+            case ConditionNode conditionNode -> compilationContext.addWhereCondition(conditionNode);
+            case ConditionGroupNode conditionGroupNode -> {
+                final ConditionGroupSpecStack conditionGroupSpecStack = compilationContext.ensureWhereConditionGroupStack();
+                conditionGroupSpecStack.push(conditionGroupNode.logicOperator());
+                flattenAndApplyNodes(conditionGroupNode.lastChild(), compilationContext);
+                conditionGroupSpecStack.pop();
+            }
+            //noinspection unused
+            case DeleteNode deleteNode -> { /* Ignore */ }
+            default -> throw new UnsupportedOperationException("Unsupported node type: " + node.getClass().getName());
+        }
+    }
+}

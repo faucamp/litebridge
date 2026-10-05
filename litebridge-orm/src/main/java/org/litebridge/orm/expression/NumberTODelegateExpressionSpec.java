@@ -7,9 +7,16 @@ import org.litebridge.orm.expression.function.scalar.AbsSpec;
  * <p>
  * A nestable column expression that overrides the type of the result to {@code Number}.
  */
-public sealed interface NumberTODelegateExpressionSpec
-        extends DelegateExpressionSpec, TypeOverrideExpressionSpec<Number>
-        permits AbsSpec {
+public sealed class NumberTODelegateExpressionSpec extends AbstractTODelegateExpressionSpec<Number> permits AbsSpec {
+
+    /**
+     * Creates a new {@code NumberTODelegateExpressionSpec} instance.
+     *
+     * @param target The target nested expression
+     */
+    protected NumberTODelegateExpressionSpec(final ColumnExpressionSpec target) {
+        super(target, Number.class);
+    }
 
     /**
      * Gets the return type override of the query result.
@@ -19,7 +26,7 @@ public sealed interface NumberTODelegateExpressionSpec
      * @return {@code Number.class}
      */
     @Override
-    default Class<Number> returnType() {
+    public Class<Number> returnType() {
         return Number.class;
     }
 }

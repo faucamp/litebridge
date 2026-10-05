@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.register;
 
-import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 
 /**
@@ -11,13 +10,13 @@ import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
  */
 final class PlaceholderSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
 
+    /**
+     * Creates a new instance of {@link PlaceholderSequenceColumnValueGenerator}.
+     *
+     * @param sequence The name of the sequence associated with this generator.
+     */
     public PlaceholderSequenceColumnValueGenerator(final String sequence) {
         super(sequence);
-    }
-
-    @Override
-    public String generate(final ColumnMetaData columnMetaData) {
-        throw new UnsupportedOperationException("Not supported; regression (placeholder not replaced)");
     }
 
     /**
@@ -26,6 +25,6 @@ final class PlaceholderSequenceColumnValueGenerator extends SequenceColumnValueG
      * @return The sequence name as a {@code String}.
      */
     public String sequence() {
-        return sequence;
+        return sequenceNextValSqlFragment;
     }
 }
