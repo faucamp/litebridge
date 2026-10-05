@@ -130,11 +130,15 @@ class ConcurrentLazyFunctionTest {
             } catch (InterruptedException ex) {
                 fail(ex.getMessage(), ex);
             }
-
-            assertEquals("hello 0", threadResults[i]);
         }
 
-        assertEquals("hello 0", concurrentLazy.getOrNull(0));
+        final String expected = threadResults[0];
+
+        for (String threadResult : threadResults) {
+            assertEquals(expected, threadResult);
+        }
+
+        assertEquals(expected, concurrentLazy.getOrNull(0));
     }
 
     @Test
