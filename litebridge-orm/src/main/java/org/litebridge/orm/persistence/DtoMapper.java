@@ -85,7 +85,7 @@ public class DtoMapper {
         }
 
         // Compile per-DTO mapping data; key is the table alias or table name (if no alias exists)
-        final MappingPlan compilationResult = compileMappingPlan(dtoClass, contextDtoClass, rows);
+        final MappingPlan compilationResult = compileMappingPlan(dtoClass, contextDtoClass, rows.getFirst());
 
         if (compilationResult.rootMappingData() == null) {
             return Collections.emptyList();
@@ -117,7 +117,7 @@ public class DtoMapper {
         return result;
     }
 
-    private MappingPlan compileMappingPlan(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final List<Row> rows) {
+    private MappingPlan compileMappingPlan(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final Row firstRow) {
         final TableMetaData dtoClassTableMetaData;
         final OrmTable rootOrmTable;
 
@@ -133,7 +133,7 @@ public class DtoMapper {
         MappingData rootMappingData = null;
         int columnIndex = 0;
 
-        for (final RowColumn rowColumn : rows.getFirst().columns()) {
+        for (final RowColumn rowColumn : firstRow.columns()) {
             final Column rawColumn = rowColumn.column();
             final Column column;
 
@@ -234,7 +234,6 @@ public class DtoMapper {
         // Resolve all column indices
         for (final MappingData mappingData : mappingDataMap.values()) {
             final List<FieldMapping> fieldMappings = mappingData.fieldMappings();
-            final Row firstRow = rows.getFirst();
 
             for (final FieldMapping fieldMapping : fieldMappings) {
                 if (fieldMapping.isRelatedDto() && fieldMapping.columns().size() > 1) {
