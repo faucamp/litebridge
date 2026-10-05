@@ -172,8 +172,8 @@ public class OrmTable {
                 }));
 
         // Append remaining entries to the end of the list
-        if (orderedFieldTargetEntries.size() < fieldAccessorTargetMap.size()) {
-            fieldAccessorTargetMap.entrySet().stream()
+        if (orderedFieldTargetEntries.size() < processedFieldTargetMap.size()) {
+            processedFieldTargetMap.entrySet().stream()
                     .filter(entry -> !orderedFieldTargetEntries.contains(entry))
                     .forEach(orderedFieldTargetEntries::add);
         }

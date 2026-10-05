@@ -1,7 +1,6 @@
 package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.api.merge.DtoMergeInsertStep;
 import org.litebridge.orm.api.merge.DtoMergeOnStep;
@@ -13,7 +12,6 @@ import org.litebridge.orm.api.merge.MergeTerminalInspector;
 import org.litebridge.orm.api.update.DtoUpdateStep;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -66,7 +64,6 @@ final class MergeBuilder extends InsertBuilder {
         final int columnCount = row.size();
         final String[] fieldNames = new String[columnCount];
         final @Nullable Object[] values = new Object[columnCount];
-        final ExpressionSpec[] literalExpressions = new ExpressionSpec[columnCount];
 
         {
             int i = 0;
@@ -77,24 +74,12 @@ final class MergeBuilder extends InsertBuilder {
 
                 fieldNames[i] = fieldName;
                 values[i] = value;
-                literalExpressions[i] = Fn.literal(value, fieldName);
                 i++;
             }
         }
 
-        final DtoMergeOnStep<T> mergeOnStep;
-        final boolean mergeUsingValuesSupported = litebridgeContext.databaseProvider().metaData()
-                .mergeCapability() == DatabaseProviderMetaData.MergeCapability.USING_VALUES;
-
-        if (mergeUsingValuesSupported) {
-            // Merge using VALUES clause
-            mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
-                    .using(Fn.values(tableAlias, pkValues));
-        } else {
-            // Merge using selecting literals
-            mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
-                    .using(Fn.alias(q -> q.select(literalExpressions), tableAlias));
-        }
+        final DtoMergeOnStep<T> mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
+                .using(Fn.values(tableAlias, pkValues));
 
         final Set<String> pkFieldNames = new HashSet<>(pkFields.size());
         MergeOnConditionClauseTerminal<T, DtoMergeUpdateStep<T>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;

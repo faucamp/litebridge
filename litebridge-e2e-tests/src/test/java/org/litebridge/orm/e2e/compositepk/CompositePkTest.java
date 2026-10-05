@@ -243,8 +243,8 @@ class CompositePkTest extends AbstractE2eTest {
                 .with(spec -> spec.mapField("description").toColumn(tableMapper.transformColumnName("CHILD_DESC")))
                 .with(spec -> spec.mapField("parent")
                         .toColumns(mc -> mc
-                                .column("PARENT_PK1").joinOn("PK1")
-                                .column("PARENT_PK2").joinOn("PK2"))));
+                                .column(tableMapper.transformColumnName("PARENT_PK1")).joinOn(tableMapper.transformColumnName("PK1"))
+                                .column(tableMapper.transformColumnName("PARENT_PK2")).joinOn(tableMapper.transformColumnName("PK2")))));
 
         // Create DTOs
         final CompositePkParent parent = new CompositePkParent(1L, 2L, "Parent", null);
