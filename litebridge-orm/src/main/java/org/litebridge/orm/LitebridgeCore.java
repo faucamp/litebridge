@@ -41,6 +41,7 @@ import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoEntityMapping;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.EntityDtoMapper;
+import org.litebridge.orm.persistence.MappingPlanCache;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.PersistenceFacade;
 import org.litebridge.orm.persistence.TableMapper;
@@ -101,6 +102,7 @@ public class LitebridgeCore implements SelectApi {
     private final UpdateEngine updateEngine = new UpdateEngine();
     private final DeleteEngine deleteEngine = new DeleteEngine();
     private final QueryPlanCache queryPlanCache = new QueryPlanCache();
+    private final MappingPlanCache mappingPlanCache = new MappingPlanCache();
     private final LitebridgeConfig litebridgeConfig;
     private final TableMetaDataCache tableMetaDataCache;
 
@@ -625,6 +627,15 @@ public class LitebridgeCore implements SelectApi {
     }
 
     /**
+     * Provides access to the mapping plan cache.
+     *
+     * @return the {@link MappingPlanCache} instance associated with this Litebridge instance
+     */
+    MappingPlanCache mappingPlanCache() {
+        return mappingPlanCache;
+    }
+
+    /**
      * Creates a new DTO-mode {@link LitebridgeContext}.
      *
      * @return a new DTO-mode Litebridge context
@@ -654,6 +665,7 @@ public class LitebridgeCore implements SelectApi {
                 litebridgeConfig,
                 databaseProvider,
                 queryPlanCache,
+                mappingPlanCache,
                 aliasGenerator,
                 tableRegistry,
                 tableMetaDataCache,

@@ -25,6 +25,26 @@ public record RowColumn(String label, @Nullable Object value, @Nullable Column c
         this(label, value, column, null);
     }
 
+    /**
+     * Computes a structural hash code for this column based strictly on its
+     * label, table alias, and column metadata (name and table), ignoring the runtime value.
+     *
+     * @return the structural hash code of this row column
+     */
+    public int structureHashCode() {
+        int result = label.hashCode();
+        result = 31 * result + (tableAlias != null ? tableAlias.hashCode() : 0);
+
+        if (column != null) {
+            result = 31 * result + column.name().hashCode();
+            if (column.hasTable()) {
+                result = 31 * result + column.table().hashCode();
+            }
+        }
+
+        return result;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("{").append(label);

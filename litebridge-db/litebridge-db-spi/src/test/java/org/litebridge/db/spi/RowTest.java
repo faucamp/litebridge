@@ -134,4 +134,97 @@ class RowTest {
         assertEquals("C1", row.column(0).column().name());
         assertEquals("C2", row.column(1).column().name());
     }
+
+    @Test
+    void structureHashCode_sameStructureDifferentValues_sameHash() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final Column col1 = new Column(table, "COL1");
+        final Column col2 = new Column(table, "COL2");
+
+        final Row row1 = new Row(List.of(
+                new RowColumn("c1", "val1", col1, "t1"),
+                new RowColumn("c2", 123, col2, "t1")
+        ));
+
+        final Row row2 = new Row(List.of(
+                new RowColumn("c1", "differentVal", col1, "t1"),
+                new RowColumn("c2", 456, col2, "t1")
+        ));
+
+        // When
+        final int hash1 = row1.structureHashCode();
+        final int hash2 = row2.structureHashCode();
+
+        // Then
+        assertEquals(hash1, hash2);
+        assertEquals(hash1, row1.structureHashCode()); // cached call
+    }
+
+    @Test
+    void structureHashCode_differentStructure_differentHash() {
+        // Given
+        final Table table1 = new Table("CAT1", "SCHEMA1", "TABLE1");
+        final Table table2 = new Table("CAT2", "SCHEMA2", "TABLE2");
+        final Column col1 = new Column(table1, "COL1");
+        final Column col2 = new Column(table2, "COL2");
+
+        final Row row1 = new Row(List.of(new RowColumn("c1", "val", col1, "t1")));
+        final Row row2 = new Row(List.of(new RowColumn("c2", "val", col1, "t1")));
+        final Row row3 = new Row(List.of(new RowColumn("c1", "val", col2, "t1")));
+        final Row row4 = new Row(List.of(new RowColumn("c1", "val", col1, "t2")));
+        final Row row5 = new Row(List.of(new RowColumn("c1", "val", null, "t1")));
+
+        // When & Then
+        assertFalse(row1.structureHashCode() == row2.structureHashCode());
+        assertFalse(row1.structureHashCode() == row3.structureHashCode());
+        assertFalse(row1.structureHashCode() == row4.structureHashCode());
+        assertFalse(row1.structureHashCode() == row5.structureHashCode());
+    }
+
+    @Test
+    void structureHashCode_nullMetadataAndAliases_succeeds() {
+        // Given
+        final Row row = new Row(List.of(
+                new RowColumn("c1", "val", null),
+                new RowColumn("c2", null, new Column("PLAIN_COL"))
+        ));
+
+        // When
+        final int hash = row.structureHashCode();
+
+        // Then
+        assertTrue(hash != 0);
+    }
+
+    @Test
+    void structureHashCode_emptyRow_succeeds() {
+        // Given
+        final Row row = new Row(Collections.emptyList());
+
+        // When
+        final int hash = row.structureHashCode();
+
+        // Then
+        assertEquals(1, hash);
+    }
+
+    @Test
+    void structureHashCode_updateColumn_recalculatesHash() {
+        // Given
+        final Column col1 = new Column(new Table("T1"), "C1");
+        final Column col2 = new Column(new Table("T1"), "C2");
+        final List<RowColumn> rowColumns = new ArrayList<>();
+        rowColumns.add(new RowColumn("c1", "val1", col1));
+        final Row row = new Row(rowColumns);
+
+        final int initialHash = row.structureHashCode();
+
+        // When
+        row.updateColumn(0, new RowColumn("c2", "val1", col2));
+        final int updatedHash = row.structureHashCode();
+
+        // Then
+        assertFalse(initialHash == updatedHash);
+    }
 }

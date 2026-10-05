@@ -20,6 +20,7 @@ public final class Row {
 
     private final List<RowColumn> columns;
     private @Nullable LinkedHashMap<String, RowColumn> columnMap;
+    private int structureHash;
 
     public Row(final List<RowColumn> columns) {
         this.columns = columns;
@@ -152,6 +153,29 @@ public final class Row {
         return columnMap;
     }
 
+    /**
+     * Computes or returns the cached structural hash code of this row.
+     * <p>
+     * The structural hash code is based solely on the structure of the columns
+     * (labels, aliases, column metadata), ignoring row data values.
+     *
+     * @return the structural hash code of this row
+     */
+    public int structureHashCode() {
+        int hash = structureHash;
+
+        if (hash == 0) {
+            int result = 1;
+            for (final RowColumn column : columns) {
+                result = 31 * result + column.structureHashCode();
+            }
+            hash = result;
+            structureHash = hash;
+        }
+
+        return hash;
+    }
+
     @Override
     public boolean equals(final Object o) {
         return this == o || (o instanceof final Row that
@@ -170,5 +194,7 @@ public final class Row {
 
     void updateColumn(final int columnIndex, final RowColumn rowColumn) {
         columns.set(columnIndex, rowColumn);
+        columnMap = null;
+        structureHash = 0;
     }
 }

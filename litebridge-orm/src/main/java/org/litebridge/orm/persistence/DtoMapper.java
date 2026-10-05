@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Maps data from rows of a database query to DTO (Data Transfer Object) instances.
@@ -50,7 +49,6 @@ public class DtoMapper {
             Pattern.CASE_INSENSITIVE
     );
 
-    private final DtoCache dtoCache = new DtoCache();
     private final TypeConverter typeConverter;
     private final TableRegistry tableRegistry;
     private final DtoConstructor dtoConstructor;
@@ -84,18 +82,31 @@ public class DtoMapper {
             return Collections.emptyList();
         }
 
-        // Compile per-DTO mapping data; key is the table alias or table name (if no alias exists)
-        final MappingPlan compilationResult = compileMappingPlan(dtoClass, contextDtoClass, rows.getFirst());
+        final Row firstRow = rows.getFirst();
+        final int rowHash = firstRow.structureHashCode();
+        final MappingPlanKey key = new MappingPlanKey(dtoClass, contextDtoClass, rowHash);
+        final MappingPlanCache mappingPlanCache = litebridgeContext.mappingPlanCache();
+
+        MappingPlan compilationResult = mappingPlanCache != null ? mappingPlanCache.get(key) : null;
+
+        if (compilationResult == null) {
+            compilationResult = compileMappingPlan(dtoClass, contextDtoClass, firstRow);
+
+            if (mappingPlanCache != null) {
+                mappingPlanCache.put(key, compilationResult);
+            }
+        }
 
         if (compilationResult.rootMappingData() == null) {
             return Collections.emptyList();
         }
 
         // Create DTOs and populate the cache
-        final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping = cacheDtos(rows, compilationResult.mappingDataMap());
+        final DtoCache dtoCache = new DtoCache();
+        final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping = cacheDtos(rows, compilationResult.mappingDataMap(), dtoCache);
 
         // Resolve inter-DTO dependencies
-        resolveDependencies(createdDtosByMapping);
+        resolveDependencies(createdDtosByMapping, dtoCache);
 
         // Return all unique DTOs assignable to the requested type from the root mapping
         final List<DTO> result = new ArrayList<>();
@@ -249,52 +260,33 @@ public class DtoMapper {
                 fieldMapping.setColumnIndexes(columnIndexes);
             }
 
-            // Pre-map constructor arguments
-            final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(mappingData.dtoClass(), contextDtoClass);
-            final int[] constructorArgIndices;
-
-            if (!constructorMappingInfo.defaultConstructorUsed()) {
-                final List<FieldAccessor> canonicalAccessors = constructorMappingInfo.canonicalConstructorFieldAccessors();
-                constructorArgIndices = new int[canonicalAccessors.size()];
-
-                for (int i = 0; i < constructorArgIndices.length; i++) {
-                    final FieldAccessor accessor = canonicalAccessors.get(i);
-                    int foundIndex = -1;
-
-                    for (int j = 0; j < fieldMappings.size(); j++) {
-                        if (fieldMappings.get(j).fieldAccessor().equals(accessor)) {
-                            foundIndex = j;
-                            break;
-                        }
-                    }
-
-                    constructorArgIndices[i] = foundIndex;
-                }
-            } else {
-                constructorArgIndices = new int[0];
-            }
-
-            mappingData.setConstructorArgIndices(constructorArgIndices);
-
             // Check for implicit related DTOs
             final OrmTable ormTable = mappingData.ormTable();
 
-            for (ColumnMetaData mappedColumn : ormTable.mappedColumns()) {
+            for (final ColumnMetaData mappedColumn : ormTable.mappedColumns()) {
                 final List<ForeignKeyConstraint> foreignKeyConstraints = mappedColumn.getForeignKeyConstraints();
 
                 if (foreignKeyConstraints.isEmpty()) {
                     continue;
                 }
 
-                for (ForeignKeyConstraint foreignKeyConstraint : foreignKeyConstraints) {
+                for (final ForeignKeyConstraint foreignKeyConstraint : foreignKeyConstraints) {
                     final Column fkColumn = foreignKeyConstraint.foreignKey();
+                    FieldMapping targetFieldMapping = null;
 
-                    final FieldMapping targetFieldMapping = mappingDataMap.values().stream()
-                            .filter(targetMappingData -> targetMappingData != mappingData && targetMappingData.table().equals(fkColumn.table()))
-                            .flatMap(targetMappingData -> targetMappingData.fieldMappings().stream())
-                            .filter(mapping -> mapping.columns().stream().anyMatch(c -> c.equals(fkColumn)))
-                            .findFirst()
-                            .orElse(null);
+                    for (final MappingData targetMappingData : mappingDataMap.values()) {
+                        if (targetMappingData != mappingData && targetMappingData.table().equals(fkColumn.table())) {
+                            for (final FieldMapping mapping : targetMappingData.fieldMappings()) {
+                                if (mapping.columns().contains(fkColumn)) {
+                                    targetFieldMapping = mapping;
+                                    break;
+                                }
+                            }
+                            if (targetFieldMapping != null) {
+                                break;
+                            }
+                        }
+                    }
 
                     if (targetFieldMapping == null) {
                         continue;
@@ -312,7 +304,21 @@ public class DtoMapper {
 
     private void sortColumnsForRelatedDto(final FieldMapping fieldMapping, final OrmTable ormTable) {
         final Class<?> targetDtoClass = fieldMapping.fieldAccessor().type();
-        final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetDtoClass);
+        final MappedFieldTarget target = ormTable.mappedFieldTargetForFieldOrNull(fieldMapping.fieldAccessor());
+        final OrmTable targetOrmTable;
+
+        if (target instanceof ColumnAndInlineTable cit) {
+            targetOrmTable = cit.tableSpec();
+        } else if (target instanceof MappedCompositeKey mck) {
+            targetOrmTable = mck.targetOrmTable().get();
+        } else {
+            targetOrmTable = tableRegistry.getOrmTable(targetDtoClass);
+        }
+
+        if (targetOrmTable == null) {
+            return;
+        }
+
         final List<FieldAccessor> targetPkFields = targetOrmTable.getPrimaryKeyFields();
 
         if (targetPkFields.size() != fieldMapping.columns().size()) {
@@ -333,10 +339,15 @@ public class DtoMapper {
             if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().table().equals(targetOrmTable.getMetaData().table())) {
                 targetCol = columnMetaData.getJoinColumn().column();
             } else {
-                final ForeignKeyConstraint constraint = columnMetaData.getForeignKeyConstraints().stream()
-                        .filter(fk -> fk.foreignKey().table().equals(targetOrmTable.getMetaData().table()))
-                        .findFirst()
-                        .orElse(null);
+                ForeignKeyConstraint constraint = null;
+
+                for (final ForeignKeyConstraint fk : columnMetaData.getForeignKeyConstraints()) {
+                    if (fk.foreignKey().table().equals(targetOrmTable.getMetaData().table())) {
+                        constraint = fk;
+                        break;
+                    }
+                }
+
                 targetCol = constraint != null ? constraint.foreignKey() : null;
             }
 
@@ -389,10 +400,10 @@ public class DtoMapper {
         }
     }
 
-    private Map<MappingData, List<PartiallyConstructedDto>> cacheDtos(final List<Row> rows, final Map<String, MappingData> mappingDataMap) {
+    private Map<MappingData, List<PartiallyConstructedDto>> cacheDtos(final List<Row> rows, final Map<String, MappingData> mappingDataMap, final DtoCache dtoCache) {
         final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping = new HashMap<>();
 
-        for (MappingData mappingData : mappingDataMap.values()) {
+        for (final MappingData mappingData : mappingDataMap.values()) {
             for (final Row row : rows) {
                 final Pk primaryKey = getPrimaryKey(mappingData, row);
                 PartiallyConstructedDto partialDto = dtoCache.get(mappingData, primaryKey);
@@ -457,23 +468,26 @@ public class DtoMapper {
         if (target instanceof ColumnAndInlineTable cit) {
             final TableMetaData targetMeta = cit.tableSpec().getMetaData();
 
-            return mappingDataMap.values().stream()
-                    .filter(md -> md != sourceMappingData
-                            && md.dtoClass().equals(fieldMapping.fieldAccessor().type())
-                            && Objects.equals(md.ormTable().getMetaData().schema(), targetMeta.schema())
-                            && md.ormTable().getMetaData().name().equals(targetMeta.name()))
-                    .findFirst()
-                    .orElse(null);
+            for (final MappingData md : mappingDataMap.values()) {
+                if (md != sourceMappingData
+                        && md.dtoClass().equals(fieldMapping.fieldAccessor().type())
+                        && Objects.equals(md.ormTable().getMetaData().schema(), targetMeta.schema())
+                        && md.ormTable().getMetaData().name().equals(targetMeta.name())) {
+                    return md;
+                }
+            }
         }
 
         return null;
     }
 
-    private void resolveDependencies(final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping) {
+    private void resolveDependencies(final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping, final DtoCache dtoCache) {
         final List<LateReverseCollectionUpdate> lateReverseUpdates = new ArrayList<>();
-        final Set<PartiallyConstructedDto> allPartialDtos = createdDtosByMapping.values().stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toSet());
+        final List<PartiallyConstructedDto> allPartialDtos = new ArrayList<>(createdDtosByMapping.values().size());
+
+        for (final List<PartiallyConstructedDto> list : createdDtosByMapping.values()) {
+            allPartialDtos.addAll(list);
+        }
 
         // Resolve dependencies and populate DtoData
         for (final PartiallyConstructedDto partialDto : allPartialDtos) {
@@ -483,29 +497,26 @@ public class DtoMapper {
 
             for (final MappedManyToMany mappedManyToMany : mappedManyToManyList) {
                 final OrmTable targetOrmTable = mappedManyToMany.targetOrmTable().get();
-                final List<PartiallyConstructedDto> matchingCreatedDtos = allPartialDtos.stream()
-                        .filter(pd -> pd.mappingData() != partialDto.mappingData()
-                                && pd.mappingData().dtoClass().equals(targetOrmTable.dtoClass()))
-                        .toList();
+                final FieldAccessor collectionFieldAccessor = mappedManyToMany.collection();
 
-                if (!matchingCreatedDtos.isEmpty()) {
-                    final FieldAccessor collectionFieldAccessor = mappedManyToMany.collection();
-
-                    for (final PartiallyConstructedDto matchingCreatedDto : matchingCreatedDtos) {
-                        dtoData.addToCollection(collectionFieldAccessor, matchingCreatedDto);
+                for (final Map.Entry<MappingData, List<PartiallyConstructedDto>> entry : createdDtosByMapping.entrySet()) {
+                    if (entry.getKey() != partialDto.mappingData() && entry.getKey().dtoClass().equals(targetOrmTable.dtoClass())) {
+                        for (final PartiallyConstructedDto matchingCreatedDto : entry.getValue()) {
+                            dtoData.addToCollection(collectionFieldAccessor, matchingCreatedDto);
+                        }
                     }
                 }
             }
 
             final List<GenericDtoDependency> genericDtoDependencies = partialDto.mappingData().getGenericDtoDependencies();
-            final List<SpecificDtoDependency> specificDtoDepencies = partialDto.dependencies();
+            final List<SpecificDtoDependency> specificDtoDependencies = partialDto.dependencies();
             final Set<FieldAccessor> specificDependenciesResolved = new HashSet<>();
 
-            for (final SpecificDtoDependency specificDtoDependency : specificDtoDepencies) {
+            for (final SpecificDtoDependency specificDtoDependency : specificDtoDependencies) {
                 final Class<?> relatedDtoClass = specificDtoDependency.relatedDtoClass();
-                final PartiallyConstructedDto targetDto = specificDtoDependency.targetMappingData() != null ?
-                        dtoCache.get(specificDtoDependency.targetMappingData(), specificDtoDependency.primaryKeyValue()) :
-                        dtoCache.getByClassAndPk(specificDtoDependency.relatedDtoClass(), specificDtoDependency.primaryKeyValue());
+                final PartiallyConstructedDto targetDto = specificDtoDependency.targetMappingData() != null
+                        ? dtoCache.get(specificDtoDependency.targetMappingData(), specificDtoDependency.primaryKeyValue())
+                        : dtoCache.getByClassAndPk(specificDtoDependency.relatedDtoClass(), specificDtoDependency.primaryKeyValue());
                 final Object resolvedDependency;
 
                 if (targetDto == null) {
@@ -536,7 +547,7 @@ public class DtoMapper {
             }
 
             if (genericDtoDependencies != null) {
-                for (GenericDtoDependency genericDtoDependency : genericDtoDependencies) {
+                for (final GenericDtoDependency genericDtoDependency : genericDtoDependencies) {
                     if (specificDependenciesResolved.contains(genericDtoDependency.field())) {
                         continue;
                     }
@@ -558,7 +569,7 @@ public class DtoMapper {
         }
 
         // Process deferred collection additions for cyclic dependencies
-        for (DeferredCollectionAddition addition : deferredAdditions) {
+        for (final DeferredCollectionAddition addition : deferredAdditions) {
             final Object itemDto = addition.itemPartialDto().getDto();
             if (itemDto != null && !addition.collection().contains(itemDto)) {
                 addition.collection().add(itemDto);
@@ -566,7 +577,7 @@ public class DtoMapper {
         }
 
         // Late reverse updates for already-instantiated DTOs
-        for (LateReverseCollectionUpdate update : lateReverseUpdates) {
+        for (final LateReverseCollectionUpdate update : lateReverseUpdates) {
             updateReverseCollection(Objects.requireNonNull(update.hostPartialDto.getDto()), update.relatedDto, update.relatedCollectionField);
         }
     }
@@ -591,7 +602,7 @@ public class DtoMapper {
 
             final Map<FieldAccessor, Collection<Object>> instantiatedCollections = new HashMap<>();
 
-            for (Map.Entry<FieldAccessor, Collection<Object>> entry : dtoData.collections().entrySet()) {
+            for (final Map.Entry<FieldAccessor, Collection<Object>> entry : dtoData.collections().entrySet()) {
                 final FieldAccessor accessor = entry.getKey();
                 final Collection<Object> finalCollection = (Collection<Object>) ClassUtils.newInstance(accessor.type());
                 instantiatedCollections.put(accessor, finalCollection);
@@ -609,7 +620,7 @@ public class DtoMapper {
                 partialDto.setDto(dto);
 
                 // Populate scalar fields
-                for (Map.Entry<FieldAccessor, @Nullable Object> entry : dtoData.values().entrySet()) {
+                for (final Map.Entry<FieldAccessor, @Nullable Object> entry : dtoData.values().entrySet()) {
                     final FieldAccessor accessor = entry.getKey();
                     Object value = entry.getValue();
 
@@ -622,38 +633,25 @@ public class DtoMapper {
                     }
                 }
 
-                for (Map.Entry<FieldAccessor, Collection<Object>> entry : instantiatedCollections.entrySet()) {
+                for (final Map.Entry<FieldAccessor, Collection<Object>> entry : instantiatedCollections.entrySet()) {
                     entry.getKey().set(dto, entry.getValue());
                 }
             } else {
-                final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>();
-                for (Map.Entry<FieldAccessor, Object> entry : dtoData.values().entrySet()) {
-                    final FieldAccessor accessor = entry.getKey();
-                    Object value = entry.getValue();
-
-                    if (value instanceof PartiallyConstructedDto depPartialDto) {
-                        value = instantiateDto(depPartialDto, deferredAdditions);
-                    }
-
-                    fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(accessor, value));
-                }
-
-                for (Map.Entry<FieldAccessor, Collection<Object>> entry : instantiatedCollections.entrySet()) {
-                    fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(entry.getKey(), entry.getValue()));
-                }
-
-                // Fill in default values for canonical constructor if missing
                 final List<FieldAccessor> canonicalAccessors = constructorMappingInfo.canonicalConstructorFieldAccessors();
-                final Set<FieldAccessor> providedAccessors = new HashSet<>();
+                final List<DtoConstructor.FieldAccessorValue> fieldAccessorValues = new ArrayList<>(canonicalAccessors.size());
 
-                for (DtoConstructor.FieldAccessorValue fav : fieldAccessorValues) {
-                    providedAccessors.add(fav.field());
-                }
+                for (final FieldAccessor canonicalAccessor : canonicalAccessors) {
+                    Object value = dtoData.values().get(canonicalAccessor);
 
-                for (FieldAccessor canonicalAccessor : canonicalAccessors) {
-                    if (!providedAccessors.contains(canonicalAccessor)) {
-                        fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(canonicalAccessor, ClassUtils.getDefaultValue(canonicalAccessor.type())));
+                    if (value == null && instantiatedCollections.containsKey(canonicalAccessor)) {
+                        value = instantiatedCollections.get(canonicalAccessor);
+                    } else if (value instanceof PartiallyConstructedDto depPartialDto) {
+                        value = instantiateDto(depPartialDto, deferredAdditions);
+                    } else if (value == null && !dtoData.values().containsKey(canonicalAccessor)) {
+                        value = ClassUtils.getDefaultValue(canonicalAccessor.type());
                     }
+
+                    fieldAccessorValues.add(new DtoConstructor.FieldAccessorValue(canonicalAccessor, value));
                 }
 
                 dto = constructDto(dtoClass, fieldAccessorValues, dtoConstructor);
@@ -661,12 +659,12 @@ public class DtoMapper {
             }
 
             // Populate collection elements after dto instance is created & cached
-            for (Map.Entry<FieldAccessor, Collection<Object>> entry : dtoData.collections().entrySet()) {
+            for (final Map.Entry<FieldAccessor, Collection<Object>> entry : dtoData.collections().entrySet()) {
                 final FieldAccessor accessor = entry.getKey();
                 final Collection<Object> partialCollection = entry.getValue();
                 final Collection<Object> finalCollection = instantiatedCollections.get(accessor);
 
-                for (Object item : partialCollection) {
+                for (final Object item : partialCollection) {
                     if (item instanceof PartiallyConstructedDto itemPartialDto) {
                         if (itemPartialDto.isInstantiating() && itemPartialDto.getDto() == null) {
                             deferredAdditions.add(new DeferredCollectionAddition(finalCollection, itemPartialDto));
@@ -800,7 +798,7 @@ public class DtoMapper {
         }
 
         public @Nullable PartiallyConstructedDto getByClassAndPk(final Class<?> dtoClass, final Pk primaryKey) {
-            for (Map.Entry<OrmTable, Map<Pk, PartiallyConstructedDto>> entry : cache.entrySet()) {
+            for (final Map.Entry<OrmTable, Map<Pk, PartiallyConstructedDto>> entry : cache.entrySet()) {
                 if (entry.getKey().dtoClass().equals(dtoClass)) {
                     final PartiallyConstructedDto dto = entry.getValue().get(primaryKey);
                     if (dto != null) {
@@ -812,8 +810,7 @@ public class DtoMapper {
         }
 
         public @Nullable PartiallyConstructedDto get(final FieldMapping fieldMapping) {
-            for (Map.Entry<OrmTable, Map<Pk, PartiallyConstructedDto>> entry : cache.entrySet()) {
-                final Map<Pk, PartiallyConstructedDto> pkMap = entry.getValue();
+            for (final Map<Pk, PartiallyConstructedDto> pkMap : cache.values()) {
                 if (!pkMap.isEmpty()) {
                     final PartiallyConstructedDto first = pkMap.values().iterator().next();
                     if (first.mappingData().fieldMappings().contains(fieldMapping)) {
@@ -864,7 +861,7 @@ public class DtoMapper {
         public boolean equals(final @Nullable Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            CompositePk that = (CompositePk) o;
+            final CompositePk that = (CompositePk) o;
             return Arrays.equals(values, that.values);
         }
 
@@ -902,43 +899,39 @@ public class DtoMapper {
         final DTO dto = constructionResult.dto();
 
         if (constructionResult.defaultConstructorUsed()) {
-            fieldAccessorValues.forEach(fieldAccessorValue -> {
+            for (final DtoConstructor.FieldAccessorValue fieldAccessorValue : fieldAccessorValues) {
                 final FieldAccessor fieldAccessor = fieldAccessorValue.field();
                 final Object rawValue = fieldAccessorValue.value();
                 final Object value;
 
                 if (rawValue == null) {
                     value = ClassUtils.getDefaultValue(fieldAccessor.type());
-                } else if (fieldAccessorValue.value() instanceof DtoConstructor.DtoDependency dependency) {
+                } else if (rawValue instanceof DtoConstructor.DtoDependency) {
                     value = null;
                 } else {
-                    value = fieldAccessorValue.value();
+                    value = rawValue;
                 }
 
-                fieldAccessorValue.field().set(dto, value);
-            });
+                fieldAccessor.set(dto, value);
+            }
         }
 
         return dto;
     }
 
-    private record MappingPlan(Map<String, MappingData> mappingDataMap, @Nullable MappingData rootMappingData) {
+    record MappingPlan(Map<String, MappingData> mappingDataMap, @Nullable MappingData rootMappingData) {
     }
 
     private static final class DtoData {
         private final Map<FieldAccessor, @Nullable Object> values = new HashMap<>();
         private final Map<FieldAccessor, Collection<Object>> collections = new HashMap<>();
 
-        public void set(FieldAccessor accessor, @Nullable Object value) {
+        public void set(final FieldAccessor accessor, final @Nullable Object value) {
             values.put(accessor, value);
         }
 
-        public @Nullable Object get(FieldAccessor accessor) {
-            return values.get(accessor);
-        }
-
         @SuppressWarnings("unchecked")
-        public void addToCollection(FieldAccessor accessor, Object value) {
+        public void addToCollection(final FieldAccessor accessor, final Object value) {
             collections.computeIfAbsent(accessor, a -> (Collection<Object>) ClassUtils.newInstance(a.type()))
                     .add(value);
         }
@@ -960,10 +953,10 @@ public class DtoMapper {
         private final MappingData mappingData;
         private boolean instantiating;
 
-        private PartiallyConstructedDto(DtoData dtoData,
-                                        Pk primaryKey,
-                                        List<SpecificDtoDependency> dependencies,
-                                        MappingData mappingData) {
+        private PartiallyConstructedDto(final DtoData dtoData,
+                                        final Pk primaryKey,
+                                        final List<SpecificDtoDependency> dependencies,
+                                        final MappingData mappingData) {
             this.dtoData = dtoData;
             this.primaryKey = primaryKey;
             this.dependencies = dependencies;
@@ -1001,34 +994,6 @@ public class DtoMapper {
         public MappingData mappingData() {
             return mappingData;
         }
-
-        @Override
-        public boolean equals(final @Nullable Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (PartiallyConstructedDto) obj;
-            return Objects.equals(this.dtoData, that.dtoData) &&
-                    Objects.equals(this.dto, that.dto) &&
-                    Objects.equals(this.primaryKey, that.primaryKey) &&
-                    Objects.equals(this.dependencies, that.dependencies) &&
-                    Objects.equals(this.mappingData, that.mappingData);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(dtoData, dto, primaryKey, dependencies, mappingData);
-        }
-
-        @Override
-        public String toString() {
-            return "PartiallyConstructedDto[" +
-                    "dtoData=" + dtoData + ", " +
-                    "dto=" + dto + ", " +
-                    "primaryKey=" + primaryKey + ", " +
-                    "dependencies=" + dependencies + ", " +
-                    "mappingData=" + mappingData + ']';
-        }
-
     }
 
     private static final class FieldMapping {
@@ -1041,13 +1006,13 @@ public class DtoMapper {
         private final @Nullable Class<?> relatedDtoClass;
         private int @Nullable [] columnIndexes;
 
-        private FieldMapping(FieldAccessor fieldAccessor,
-                             List<Column> columns,
-                             List<String> columnLabels,
-                             boolean isBasicType,
-                             boolean isRelatedDto,
-                             @Nullable FieldAccessor relatedCollectionField,
-                             @Nullable Class<?> relatedDtoClass) {
+        private FieldMapping(final FieldAccessor fieldAccessor,
+                             final List<Column> columns,
+                             final List<String> columnLabels,
+                             final boolean isBasicType,
+                             final boolean isRelatedDto,
+                             final @Nullable FieldAccessor relatedCollectionField,
+                             final @Nullable Class<?> relatedDtoClass) {
             this.fieldAccessor = fieldAccessor;
             this.columns = columns;
             this.columnLabels = columnLabels;
@@ -1092,38 +1057,6 @@ public class DtoMapper {
         public void setColumnIndexes(final int[] columnIndexes) {
             this.columnIndexes = columnIndexes;
         }
-
-        @Override
-        public boolean equals(final @Nullable Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (FieldMapping) obj;
-            return Objects.equals(this.fieldAccessor, that.fieldAccessor) &&
-                    Objects.equals(this.columns, that.columns) &&
-                    Arrays.equals(this.columnIndexes, that.columnIndexes) &&
-                    this.isBasicType == that.isBasicType &&
-                    this.isRelatedDto == that.isRelatedDto &&
-                    Objects.equals(this.relatedCollectionField, that.relatedCollectionField) &&
-                    Objects.equals(this.relatedDtoClass, that.relatedDtoClass);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(fieldAccessor, columns, Arrays.hashCode(columnIndexes), isBasicType, isRelatedDto, relatedCollectionField, relatedDtoClass);
-        }
-
-        @Override
-        public String toString() {
-            return "FieldMapping[" +
-                    "fieldAccessor=" + fieldAccessor + ", " +
-                    "columns=" + columns + ", " +
-                    "columnIndexes=" + Arrays.toString(columnIndexes) + ", " +
-                    "isBasicType=" + isBasicType + ", " +
-                    "isRelatedDto=" + isRelatedDto + ", " +
-                    "relatedCollectionField=" + relatedCollectionField + ", " +
-                    "relatedDtoClass=" + relatedDtoClass + ']';
-        }
-
     }
 
     private static final class MappingData {
@@ -1133,7 +1066,6 @@ public class DtoMapper {
         private final OrmTable ormTable;
         private final int[] pkColumnIndexes;
         private final List<FieldMapping> fieldMappings;
-        private int @Nullable [] constructorArgIndices;
         private @Nullable List<GenericDtoDependency> genericDtoDependencies;
 
         private MappingData(final Class<?> dtoClass,
@@ -1174,14 +1106,6 @@ public class DtoMapper {
             return fieldMappings;
         }
 
-        public int[] getConstructorArgIndices() {
-            return constructorArgIndices;
-        }
-
-        public void setConstructorArgIndices(final int @Nullable [] constructorArgIndices) {
-            this.constructorArgIndices = constructorArgIndices;
-        }
-
         public void addGenericDtoDependency(final GenericDtoDependency genericDtoDependency) {
             if (genericDtoDependencies == null) {
                 genericDtoDependencies = new ArrayList<>();
@@ -1192,35 +1116,6 @@ public class DtoMapper {
 
         public @Nullable List<GenericDtoDependency> getGenericDtoDependencies() {
             return genericDtoDependencies;
-        }
-
-        @Override
-        public boolean equals(final @Nullable Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (MappingData) obj;
-            return Objects.equals(this.dtoClass, that.dtoClass) &&
-                    Objects.equals(this.table, that.table) &&
-                    Objects.equals(this.ormTable, that.ormTable) &&
-                    Arrays.equals(this.pkColumnIndexes, that.pkColumnIndexes) &&
-                    Objects.equals(this.fieldMappings, that.fieldMappings) &&
-                    Arrays.equals(this.constructorArgIndices, that.constructorArgIndices);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(dtoClass, table, ormTable, Arrays.hashCode(pkColumnIndexes), fieldMappings, Arrays.hashCode(constructorArgIndices));
-        }
-
-        @Override
-        public String toString() {
-            return "MappingData[" +
-                    "dtoClass=" + dtoClass + ", " +
-                    "table=" + table + ", " +
-                    "ormTable=" + ormTable + ", " +
-                    "pkColumnIndexes=" + Arrays.toString(pkColumnIndexes) + ", " +
-                    "fieldMappings=" + fieldMappings + ", " +
-                    "constructorArgIndices=" + Arrays.toString(constructorArgIndices) + ']';
         }
     }
 

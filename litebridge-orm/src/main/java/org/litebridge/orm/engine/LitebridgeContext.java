@@ -11,6 +11,7 @@ import org.litebridge.orm.api.select.sql.SqlProtoExpressionResolver;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
+import org.litebridge.orm.persistence.MappingPlanCache;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.orm.persistence.alias.AliasGenerator;
@@ -26,6 +27,7 @@ public final class LitebridgeContext {
     private final DatabaseProvider databaseProvider;
     private final SqlFunctionRegistry sqlFunctionRegistry;
     private final QueryPlanCache queryPlanCache;
+    private final MappingPlanCache mappingPlanCache;
     private final AliasGenerator aliasGenerator;
     private final TableRegistry tableRegistry;
     private final TableMetaDataCache tableMetaDataCache;
@@ -35,6 +37,49 @@ public final class LitebridgeContext {
     private final TransactionManager transactionManager;
     private final SelectEngine selectEngine;
     private RelatedDtoStrategy relatedDtoStrategy;
+
+    /**
+     * Create a new Litebridge context with the specified components.
+     *
+     * @param mode                    The mode of operation for the Litebridge context.
+     * @param config                  Configuration for managing runtime behaviour
+     * @param databaseProvider        The database provider.
+     * @param queryPlanCache          A cache for storing execution plans based on query structure.
+     * @param mappingPlanCache        A cache for storing mapping plans for DTOs.
+     * @param aliasGenerator          An alias generator for creating unique table and column aliases.
+     * @param tableRegistry           The table registry.
+     * @param tableMetaDataCache      The table metadata cache.
+     * @param classFieldAccessorCache The class field accessor cache.
+     * @param transactionManager      The transaction manager.
+     * @param selectEngine            The select engine.
+     */
+    public LitebridgeContext(final Mode mode,
+                             final LitebridgeConfig config,
+                             final DatabaseProvider databaseProvider,
+                             final QueryPlanCache queryPlanCache,
+                             final MappingPlanCache mappingPlanCache,
+                             final AliasGenerator aliasGenerator,
+                             final TableRegistry tableRegistry,
+                             final TableMetaDataCache tableMetaDataCache,
+                             final ClassFieldAccessorCache classFieldAccessorCache,
+                             final TransactionManager transactionManager,
+                             final SelectEngine selectEngine) {
+        this.mode = mode;
+        this.config = config;
+        this.databaseProvider = databaseProvider;
+        this.sqlFunctionRegistry = databaseProvider.sqlFunctionRegistry();
+        this.queryPlanCache = queryPlanCache;
+        this.mappingPlanCache = mappingPlanCache;
+        this.aliasGenerator = aliasGenerator;
+        this.relatedDtoStrategy = config.relatedDtoStrategy();
+        this.tableRegistry = tableRegistry;
+        this.tableMetaDataCache = tableMetaDataCache;
+        this.classFieldAccessorCache = classFieldAccessorCache;
+        this.transactionManager = transactionManager;
+        this.typeConverter = databaseProvider.typeConverter();
+        this.selectExpressionMapper = createSelectExpressionMapper();
+        this.selectEngine = selectEngine;
+    }
 
     /**
      * Create a new Litebridge context with the specified components.
@@ -60,20 +105,7 @@ public final class LitebridgeContext {
                              final ClassFieldAccessorCache classFieldAccessorCache,
                              final TransactionManager transactionManager,
                              final SelectEngine selectEngine) {
-        this.mode = mode;
-        this.config = config;
-        this.databaseProvider = databaseProvider;
-        this.sqlFunctionRegistry = databaseProvider.sqlFunctionRegistry();
-        this.queryPlanCache = queryPlanCache;
-        this.aliasGenerator = aliasGenerator;
-        this.relatedDtoStrategy = config.relatedDtoStrategy();
-        this.tableRegistry = tableRegistry;
-        this.tableMetaDataCache = tableMetaDataCache;
-        this.classFieldAccessorCache = classFieldAccessorCache;
-        this.transactionManager = transactionManager;
-        this.typeConverter = databaseProvider.typeConverter();
-        this.selectExpressionMapper = createSelectExpressionMapper();
-        this.selectEngine = selectEngine;
+        this(mode, config, databaseProvider, queryPlanCache, new MappingPlanCache(), aliasGenerator, tableRegistry, tableMetaDataCache, classFieldAccessorCache, transactionManager, selectEngine);
     }
 
     /**
@@ -110,6 +142,15 @@ public final class LitebridgeContext {
      */
     public QueryPlanCache queryPlanCache() {
         return queryPlanCache;
+    }
+
+    /**
+     * Provides access to the mapping plan cache.
+     *
+     * @return the {@link MappingPlanCache} instance for the context
+     */
+    public MappingPlanCache mappingPlanCache() {
+        return mappingPlanCache;
     }
 
     /**
