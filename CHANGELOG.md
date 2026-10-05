@@ -15,6 +15,9 @@
     - Return `UpdateResult` and `InsertResult` classes for mutating operations, providing details on rows affected and
       generated keys.
     - Add batch update operations for native SQL.
+    - Add new DTO mapper via the `DtoMapper` class.
+    - Add `MappingPlanCache` to increase performance for mapping structurally-similar results to entities/DTOs
+      by caching the calculated mapping plans in `DtoMapper`.
     - Add `LitebridgeBuilder` for instantiating dynamic Litebridge instances with ease.
       This allows database providers to "inject" additional `Litebridge` APIs for database-specific functionality.
     - Add `LitebridgeOverrideDatabaseProvider` interface in new ORM SPI package. This allows the Database Provider 
@@ -76,6 +79,7 @@
     - Mathematical operations can now be overridden more simply in database providers
     - `LabelGenerator` replaces `ColumnIdentifierGenerator`; simplify and standardise alias handling
     - Refactor and simplify `SelectExpression` reference implementations.
+    - `Row` and `RowColumn` models re-created for better user experience and performance.
 - PostgreSQL Database Provider:
     - Add postgres-specific `COUNT(*)` expression to handle references to it in conditions using expression functions correctly.
 - Oracle Database Provider:
