@@ -12,7 +12,9 @@ export const exampleCodeHints: CodeHintRegistry = {
     Person: {
         title: 'Person.java',
         description: 'Example entity class annotated with <code>@Table</code>, <code>@Column</code> and others, for <strong>declarative table mapping</strong>.',
-        code: `@Table("LB.PERSON")
+        code: `
+
+@Table("LB.PERSON")
 public class PersonEntity {
     @Column(value = "PERSON_ID", generateUsingSequence = "LB.PERSON_SEQ")
     private Long id;
@@ -99,7 +101,7 @@ const entityJavaCode = `import org.litebridge.orm.annotation.Column;
 import org.litebridge.orm.annotation.Table;
 import org.litebridge.orm.annotation.OneToMany;
 
-@Table("EXAMPLE.PERSON")
+@Table("LB.PERSON")
 public class Person {
 
     @Column(value = "ID", generateUsingSequence = "PERSON_SEQ")

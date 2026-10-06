@@ -1,0 +1,239 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {ArrowLeft, DatabaseX} from '@lucide/astro';
+import CodeExample from '../components/CodeExample.astro';
+import save from "@lucide/astro/icons/save";
+
+const title = "Annotated entities";
+const description = "Annotated entity examples";
+
+const entityExample = [
+    {
+        id: 'exampleEntities',
+        title: 'Example entities',
+        description: 'Litebridge entities are decorated with annotations to define their mapping to tables and columns, and relationships with other entities. Fields or property getter methods may be annotated.',
+        code: `import org.litebridge.orm.annotation.Column;
+import org.litebridge.orm.annotation.Table;
+import org.litebridge.orm.annotation.OneToMany;
+
+// Person.java
+@Table("LB.PERSON")
+public class Person {
+
+    @Column(value = "ID", generateUsingSequence = "LB.PERSON_SEQ")
+    private Long id;
+
+    @Column("NAME")
+    private String name;
+
+    @Column("SURNAME")
+    private String surname;
+    
+    @OneToMany(mappedByField = "owner")
+    private List<Account> accounts;
+
+    // Getters and setters
+}
+
+// Account.java
+@Table("LB.ACCOUNT")
+public class Account {
+
+    @Column(value = "ACCOUNT_ID", generateUsingSequence = "LB.ACCOUNT_SEQ")
+    private Long id;
+    
+    @Column("ACCOUNT_NAME")
+    private String name;
+    
+    @Column("BALANCE")
+    private BigInteger balance;
+    
+    @Column(value = "PERSON_ID", joinUsing = true)
+    private Person owner;
+    
+    // Getters and setters
+}`
+    },
+    {
+        id: 'exampleMetaModels',
+        title: 'Example metamodels',
+        description: 'Litebridge metamodels provide static query expressions for <strong>type-safe query formulation</strong>.',
+        code: `import org.litebridge.orm.expression.Fn;
+import org.litebridge.orm.expression.ProtoNestableTOExpr;
+import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
+
+import org.example.entity.Person;
+
+// PersonMeta.java
+public final class PersonMeta {
+    public static final NumericQueryField id = new NumericQueryField(Person.class, "id");
+    public static final StringQueryField name = new StringQueryField(Person.class, "name");
+    public static final StringQueryField surname = new StringQueryField(Person.class, "surname");
+    public static final NumericQueryField age = new NumericQueryField(Person.class, "age");
+    public static final QueryField accounts = new QueryField(Person.class, "accounts");
+}`
+    },
+    {
+        id: 'maven',
+        title: 'Reverse engineering',
+        description: 'Reverse engineer existing database tables to entities using the Litebridge Maven plugin.',
+        lang: `xml`,
+        code: `<!-- Generate Litebridge entities -->
+            <plugin>
+                <groupId>org.litebridgedb.maven</groupId>
+                <artifactId>litebridge-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>Reverse engineer Litebridge entities</id>
+                        <goals>
+                            <goal>reverse-engineer</goal>
+                        </goals>
+                        <configuration>
+                            <database>
+                                <url>jdbc:h2:file:./target/h2/lb</url>
+                                <user>sa</user>
+                                <password></password>
+                                <databaseProviderClass>org.litebridge.db.h2.H2DatabaseProvider</databaseProviderClass>
+                            </database>
+
+                            <input>
+                                <tables>
+                                    <table>LB.PERSON</table>
+                                    <table>LB.ACCOUNT</table>
+                                </tables>
+                            </input>
+
+                            <sqlTypeMappings>
+                                <sqlTypeMapping>
+                                    <jdbcType>NUMERIC</jdbcType>
+                                    <fieldType>java.lang.Long</fieldType>
+                                </sqlTypeMapping>
+                                <sqlTypeMapping>
+                                    <jdbcType>NUMERIC</jdbcType>
+                                    <precision>1</precision>
+                                    <notNull>true</notNull>
+                                    <fieldType>boolean</fieldType>
+                                </sqlTypeMapping>
+                                <sqlTypeMapping>
+                                    <jdbcType>NUMERIC</jdbcType>
+                                    <precision>1</precision>
+                                    <notNull>false</notNull>
+                                    <fieldType>java.lang.Boolean</fieldType>
+                                </sqlTypeMapping>
+                            </sqlTypeMappings>
+
+                            <tableMappings>
+                                <tableMapping>
+                                    <table>LB.PERSON</table>
+                                    <columnMappings>
+                                        <columnMapping>
+                                            <column>PERSON_ID</column>
+                                            <fieldName>id</fieldName>
+                                            <generateUsingSequence>LB.PERSON_SEQ</generateUsingSequence>
+                                        </columnMapping>
+                                        <columnMapping>
+                                            <column>AGE</column>
+                                            <fieldType>int</fieldType>
+                                        </columnMapping>
+                                    </columnMappings>
+                                </tableMapping>
+
+                                <tableMapping>
+                                    <table>LB.ACCOUNT</table>
+                                    <columnMappings>
+                                        <columnMapping>
+                                            <column>ACCOUNT_ID</column>
+                                            <fieldName>id</fieldName>
+                                            <generateUsingSequence>LB.ACCOUNT_SEQ</generateUsingSequence>
+                                        </columnMapping>
+                                        <columnMapping>
+                                            <column>PERSON_ID</column>
+                                            <fieldName>owner</fieldName>
+                                        </columnMapping>
+                                        <columnMapping>
+                                            <column>BALANCE</column>
+                                            <fieldType>java.math.BigDecimal</fieldType>
+                                        </columnMapping>
+                                    </columnMappings>
+                                </tableMapping>
+                            </tableMappings>
+
+                            <output>
+                                <outputDir>\${project.build.directory}/generated-sources/java</outputDir>
+                                <outputPackage>org.example.entity</outputPackage>
+                            </output>
+                        </configuration>
+                    </execution>
+
+                    <!-- Create Litebridge entity metamodels -->
+                    <execution>
+                        <id>Create Litebridge entity metamodels</id>
+                        <goals>
+                            <goal>metamodel</goal>
+                        </goals>
+
+                        <configuration>
+                            <input>
+                                <srcDir>\${project.build.directory}/generated-sources/java</srcDir>
+                                <inputPackages>
+                                    <inputPackage>org.example.entity</inputPackage>
+                                </inputPackages>
+                            </input>
+                            <output>
+                                <outputDir>\${project.build.directory}/generated-sources/java</outputDir>
+                                <outputPackage>org.example.metamodel</outputPackage>
+                            </output>
+                        </configuration>
+                    </execution>
+                </executions>`
+    },
+];
+---
+
+<Layout title={title} description={description}>
+    <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-12 reveal">
+                <a
+                        href="/mapping"
+                        class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
+                >
+                    <ArrowLeft class="h-4 w-4"/>
+                    Back to mapping overview
+                </a>
+                <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+                    Annotated entities
+                </h1>
+                <p class="text-xl text-gray-500 dark:text-gray-400">
+                    Use annotations to map entities to tables declaratively.
+                </p>
+            </div>
+
+            <div class="space-y-16">
+                <!-- Update data -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <DatabaseX class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Creating entities</h2>
+                    </div>
+                    <CodeExample filename="Person.java / Account.java" examples={entityExample}/>
+                </section>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s ease-out;
+    }
+
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
