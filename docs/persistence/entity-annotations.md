@@ -110,7 +110,7 @@ module my.module {
 
 #### Usage
 
-Use `TypesafeRegistrationSupport` to scan one or more packages:
+Use `EntityScanner` to scan one or more packages:
 
 ```java
 import org.litebridge.orm.support.EntityScanner;
@@ -119,9 +119,7 @@ import org.litebridge.orm.support.EntityScanner;
 EntityScanner scanner = new EntityScanner(litebridge);
 
 // Scan and register all entity classes in the specified packages
-scanner.
-
-        scanBasePackage("com.example.app.mappings");
+scanner.scanBasePackage("com.example.app.mappings");
 ```
 
 ### Spring Integration

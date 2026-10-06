@@ -13,6 +13,7 @@ export interface Props {
   hints?: Record<string, CodeHint>;
   showImportsDefault?: boolean;
   showHintsDefault?: boolean;
+  animate?: boolean;
 }
 
 const {
@@ -24,6 +25,7 @@ const {
   hints = {},
   showImportsDefault = false,
   showHintsDefault = true,
+  animate = true,
 } = Astro.props;
 
 const mergedHints: CodeHintRegistry = {
@@ -61,6 +63,7 @@ for (const key of parsed.detectedHintKeys) {
   id={id}
   data-has-imports={hasImports ? 'true' : 'false'}
   data-hints-enabled={showHintsDefault ? 'true' : 'false'}
+  data-animate={animate ? 'true' : 'false'}
 >
   <script type="application/json" class="code-hints-data" set:html={JSON.stringify(activeHints)} />
 
@@ -614,7 +617,9 @@ for (const key of parsed.detectedHintKeys) {
       });
 
       // 3. Typing animation
-      if (content) {
+      const shouldAnimate = block.dataset.animate !== 'false';
+
+      if (content && shouldAnimate) {
         const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null);
         const nodes: Text[] = [];
         let node: Node | null;

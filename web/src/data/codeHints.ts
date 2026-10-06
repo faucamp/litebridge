@@ -131,49 +131,6 @@ public class PersonEntity {
     filename: 'AccountMeta.java',
   },
 
-  Litebridge: {
-    title: 'Litebridge.java',
-    description: `The core entry point for fluent database operations (<code>select</code>, <code>insert</code>, <code>update</code>, <code>delete</code>, <code>merge</code>).
-
-Typically instantiated using the <code>Litebridge.withDatabase()</code> builder method, or injected if using Spring.
-
-Different database providers change the capabilities of Litebridge by extending or constraining its API:
-`,
-    code: `import org.litebridge.orm.Litebridge;
-import org.litebridge.db.h2.H2DatabaseProvider;
-import org.litebridge.db.h2.OracleDatabseProvider;
-import org.litebridge.db.postgres.PostgresDatabaseProvider;
-import org.litebridge.db.sqlite.SQLiteDatabaseProvider;
-
-// For H2
-Litebridge litebridge = Litebridge
-    .withDatabaseProvider(
-        new H2DatabaseProvider(), dataSource)
-    .build();
-    
-// Oracle provides database-specific extensions to the 
-// base Litebridge interface, such as "insertAll()"
-LitebridgeOracle litebridge = Litebridge
-    .withDatabaseProvider(
-        new OracleDatabaseProvider(), dataSource)
-    .build();
-
-// For PostgreSQL
-Litebridge litebridge = Litebridge
-    .withDatabaseProvider(
-        new PostgresDatabaseProvider(), dataSource)
-    .build();
-
-// SQLite uses LitebridgeCore as it does not have "merge" functionality
-LitebridgeCore litebridge = Litebridge
-    .withDatabaseProvider(
-        new SQLiteDatabaseProvider(), dataSource)
-    .build();
-    `,
-    lang: 'java',
-    filename: 'Litebridge.java',
-  },
-
   Row: {
     title: 'Row.java',
     description: 'Litebridge representation of an untyped database row containing key-value column pairs.',

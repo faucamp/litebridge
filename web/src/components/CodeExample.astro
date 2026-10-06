@@ -12,6 +12,7 @@ export interface CodeSnippet {
   hints?: Record<string, CodeHint>;
   showImportsDefault?: boolean;
   showHintsDefault?: boolean;
+  animate?: boolean;
 }
 
 export interface Props {
@@ -24,6 +25,7 @@ export interface Props {
   hints?: Record<string, CodeHint>;
   showImportsDefault?: boolean;
   showHintsDefault?: boolean;
+  animate?: boolean;
 }
 
 const {
@@ -36,6 +38,7 @@ const {
   hints = {},
   showImportsDefault = false,
   showHintsDefault = true,
+  animate,
 } = Astro.props;
 
 const activeId = defaultId ?? (examples[0]?.id ?? '');
@@ -58,9 +61,7 @@ const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
               <h3 class="text-lg font-bold text-primary dark:text-white group-hover:text-accent transition-colors">
                 {ex.title}
               </h3>
-              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                {ex.description}
-              </p>
+              <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 example-desc" set:html={ex.description} />
             </button>
           ))}
         </div>
@@ -78,6 +79,7 @@ const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
                 hints={ex.hints ?? hints}
                 showImportsDefault={ex.showImportsDefault ?? showImportsDefault}
                 showHintsDefault={ex.showHintsDefault ?? showHintsDefault}
+                animate={ex.animate ?? animate}
               />
             </div>
           ))}
@@ -104,9 +106,8 @@ const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
             <p
               data-desc-id={ex.id}
               class={`example-desc text-sm sm:text-base text-gray-600 dark:text-gray-400 ${ex.id === activeId ? 'block' : 'hidden'}`}
-            >
-              {ex.description}
-            </p>
+              set:html={ex.description}
+            />
           ))}
         </div>
 
@@ -123,6 +124,7 @@ const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
                 hints={ex.hints ?? hints}
                 showImportsDefault={ex.showImportsDefault ?? showImportsDefault}
                 showHintsDefault={ex.showHintsDefault ?? showHintsDefault}
+                animate={ex.animate ?? animate}
               />
             </div>
           ))}
@@ -190,3 +192,67 @@ const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
   initCodeExamples();
   document.addEventListener('astro:page-load', initCodeExamples);
 </script>
+
+<style>
+  :global(.example-desc strong) {
+    font-weight: 600;
+    color: #111827;
+  }
+  :global(.dark .example-desc strong) {
+    color: #f9fafb;
+  }
+
+  :global(.example-desc em) {
+    font-style: italic;
+    color: #374151;
+  }
+  :global(.dark .example-desc em) {
+    color: #d1d5db;
+  }
+
+  :global(.example-desc code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.85em;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background-color: #f3f4f6;
+    color: #0B2E4E;
+    border: 1px solid #e5e7eb;
+  }
+  :global(.dark .example-desc code) {
+    background-color: #1f2937;
+    color: #4FD1F9;
+    border-color: rgba(55, 65, 81, 0.6);
+  }
+
+  :global(.example-desc a) {
+    color: #4FD1F9;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: opacity 0.15s ease;
+  }
+  :global(.dark .example-desc a) {
+    color: #4FD1F9;
+  }
+  :global(.example-desc a:hover) {
+    opacity: 0.8;
+  }
+
+  :global(.example-desc ul) {
+    list-style-type: disc;
+    padding-left: 1.25rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.example-desc ol) {
+    list-style-type: decimal;
+    padding-left: 1.25rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.example-desc li) {
+    margin-bottom: 0.125rem;
+  }
+</style>
