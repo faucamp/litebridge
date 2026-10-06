@@ -1,0 +1,241 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {ArrowLeft, Database} from '@lucide/astro';
+import CodeExample from '../components/CodeExample.astro';
+
+const title = "Mapping DTOs to tables";
+const description = "Examples of mapping unaltered DTOs to tables";
+
+const dtoExamples = [
+    {
+        id: 'exampleClasses',
+        title: 'Example classes',
+        animate: false,
+        filename: 'Person.java / Account.java',
+        description: `Litebridge allows the use of <strong>raw/unaltered DTO classes</strong> as entities; 
+these can be typical Java beans with getters/setters or custom POJOs.`,
+        code: `// Person.java
+public class Person {
+    private Long id;
+    private String name;
+    private String surname;
+    private int age;
+    private List<Account> accounts;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getSurname() { return surname; }
+    public void setSurname(String surname) { this.surname = surname; }
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+
+    public List<Account> getAccounts() { return accounts; }
+    public void setAccounts(List<Account> accounts) { this.accounts = accounts; }
+}
+
+// Account.java
+public class Account {
+    private Long id;
+    private String accountNumber;
+    private BigDecimal balance;
+    private Person owner;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+
+    public BigDecimal getBalance() { return balance; }
+    public void setBalance(BigDecimal balance) { this.balance = balance; }
+
+    public Person getOwner() { return owner; }
+    public void setOwner(Person owner) { this.owner = owner; }
+}`
+    },
+    {
+        id: 'exampleRecords',
+        title: 'Example records',
+        animate: false,
+        filename: 'Person.java / Account.java',
+        description: `Litebridge support the use of records as DTOs both directly and as annotated entities; the example below shows alternative
+<code>Person</code> and <code>Account</code> implementations using records:`,
+        code: `// Person.java
+public record Person(Long id,
+                     String name,
+                     String surname,
+                     int age,
+                     List<Account> accounts) {
+}
+
+// Account.java
+public record Account(Long id,
+                      String accountNumber,
+                      BigDecimal balance,
+                      Person owner) {
+}`
+    },
+    {
+        id: 'exampleMetaModels',
+        title: 'Metamodels',
+        description: `Litebridge metamodels provide static query expressions for <strong>type-safe query formulation</strong>.
+<br/>
+<br/>
+They are optional to use and must be manually created for custom DTOs. If <a href="/mapping-entities">entities</a> are used, these can be generated using the Litebridge Maven plugin's <code>metamodel</code> goal.
+`,
+        animate: false,
+        filename: 'PersonMeta.java / AccountMeta.java',
+        code: `import org.litebridge.orm.meta.NumericQueryField;
+import org.litebridge.orm.meta.StringQueryField;
+import org.litebridge.orm.meta.QueryField;
+
+import org.example.dto.Person;
+import org.example.dto.Account;
+
+// PersonMeta.java
+public final class PersonMeta {
+    public static final NumericQueryField id = new NumericQueryField(Person.class, "id");
+    public static final StringQueryField name = new StringQueryField(Person.class, "name");
+    public static final StringQueryField surname = new StringQueryField(Person.class, "surname");
+    public static final NumericQueryField age = new NumericQueryField(Person.class, "age");
+    public static final QueryField accounts = new QueryField(Person.class, "accounts");
+}
+
+// AccountMeta.java
+public class AccountMeta {
+    public static final NumericQueryField id = new NumericQueryField(Account.class, "id");
+    public static final StringQueryField name = new StringQueryField(Account.class, "name");
+    public static final NumericQueryField balance = new NumericQueryField(Account.class, "balance");
+    public static final QueryField owner = new QueryField(Account.class, "owner");
+}
+
+// Example type-safe query using the Person metamodel
+litebridge.select(PersonMeta.id, PersonMeta.name).from(Person.class).list();
+
+// The same query, but using field names directly instead of a metamodel
+litebridge.select("id", "name").from(Person.class).list();`
+    },
+    {
+        id: 'exampleTables',
+        title: 'Example tables',
+        animate: false,
+        filename: 'create-tables.sql',
+        description: `DDL for examples:`,
+        lang: 'sql',
+        code: `CREATE SEQUENCE LB.PERSON_SEQ START WITH 1 MAXVALUE 999 INCREMENT BY 1;
+CREATE SEQUENCE LB.ACCOUNT_SEQ START WITH 1 MAXVALUE 999 INCREMENT BY 1;
+
+CREATE TABLE LB.PERSON
+(
+    PERSON_ID  NUMBER(10)    NOT NULL PRIMARY KEY,
+    FIRST_NAME VARCHAR2(255) NOT NULL,
+    SURNAME    VARCHAR2(255),
+    AGE        NUMBER(3),
+);
+
+CREATE TABLE LB.ACCOUNT
+(
+    ACCOUNT_ID   NUMBER(10)    NOT NULL PRIMARY KEY,
+    ACCOUNT_NAME VARCHAR2(255) NOT NULL,
+    BALANCE      NUMBER(10)    NOT NULL,
+    PERSON_ID    NUMBER(10)    NOT NULL REFERENCES LB.PERSON (PERSON_ID)
+);`
+    },
+];
+
+const registerExamples = [
+    {
+        id: 'direct',
+        title: 'Direct registration',
+        description: `DTO classes are registered using the <code>register</code> method and specifying the table, column and relationship mapping using a fluent API.`,
+        filename: 'RegistrationExample.java',
+        lang: 'java',
+        code: `import org.example.dto.Person;
+import org.example.dto.Account;
+
+// Map the Person class' to the "LB.PERSON" table
+// with the "id" field mapped to the "PERSON_ID" column and auto-generated using a sequence
+// and the "accounts" relationship mapped to the "LB.ACCOUNT" table.
+litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
+    .with(spec -> spec.mapField("id").toColumn("PERSON_ID")
+        .generateUsingSequence("LB.PERSON_SEQ"))
+    .with(spec -> spec.mapField("name").toColumn("FIRST_NAME"))
+    .with(spec -> spec.mapField("accounts")
+        .oneToMany(c -> c.mappedByField("owner"))));
+
+// Map the Account class's fields to the "LB.ACCOUNT" table
+// with the "id" field mapped to the "ACCOUNT_ID" column and auto-generated using a sequence
+// and the "owner" relationship mapped to the "LB.PERSON" table, joined on shared "PERSON_ID" column
+litebridge.register(Account.class, rc -> rc.mapToTable("LB.ACCOUNT")
+    .with(spec -> spec.mapField("id").toColumn("ACCOUNT_ID").generateUsingSequence("LB.ACCOUNT_SEQ"))
+    .with(spec -> spec.mapField("name").toColumn("ACCOUNT_NAME"))
+    .with(spec -> spec.mapField("balance").toColumn("BALANCE"))
+    .with(spec -> spec.mapField("owner").toColumn("PERSON_ID").joinUsing()));
+`
+    }
+];
+---
+
+<Layout title={title} description={description}>
+    <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-12 reveal">
+                <a
+                        href="/mapping"
+                        class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
+                >
+                    <ArrowLeft class="h-4 w-4"/>
+                    Back to mapping overview
+                </a>
+                <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+                    Programmatic DTOs
+                </h1>
+                <p class="text-xl text-gray-500 dark:text-gray-400">
+                    Use programmatic registration to to map custom DTOs to tables.
+                </p>
+            </div>
+
+            <div class="space-y-16">
+                <!-- Example DTOs  -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Database class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Using DTOs as entities</h2>
+                    </div>
+                    <CodeExample showHintsDefault={false} examples={dtoExamples}/>
+                </section>
+
+                <!-- Registering entities -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Database class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Mapping DTOs to tables</h2>
+                    </div>
+                    <CodeExample examples={registerExamples}/>
+                </section>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s ease-out;
+    }
+
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
