@@ -2,57 +2,68 @@
 ---
 
 <section class="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col items-center text-center">
-      <div class="mb-8 flex animate-fade-in justify-center">
-        <img src="/img/logo-light-transparent.png" alt="Litebridge" class="h-auto max-h-48 w-auto max-w-full dark:hidden" />
-        <img src="/img/logo-dark-transparent.png" alt="Litebridge" class="hidden h-auto max-h-48 w-auto max-w-full dark:block" />
-      </div>
-      
-      <p class="mt-6 max-w-2xl animate-slide-up text-xl text-gray-600 dark:text-gray-400 [animation-delay:200ms]">
-        A fast, lightweight Object-Relational Mapper for <span class="text-primary dark:text-accent font-semibold">Java 21+</span>. 
-        <br/>
-        SQL-like fluent API, minimal boilerplate.
-      </p>
-      
-      <div class="mt-10 flex animate-slide-up flex-wrap justify-center gap-4 [animation-delay:400ms]">
-        <a 
-          href="/get-started"
-          class="rounded-full bg-primary px-8 py-4 text-lg font-bold text-white transition-all hover:bg-primary/90 hover:shadow-lg dark:bg-accent dark:text-primary dark:hover:bg-accent/90"
-        >
-          Get Started
-        </a>
-        <a 
-          href="/examples"
-          class="rounded-full border-2 border-primary/20 px-8 py-4 text-lg font-bold text-primary transition-all hover:bg-primary/5 dark:border-accent/20 dark:text-accent dark:hover:bg-accent/5"
-        >
-          Code Examples
-        </a>
-      </div>
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col items-center text-center">
+            <div class="mb-8 flex animate-fade-in justify-center">
+                <img src="/img/logo-light-transparent.png" alt="Litebridge"
+                     class="h-auto max-h-48 w-auto max-w-full dark:hidden"/>
+                <img src="/img/logo-dark-transparent.png" alt="Litebridge"
+                     class="hidden h-auto max-h-48 w-auto max-w-full dark:block"/>
+            </div>
+
+            <p class="mt-6 max-w-2xl animate-slide-up text-xl text-gray-600 dark:text-gray-400 [animation-delay:200ms]">
+                A fast, lightweight Object-Relational Mapper for <span
+                    class="text-primary dark:text-accent font-semibold">Java 21+</span>.
+                <br/>
+                SQL-like fluent API, minimal boilerplate.
+            </p>
+
+            <div class="mt-10 flex animate-slide-up flex-wrap justify-center gap-4 [animation-delay:400ms]">
+                <a href="/get-started"
+                   class="rounded-full bg-primary px-8 py-4 text-lg font-bold text-white transition-all hover:bg-primary/90 hover:shadow-lg dark:bg-accent dark:text-primary dark:hover:bg-accent/90"
+                >
+                    Get Started
+                </a>
+                <a href="/examples"
+                   class="rounded-full border-2 border-primary/20 px-8 py-4 text-lg font-bold text-primary transition-all hover:bg-primary/5 dark:border-accent/20 dark:text-accent dark:hover:bg-accent/5"
+                >
+                    Code Examples
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
-  
-  <!-- Background Glow -->
-  <div class="absolute -top-24 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-accent/20 blur-[120px] dark:bg-accent/10"></div>
+
+    <!-- Background Glow -->
+    <div class="absolute -top-24 left-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-accent/20 blur-[120px] dark:bg-accent/10"></div>
 </section>
 
 <style>
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .animate-fade-in {
-    animation: fade-in 1s ease-out forwards;
-  }
-  
-  .animate-slide-up {
-    animation: slide-up 0.8s ease-out forwards;
-    opacity: 0;
-  }
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slide-up {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 1s ease-out forwards;
+    }
+
+    .animate-slide-up {
+        animation: slide-up 0.8s ease-out forwards;
+        opacity: 0;
+    }
 </style>
