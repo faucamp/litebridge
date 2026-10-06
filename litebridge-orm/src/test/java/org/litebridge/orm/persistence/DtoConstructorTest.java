@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,7 +26,7 @@ class DtoConstructorTest {
     void newInstanceUsesDefaultConstructorWhenAvailable() {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        final OrmTable ormTable = ormTable();
+        final OrmTable ormTable = ormTable(DefaultConstructorDto.class);
         when(tableRegistry.getOrmTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -44,7 +45,7 @@ class DtoConstructorTest {
     void newInstanceUsesCachedConstructorsAfterFirstLookup() {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        final OrmTable ormTable = ormTable();
+        final OrmTable ormTable = ormTable(DefaultConstructorDto.class);
         when(tableRegistry.getOrmTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
@@ -62,7 +63,7 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor id = field("id", Long.class);
         final FieldAccessor name = field("name", String.class);
-        final OrmTable ormTable = ormTable(id, name);
+        final OrmTable ormTable = ormTable(PojoCanonicalDto.class, id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
@@ -91,7 +92,7 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor id = field("id", Long.class);
         final FieldAccessor dependency = field("dependency", DependencyDto.class);
-        final OrmTable ormTable = ormTable(id, dependency);
+        final OrmTable ormTable = ormTable(PojoWithDependencyDto.class, id, dependency);
         final DtoConstructor.DtoDependency dtoDependency =
                 new DtoConstructor.DtoDependency(dependency, DependencyDto.class, List.of(new DtoConstructor.FieldAccessorValue(id, 456L)));
 
@@ -123,7 +124,7 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor id = field("id", Long.class);
         final FieldAccessor name = field("name", String.class);
-        final OrmTable ormTable = ormTable(id, name);
+        final OrmTable ormTable = ormTable(RecordDto.class, id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
@@ -151,8 +152,8 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor dependency = field("dependency", DependencyDto.class);
 
-        final OrmTable parentTable = ormTableWithRelatedDtos(Set.of(DependencyDto.class), dependency);
-        final OrmTable relatedContextTable = ormTable();
+        final OrmTable parentTable = ormTableWithRelatedDtos(ParentWithDefaultConstructorDto.class, Set.of(DependencyDto.class), dependency);
+        final OrmTable relatedContextTable = ormTable(DependencyDto.class);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
@@ -174,8 +175,8 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor dependency = field("dependency", DependencyDto.class);
 
-        final OrmTable parentTable = ormTableWithRelatedDtos(Set.of(DependencyDto.class), dependency);
-        final OrmTable relatedGlobalTable = ormTable();
+        final OrmTable parentTable = ormTableWithRelatedDtos(ParentWithDefaultConstructorDto.class, Set.of(DependencyDto.class), dependency);
+        final OrmTable relatedGlobalTable = ormTable(DependencyDto.class);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
@@ -195,7 +196,7 @@ class DtoConstructorTest {
     void newInstanceThrowsWhenNoDefaultOrCanonicalConstructorMatches() {
         // Given
         final FieldAccessor id = field("id", Long.class);
-        final OrmTable ormTable = ormTable(id);
+        final OrmTable ormTable = ormTable(NoSuitableConstructorDto.class, id);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(NoSuitableConstructorDto.class))
@@ -218,7 +219,7 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor firstName = field("firstName", String.class);
         final FieldAccessor lastName = field("lastName", String.class);
-        final OrmTable ormTable = ormTable(firstName, lastName);
+        final OrmTable ormTable = ormTable(DuplicateTypePojoDto.class, firstName, lastName);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(DuplicateTypePojoDto.class))
@@ -247,7 +248,7 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor different = field("different", Long.class);
         final FieldAccessor name = field("name", String.class);
-        final OrmTable ormTable = ormTable(different, name);
+        final OrmTable ormTable = ormTable(RecordDto.class, different, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
@@ -273,7 +274,7 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor id = field("id", Integer.class);
         final FieldAccessor name = field("name", String.class);
-        final OrmTable ormTable = ormTable(id, name);
+        final OrmTable ormTable = ormTable(RecordDto.class, id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
@@ -302,7 +303,7 @@ class DtoConstructorTest {
         when(id.type()).thenAnswer(i -> Long.class);
 
         final FieldAccessor name = field("name", String.class);
-        final OrmTable ormTable = ormTable(id, name);
+        final OrmTable ormTable = ormTable(RecordDto.class, id, name);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
@@ -330,7 +331,7 @@ class DtoConstructorTest {
         // Given
         final FieldAccessor id = field("id", Long.class);
         final FieldAccessor active = field("active", Boolean.class);
-        final OrmTable ormTable = ormTable(id, active);
+        final OrmTable ormTable = ormTable(PojoCanonicalDto.class, id, active);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
@@ -357,7 +358,7 @@ class DtoConstructorTest {
         final FieldAccessor id = field("id", Long.class);
         final FieldAccessor name = field("name", String.class);
         final FieldAccessor active = field("active", Boolean.class);
-        final OrmTable ormTable = ormTable(id, name, active);
+        final OrmTable ormTable = ormTable(PojoCanonicalDto.class, id, name, active);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
@@ -380,6 +381,81 @@ class DtoConstructorTest {
     }
 
     @Test
+    void getMappingInfoWithOrmTableResolvesDefaultConstructor() {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final OrmTable ormTable = ormTable(DefaultConstructorDto.class);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+
+        // When
+        final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(ormTable);
+
+        // Then
+        assertTrue(mappingInfo.defaultConstructorUsed());
+        assertNotNull(mappingInfo.constructor());
+        assertTrue(mappingInfo.canonicalConstructorFieldAccessors().isEmpty());
+    }
+
+    @Test
+    void getMappingInfoWithOrmTableResolvesCanonicalConstructorForRecord() {
+        // Given
+        final FieldAccessor id = field("id", Long.class);
+        final FieldAccessor name = field("name", String.class);
+        final OrmTable ormTable = ormTable(RecordDto.class, id, name);
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+
+        // When
+        final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(ormTable);
+
+        // Then
+        assertFalse(mappingInfo.defaultConstructorUsed());
+        assertNotNull(mappingInfo.constructor());
+        assertEquals(List.of(id, name), mappingInfo.canonicalConstructorFieldAccessors());
+    }
+
+    @Test
+    void getMappingInfoWithOrmTableResolvesCanonicalConstructorForPojo() {
+        // Given
+        final FieldAccessor id = field("id", Long.class);
+        final FieldAccessor name = field("name", String.class);
+        final OrmTable ormTable = ormTable(PojoCanonicalDto.class, id, name);
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+
+        // When
+        final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(ormTable);
+
+        // Then
+        assertFalse(mappingInfo.defaultConstructorUsed());
+        assertNotNull(mappingInfo.constructor());
+        assertEquals(List.of(id, name), mappingInfo.canonicalConstructorFieldAccessors());
+    }
+
+    @Test
+    void getMappingInfoWithContextDtoClassResolvesContextualOrmTable() {
+        // Given
+        final FieldAccessor id = field("id", Long.class);
+        final FieldAccessor name = field("name", String.class);
+        final OrmTable contextualOrmTable = ormTable(PojoCanonicalDto.class, id, name);
+
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        when(tableRegistry.getOrmTableInContext(PojoCanonicalDto.class, ParentWithDefaultConstructorDto.class))
+                .thenReturn(contextualOrmTable);
+
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+
+        // When
+        final DtoConstructor.MappingInfo mappingInfo =
+                dtoConstructor.getMappingInfo(PojoCanonicalDto.class, ParentWithDefaultConstructorDto.class);
+
+        // Then
+        assertFalse(mappingInfo.defaultConstructorUsed());
+        verify(tableRegistry).getOrmTableInContext(PojoCanonicalDto.class, ParentWithDefaultConstructorDto.class);
+        assertEquals(List.of(id, name), mappingInfo.canonicalConstructorFieldAccessors());
+    }
+
+    @Test
     void fieldAccessorValueStoresFieldAndValue() {
         // Given
         final FieldAccessor field = field("id", Long.class);
@@ -392,12 +468,13 @@ class DtoConstructorTest {
         assertEquals(123L, value.value());
     }
 
-    private static OrmTable ormTable(final FieldAccessor... fieldAccessors) {
-        return ormTableWithRelatedDtos(Set.of(), fieldAccessors);
+    private static OrmTable ormTable(final Class<?> dtoClass, final FieldAccessor... fieldAccessors) {
+        return ormTableWithRelatedDtos(dtoClass, Set.of(), fieldAccessors);
     }
 
-    private static OrmTable ormTableWithRelatedDtos(final Set<Class<?>> relatedDtoClasses, final FieldAccessor... fieldAccessors) {
+    private static OrmTable ormTableWithRelatedDtos(final Class<?> dtoClass, final Set<Class<?>> relatedDtoClasses, final FieldAccessor... fieldAccessors) {
         final OrmTable ormTable = mock(OrmTable.class);
+        when(ormTable.dtoClass()).thenAnswer(i -> dtoClass);
         when(ormTable.fieldAcessorStream()).thenReturn(Stream.of(fieldAccessors));
         when(ormTable.getRelatedDtoClasses()).thenReturn(relatedDtoClasses);
         return ormTable;

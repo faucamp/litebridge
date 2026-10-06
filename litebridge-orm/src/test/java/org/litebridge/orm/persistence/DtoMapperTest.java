@@ -871,6 +871,73 @@ class DtoMapperTest {
         assertEquals("CompositeVal", parent.child.val);
     }
 
+    @Test
+    void toDtos_nestedSharedDtoWithoutRootTableRegistration() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table parentTable = new Table("parent_entity");
+        final Table settingTable = new Table("setting_entity");
+
+        final ColumnMetaData parentIdCol = new ColumnMetaData(parentTable, "id", false, Types.BIGINT);
+        final ColumnMetaData parentSettingIdCol = new ColumnMetaData(parentTable, "setting_id", false, Types.BIGINT);
+        final TableMetaData parentMeta = new TableMetaData(parentTable, List.of("id"), List.of(parentIdCol, parentSettingIdCol));
+
+        final ColumnMetaData settingIdCol = new ColumnMetaData(settingTable, "id", false, Types.BIGINT);
+        final ColumnMetaData settingNameCol = new ColumnMetaData(settingTable, "name", false, Types.VARCHAR);
+        final TableMetaData settingMeta = new TableMetaData(settingTable, List.of("id"), List.of(settingIdCol, settingNameCol));
+
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+
+        final FieldAccessor parentIdField = cache.fieldAccessorOrThrow(ParentWithSharedSettingDto.class, "id");
+        final FieldAccessor parentSettingField = cache.fieldAccessorOrThrow(ParentWithSharedSettingDto.class, "setting");
+
+        final FieldAccessor settingIdField = cache.fieldAccessorOrThrow(SharedSettingDto.class, "id");
+        final FieldAccessor settingNameField = cache.fieldAccessorOrThrow(SharedSettingDto.class, "name");
+
+        // Setting table is contextual to ParentWithSharedSettingDto.class
+        final OrmTable settingOrmTable = new OrmTable(
+                SharedSettingDto.class,
+                ParentWithSharedSettingDto.class,
+                settingMeta,
+                Map.of(settingIdField, settingIdCol, settingNameField, settingNameCol),
+                new ChangeTracker(lookup),
+                cache);
+
+        final ColumnAndInlineTable columnAndInlineTable = new ColumnAndInlineTable(parentSettingIdCol, settingOrmTable);
+        final OrmTable parentOrmTable = new OrmTable(
+                ParentWithSharedSettingDto.class,
+                parentMeta,
+                Map.of(parentIdField, parentIdCol, parentSettingField, columnAndInlineTable),
+                new ChangeTracker(lookup),
+                cache);
+
+        parentOrmTable.getContextTableRegistry().addTable(SharedSettingDto.class, settingOrmTable);
+        tableRegistry.addTable(ParentWithSharedSettingDto.class, parentOrmTable);
+        // Note: settingOrmTable is registered in TableRegistry by table name only, NOT by SharedSettingDto.class
+        tableRegistry.addTable(settingOrmTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        final Row row = new Row(List.of(
+                new RowColumn("p_id", 1L, new Column(parentTable, "id"), "p"),
+                new RowColumn("p_setting_id", 10L, new Column(parentTable, "setting_id"), "p"),
+                new RowColumn("s_id", 10L, new Column(settingTable, "id"), "s"),
+                new RowColumn("s_name", "dark_mode", new Column(settingTable, "name"), "s")
+        ));
+
+        // When
+        final List<ParentWithSharedSettingDto> result = dtoMapper.toDtos(ParentWithSharedSettingDto.class, null, List.of(row));
+
+        // Then
+        assertEquals(1, result.size());
+        final ParentWithSharedSettingDto parent = result.getFirst();
+        assertEquals(1L, parent.id);
+        assertNotNull(parent.setting);
+        assertEquals(10L, parent.setting.id);
+        assertEquals("dark_mode", parent.setting.name);
+    }
+
     private static DtoMapper createDtoMapper(final TableRegistry tableRegistry) {
         return createDtoMapperWithCache(tableRegistry, null);
     }
@@ -1124,6 +1191,48 @@ class DtoMapperTest {
 
         public void setChild(final CompositeKeyDto child) {
             this.child = child;
+        }
+    }
+
+    public static class ParentWithSharedSettingDto {
+        private Long id;
+        private SharedSettingDto setting;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(final Long id) {
+            this.id = id;
+        }
+
+        public SharedSettingDto getSetting() {
+            return setting;
+        }
+
+        public void setSetting(final SharedSettingDto setting) {
+            this.setting = setting;
+        }
+    }
+
+    public static class SharedSettingDto {
+        private Long id;
+        private String name;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(final Long id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(final String name) {
+            this.name = name;
         }
     }
 }

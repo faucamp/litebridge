@@ -58,14 +58,14 @@ public final class DtoConstructor {
     }
 
     /**
-     * Resolves and returns the mapping information for instantiating the specified DTO class.
+     * Resolves and returns the mapping information for instantiating the DTO class corresponding to the specified ORM table.
      *
-     * @param dtoClass        the DTO class to inspect
-     * @param contextDtoClass the context DTO class, or {@code null}
+     * @param ormTable the ORM table to inspect
      * @return the resolved {@link MappingInfo}
      */
-    public MappingInfo getMappingInfo(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
-        cacheConstructors(dtoClass, contextDtoClass);
+    public MappingInfo getMappingInfo(final OrmTable ormTable) {
+        cacheConstructors(ormTable);
+        final Class<?> dtoClass = ormTable.dtoClass();
         final Optional<MethodHandle> defaultHandle = defaultConstructor(dtoClass);
 
         if (defaultHandle.isPresent()) {
@@ -75,6 +75,23 @@ public final class DtoConstructor {
         final MethodHandle canonicalHandle = canonicalConstructor(dtoClass)
                 .orElseThrow(() -> new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass));
         return new MappingInfo(canonicalHandle, false, canonicalConstructorFieldAccessorCache.get(dtoClass));
+    }
+
+    /**
+     * Resolves and returns the mapping information for instantiating the specified DTO class.
+     *
+     * @param dtoClass        the DTO class to inspect
+     * @param contextDtoClass the context DTO class, or {@code null}
+     * @return the resolved {@link MappingInfo}
+     */
+    public MappingInfo getMappingInfo(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
+        final OrmTable ormTable;
+        if (contextDtoClass != null) {
+            ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
+        } else {
+            ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
+        }
+        return getMappingInfo(ormTable);
     }
 
     /**
@@ -163,6 +180,16 @@ public final class DtoConstructor {
             ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
         } else {
             ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
+        }
+
+        cacheConstructors(ormTable);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <DTO> void cacheConstructors(final OrmTable ormTable) {
+        final Class<DTO> dtoClass = (Class<DTO>) ormTable.dtoClass();
+        if (defaultConstructorHandleCache.containsKey(dtoClass)) {
+            return;
         }
 
         final List<FieldAccessor> fieldAccessors = ormTable.fieldAcessorStream().toList();

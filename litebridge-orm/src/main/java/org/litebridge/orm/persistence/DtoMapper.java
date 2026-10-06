@@ -373,8 +373,9 @@ public class DtoMapper {
         final String key = rowColumn.tableAlias() != null ? rowColumn.tableAlias() : canonicalTable.qualifiedName();
         return mappingDataMap.computeIfAbsent(key, alias -> {
             final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
+            final Class<?> effectiveContextDtoClass = ormTable.contextDtoClass() != null ? ormTable.contextDtoClass() : contextDtoClass;
             return new MappingData(ormTable.dtoClass(),
-                    contextDtoClass,
+                    effectiveContextDtoClass,
                     canonicalTable,
                     ormTable,
                     new int[pkFields.size()],
@@ -598,7 +599,7 @@ public class DtoMapper {
             final MappingData mappingData = partialDto.mappingData();
             final Class<?> dtoClass = mappingData.dtoClass();
             final DtoData dtoData = partialDto.dtoData();
-            final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(dtoClass, mappingData.contextDtoClass());
+            final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(mappingData.ormTable());
 
             final Map<FieldAccessor, Collection<Object>> instantiatedCollections = new HashMap<>();
 
@@ -705,7 +706,13 @@ public class DtoMapper {
     }
 
     private Object createDtoPrimaryKeyOnly(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final Pk primaryKey) {
-        final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(dtoClass, contextDtoClass);
+        final OrmTable ormTable;
+        if (contextDtoClass != null) {
+            ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
+        } else {
+            ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
+        }
+        final DtoConstructor.MappingInfo constructorMappingInfo = dtoConstructor.getMappingInfo(ormTable);
         final Object dto;
 
         if (constructorMappingInfo.defaultConstructorUsed()) {
@@ -715,7 +722,6 @@ public class DtoMapper {
                 throw new IllegalStateException("Failed to construct DTO: " + dtoClass, e);
             }
 
-            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
             final List<FieldAccessor> primaryKeyFields = ormTable.getPrimaryKeyFields();
 
             if (primaryKeyFields.size() != primaryKey.size()) {
@@ -731,7 +737,6 @@ public class DtoMapper {
             }
         } else {
             final @Nullable Object[] args = new Object[constructorMappingInfo.canonicalConstructorFieldAccessors().size()];
-            final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
             final List<FieldAccessor> primaryKeyFields = ormTable.getPrimaryKeyFields();
 
             for (int i = 0; i < args.length; i++) {
