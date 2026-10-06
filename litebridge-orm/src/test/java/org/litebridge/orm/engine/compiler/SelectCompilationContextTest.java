@@ -3,6 +3,7 @@ package org.litebridge.orm.engine.compiler;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.convert.TypeConverter;
@@ -26,6 +27,7 @@ import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.MappedManyToMany;
 import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
@@ -436,6 +438,9 @@ class SelectCompilationContextTest {
         final MappedOneToMany mappedOneToMany = new MappedOneToMany(mappedBy, collection);
 
         when(orderOrmTable.columnMetaDataForField(mappedBy)).thenReturn(orderUserIdCol);
+        when(orderOrmTable.mappedFieldTargetForField(mappedBy)).thenReturn(orderUserIdCol);
+        when(orderOrmTable.mappedFieldTargetForField("userId")).thenReturn(orderUserIdCol);
+        when(orderOrmTable.mappedFieldTargetForFieldOrNull("userId")).thenReturn(orderUserIdCol);
         when(userOrmTable.mappedFieldTargetForField("orders")).thenReturn(mappedOneToMany);
         when(userOrmTable.mappedFieldTargetForFieldOrNull("orders")).thenReturn(mappedOneToMany);
 
@@ -450,6 +455,109 @@ class SelectCompilationContextTest {
 
         // When / Then
         compilationContext.addJoinUsingCondition(usingNode);
+    }
+
+    @Test
+    void addJoinConditionUsingNodeOneToManyReverse_compositePk() {
+        // Given
+        final LitebridgeContext context = createMockContext();
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+
+        when(context.selectExpressionMapper().toSelectExpression(any(), anyMap()))
+                .thenAnswer(inv -> {
+                    final Object arg = inv.getArgument(0);
+                    if (arg instanceof SelectColumnSpec spec) {
+                        final org.litebridge.db.spi.expression.ColumnExpression colExpr = mock(org.litebridge.db.spi.expression.ColumnExpression.class);
+                        when(colExpr.column()).thenReturn(spec.getColumn());
+                        when(colExpr.tableAlias()).thenReturn(spec.getTableAlias());
+                        return colExpr;
+                    }
+                    return mock(SelectExpression.class);
+                });
+
+        final Table parentTable = new Table("comp_parents");
+        final ColumnMetaData parentTenantIdCol = new ColumnMetaData(parentTable, "tenant_id", true, Types.INTEGER, 0);
+        final ColumnMetaData parentIdCol = new ColumnMetaData(parentTable, "id", true, Types.INTEGER, 1);
+        final TableMetaData parentMeta = new TableMetaData(parentTable, List.of("tenant_id", "id"), List.of(parentTenantIdCol, parentIdCol));
+
+        final Table childTable = new Table("comp_children");
+        final ColumnMetaData childIdCol = new ColumnMetaData(childTable, "id", true, Types.INTEGER, 0);
+        final ColumnMetaData childTenantIdCol = new ColumnMetaData(childTable, "tenant_id", true, Types.INTEGER, 1);
+        final ColumnMetaData childParentIdCol = new ColumnMetaData(childTable, "parent_id", true, Types.INTEGER, 2);
+        final TableMetaData childMeta = new TableMetaData(childTable, List.of("id"), List.of(childIdCol, childTenantIdCol, childParentIdCol));
+
+        final TableRegistry tableRegistry = context.tableRegistry();
+        final OrmTable parentOrmTable = mock(OrmTable.class);
+        when(parentOrmTable.getMetaData()).thenReturn(parentMeta);
+        when(parentOrmTable.mappedColumns()).thenReturn(List.of(parentTenantIdCol, parentIdCol));
+        when(parentOrmTable.dtoClass()).thenReturn((Class) UserDto.class);
+        when(parentOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
+        when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(parentOrmTable);
+        when(tableRegistry.getOrmTable(UserDto.class)).thenReturn(parentOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(parentTable)).thenReturn(parentOrmTable);
+        when(tableRegistry.getOrmTable(parentTable)).thenReturn(parentOrmTable);
+        when(context.tableMetaDataCache().ensureTableMetaData(parentTable)).thenReturn(parentMeta);
+
+        final OrmTable childOrmTable = mock(OrmTable.class);
+        when(childOrmTable.getMetaData()).thenReturn(childMeta);
+        when(childOrmTable.mappedColumns()).thenReturn(List.of(childIdCol, childTenantIdCol, childParentIdCol));
+        when(childOrmTable.dtoClass()).thenReturn((Class) OrderDto.class);
+        when(childOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
+        when(tableRegistry.getOrmTableOrThrow(OrderDto.class)).thenReturn(childOrmTable);
+        when(tableRegistry.getOrmTable(OrderDto.class)).thenReturn(childOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(childTable)).thenReturn(childOrmTable);
+        when(tableRegistry.getOrmTable(childTable)).thenReturn(childOrmTable);
+        when(context.tableMetaDataCache().ensureTableMetaData(childTable)).thenReturn(childMeta);
+
+        final FieldAccessor mappedBy = mock(FieldAccessor.class);
+        when(mappedBy.name()).thenReturn("parent");
+        final FieldAccessor collection = mock(FieldAccessor.class);
+        final MappedOneToMany mappedOneToMany = new MappedOneToMany(mappedBy, collection);
+
+        final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(
+                new MappedFieldTarget[]{childTenantIdCol, childParentIdCol},
+                () -> parentOrmTable,
+                new String[]{"tenant_id", "id"}
+        );
+
+        when(childOrmTable.mappedFieldTargetForField(mappedBy)).thenReturn(mappedCompositeKey);
+        when(childOrmTable.mappedFieldTargetForField("parent")).thenReturn(mappedCompositeKey);
+        when(childOrmTable.mappedFieldTargetForFieldOrNull("parent")).thenReturn(mappedCompositeKey);
+        when(parentOrmTable.mappedFieldTargetForField("children")).thenReturn(mappedOneToMany);
+        when(parentOrmTable.mappedFieldTargetForFieldOrNull("children")).thenReturn(mappedOneToMany);
+
+        final SelectNode selectNode = new SelectNode(UserDto.class, null, null, null, null, null);
+        final SelectCompilationContext compilationContext = new SelectCompilationContext(selectNode, null, context);
+
+        final JoinNode joinNode = new JoinNode(selectNode, Join.JoinType.LEFT, OrderDto.class, null, null, null, null);
+        final ConditionJoinUsingNode usingNode = new ConditionJoinUsingNode(null, LogicOperator.AND, "children", null);
+        joinNode.setCondition(usingNode);
+
+        compilationContext.addJoin(joinNode);
+        compilationContext.addJoinUsingCondition(usingNode);
+
+        // When
+        final Select select = (Select) compilationContext.toOperation();
+
+        // Then
+        assertNotNull(select);
+        assertNotNull(select.joins());
+        assertEquals(1, select.joins().size());
+
+        final Join join = select.joins().getFirst();
+        assertEquals(Join.JoinType.LEFT, join.type());
+        assertNotNull(join.conditions());
+        assertEquals(2, join.conditions().conditions().size());
+
+        final org.litebridge.db.spi.expression.ColumnExpression lhs0 = (org.litebridge.db.spi.expression.ColumnExpression) join.conditions().conditions().get(0).condition().lhs();
+        final org.litebridge.db.spi.expression.ColumnExpression rhs0 = (org.litebridge.db.spi.expression.ColumnExpression) join.conditions().conditions().get(0).condition().rhs();
+        final org.litebridge.db.spi.expression.ColumnExpression lhs1 = (org.litebridge.db.spi.expression.ColumnExpression) join.conditions().conditions().get(1).condition().lhs();
+        final org.litebridge.db.spi.expression.ColumnExpression rhs1 = (org.litebridge.db.spi.expression.ColumnExpression) join.conditions().conditions().get(1).condition().rhs();
+
+        assertEquals("tenant_id", lhs0.column().name());
+        assertEquals("tenant_id", rhs0.column().name());
+        assertEquals("id", lhs1.column().name());
+        assertEquals("parent_id", rhs1.column().name());
     }
 
     @Test
@@ -690,6 +798,9 @@ class SelectCompilationContextTest {
         when(accountOrmTable.hasField("setting")).thenReturn(true);
         when(accountOrmTable.columnMetaDataForField("tenantId")).thenReturn(accountTenantIdCol);
         when(accountOrmTable.columnMetaDataForField(mappedByField)).thenReturn(accountTenantIdCol);
+        when(accountOrmTable.mappedFieldTargetForField(mappedByField)).thenReturn(accountTenantIdCol);
+        when(accountOrmTable.mappedFieldTargetForField("tenantId")).thenReturn(accountTenantIdCol);
+        when(accountOrmTable.mappedFieldTargetForFieldOrNull("tenantId")).thenReturn(accountTenantIdCol);
         when(accountOrmTable.columnMetaDataForField("setting")).thenReturn(accountSettingIdCol);
         when(accountOrmTable.mappedFieldTargetForField("setting")).thenReturn(accountSettingIdCol);
         when(accountOrmTable.mappedFieldTargetForFieldOrNull("setting")).thenReturn(accountSettingIdCol);
