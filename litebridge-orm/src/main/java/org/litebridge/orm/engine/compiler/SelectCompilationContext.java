@@ -736,9 +736,9 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     }
 
     private static void buildJoinConditions(final ConditionGroupSpec conditionGroupSpec,
-                                           final SelectColumnSpec[] leftSelectColumnSpecs,
-                                           final SelectColumnSpec[] rightSelectColumnSpecs,
-                                           final LogicOperator initialLogicOperator) {
+                                            final SelectColumnSpec[] leftSelectColumnSpecs,
+                                            final SelectColumnSpec[] rightSelectColumnSpecs,
+                                            final LogicOperator initialLogicOperator) {
         LogicOperator logicOperator = initialLogicOperator;
         for (int i = 0; i < leftSelectColumnSpecs.length; i++) {
             conditionGroupSpec.newCondition(logicOperator,
@@ -928,28 +928,53 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     private JoinOnSpec processOneToManyReverseJoin(final SelectTarget rightSelectTarget,
                                                    final MappedOneToMany mappedOneToMany,
                                                    final SelectTarget leftSelectTarget) {
+        // Left table
+        final Table leftTable = getTable(leftSelectTarget);
+        final String leftTableAlias = getAlias(leftSelectTarget);
+        final OrmTable leftOrmTable = tableRegistry.getOrmTableOrThrow(leftTable);
+        final TableMetaData leftTableMetaData = getTableMetaData(leftTable);
+
         // Right table & column
         final Table rightTable = getTable(rightSelectTarget);
         final String rightTableAlias = getAlias(rightSelectTarget) != null ? getAlias(rightSelectTarget) : aliasGenerator.newTableAlias(rightTable);
         final TableMetaData rightTableMetaData = getTableMetaData(rightTable);
         final OrmTable rightOrmTable = tableRegistry.getOrmTableOrThrow(rightTable);
-        final ColumnMetaData rightColumnMetaData = rightOrmTable.columnMetaDataForField(mappedOneToMany.mappedByField());
+        final MappedFieldTarget rightMappedFieldTarget = rightOrmTable.mappedFieldTargetForField(mappedOneToMany.mappedByField());
+        final ColumnMetaData[] leftColumnMetadatas;
+        final MappedFieldTarget[] rightMappedFieldTargets;
 
-        // Left column
-        //TODO: composite primary keys
-        final Table leftTable = getTable(leftSelectTarget);
-        final OrmTable leftOrmTable = tableRegistry.getOrmTableOrThrow(leftTable);
-        final ColumnMetaData leftColumnMetaData = leftOrmTable.getMetaData().primaryKey().getFirst();
-        final Column leftColumn = leftColumnMetaData.column();
-        final String leftTableAlias = getAlias(leftSelectTarget) != null ? getAlias(leftSelectTarget) : aliasGenerator.tableAlias(leftTable);
-        final String leftColumnAlias = aliasGenerator.columnAlias(leftColumn);
-        final SelectColumnSpec leftSelectColumnSpec = new SelectColumnSpec(leftColumn, leftColumnAlias, leftTableAlias);
+        if (rightMappedFieldTarget instanceof MappedCompositeKey mappedCompositeKey) {
+            rightMappedFieldTargets = mappedCompositeKey.columns();
+            final String[] leftColumnNames = mappedCompositeKey.targetColumns();
+            leftColumnMetadatas = new ColumnMetaData[leftColumnNames.length];
+
+            for (int i = 0; i < leftColumnNames.length; i++) {
+                final String columnName = leftColumnNames[i];
+                leftColumnMetadatas[i] = leftTableMetaData.column(columnName);
+            }
+        } else {
+            rightMappedFieldTargets = new MappedFieldTarget[]{rightMappedFieldTarget};
+            leftColumnMetadatas = new ColumnMetaData[]{leftTableMetaData.primaryKey().getFirst()};
+        }
+
+        final SelectColumnSpec[] leftSelectColumnSpecs = new SelectColumnSpec[rightMappedFieldTargets.length];
+        final SelectColumnSpec[] rightSelectColumnSpecs = new SelectColumnSpec[rightMappedFieldTargets.length];
+        final Map<ColumnMetaData, String> rightColumnAliases = new HashMap<>(rightMappedFieldTargets.length);
+
+        for (int i = 0; i < rightMappedFieldTargets.length; i++) {
+            final ColumnMetaData rightColumnMetaData = (ColumnMetaData) rightMappedFieldTargets[i];
+
+            // Left column
+            final ColumnMetaData leftColumnMetaData = leftColumnMetadatas[i];
+            final Column leftColumn = leftColumnMetaData.column();
+            final String leftColumnAlias = aliasGenerator.columnAlias(leftColumn);
+            leftSelectColumnSpecs[i] = new SelectColumnSpec(leftColumn, leftColumnAlias, leftTableAlias);
+            rightSelectColumnSpecs[i] = new SelectColumnSpec(rightColumnMetaData.column(), null, rightTableAlias);
+        }
 
         projectJoinedTableColumns(rightTableMetaData.columns(), rightTableAlias, Collections.emptyMap());
 
-        final SelectColumnSpec rightSelectColumnSpec = new SelectColumnSpec(rightColumnMetaData.column(), null, rightTableAlias);
-
-        return new JoinOnSpec(leftSelectColumnSpec, rightSelectColumnSpec);
+        return new JoinOnSpec(leftSelectColumnSpecs, rightSelectColumnSpecs);
     }
 
     private List<SelectExpressions> ensureJoinSelectExpressions() {
