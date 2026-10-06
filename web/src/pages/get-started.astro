@@ -1,10 +1,216 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import {Code} from 'astro:components';
+import CodeBlock from '../components/CodeBlock.astro';
 import {Terminal, Database, Rocket, Settings, Box, Code2, Cpu} from '@lucide/astro';
+import {CodeHintRegistry} from "../data/codeHints";
+import CodeExample from "../components/CodeExample.astro";
 
 const title = "Get Started with Litebridge";
 const description = "Learn how to integrate Litebridge into your Java 21+ project.";
+
+export const exampleCodeHints: CodeHintRegistry = {
+    Person: {
+        title: 'Person.java',
+        description: 'Example entity class annotated with <code>@Table</code>, <code>@Column</code> and others, for <strong>declarative table mapping</strong>.',
+        code: `@Table("LB.PERSON")
+public class PersonEntity {
+    @Column(value = "PERSON_ID", generateUsingSequence = "LB.PERSON_SEQ")
+    private Long id;
+
+    @Column("FIRST_NAME")
+    private String name;
+
+    @Column("SURNAME")
+    private String surname;
+
+    @OneToMany(mappedByField = "owner")
+    private List<AccountEntity> accounts;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getSurname() { return surname; }
+    public void setSurname(String surname) { this.surname = surname; }
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+
+    public List<AccountEntity> getAccounts() { return accounts; }
+    public void setAccounts(List<AccountEntity> accounts) { this.accounts = accounts; }
+}`,
+        lang: 'java',
+        filename: 'PersonEntity.java',
+    },
+}
+
+const coreDependencyXml = `<dependency>
+    <groupId>org.litebridgedb</groupId>
+    <artifactId>litebridge-orm</artifactId>
+    <version>0.4.0</version>
+</dependency>`;
+
+const databaseProviderDependencyXml = [
+    {
+        id: 'h2',
+        title: 'H2',
+        lang: 'xml',
+        code: `<dependency>
+    <groupId>org.litebridgedb</groupId>
+    <artifactId>litebridge-db-h2</artifactId>
+    <version>0.4.0</version>
+</dependency>`
+    },
+    {
+        id: 'oracle',
+        title: 'Oracle',
+        lang: 'xml',
+        code: `<dependency>
+    <groupId>org.litebridgedb</groupId>
+    <artifactId>litebridge-db-oracle</artifactId>
+    <version>0.4.0</version>
+</dependency>`
+    },
+    {
+        id: 'postgres',
+        title: 'PostgreSQL',
+        lang: 'xml',
+        code: `<dependency>
+    <groupId>org.litebridgedb</groupId>
+    <artifactId>litebridge-db-postgres</artifactId>
+    <version>0.4.0</version>
+</dependency>`
+    },
+    {
+        id: 'sqlite',
+        title: 'SQLite',
+        lang: 'xml',
+        code: `<dependency>
+    <groupId>org.litebridgedb</groupId>
+    <artifactId>litebridge-db-sqlite</artifactId>
+    <version>0.4.0</version>
+</dependency>`
+    }
+]
+
+const entityJavaCode = `import org.litebridge.orm.annotation.Column;
+import org.litebridge.orm.annotation.Table;
+import org.litebridge.orm.annotation.OneToMany;
+
+@Table("EXAMPLE.PERSON")
+public class Person {
+
+    @Column(value = "ID", generateUsingSequence = "PERSON_SEQ")
+    private Long id;
+
+    @Column("NAME")
+    private String name;
+
+    @Column("SURNAME")
+    private String surname;
+    
+    @OneToMany(mappedByField = "owner")
+    private List<Account> accounts;
+
+    // Getters and setters
+}`;
+
+const initJavaCode = [
+    {
+        id: 'h2',
+        title: 'H2',
+        lang: 'java',
+        code: `import javax.sql.DataSource;
+
+import org.litebridge.orm.Litebridge;
+import org.litebridge.db.h2.H2DatabaseProvider;
+
+import org.example.entity.Person;
+
+// Create a Litebridge instance
+Litebridge litebridge = Litebridge
+    .withDatabase(new H2DatabaseProvider(), dataSource)
+    .build();
+
+// Register your entities
+litebridge.register(Person.class);`
+    },
+    {
+        id: 'oracle',
+        title: 'Oracle',
+        lang: 'java',
+        code: `import javax.sql.DataSource;
+
+import org.litebridge.orm.Litebridge;
+import org.litebridge.db.oracle.api.LitebridgeOracle;
+import org.litebridge.db.oracle.OracleDatabaseProvider;
+
+import org.example.entity.Person;
+
+// Create a Litebridge instance with additional Oracle-specific extensions
+LitebridgeOracle litebridge = Litebridge
+    .withDatabase(new OracleDatabaseProvider(), dataSource)
+    .build();
+
+// Register your entities
+litebridge.register(Person.class);`
+    },
+    {
+        id: 'postgres',
+        title: 'PostgreSQL',
+        lang: 'java',
+        code: `import javax.sql.DataSource;
+
+import org.litebridge.orm.Litebridge;
+import org.litebridge.db.postgres.PostgresDatabaseProvider;
+
+import org.example.entity.Person;
+
+// Create a Litebridge instance
+Litebridge litebridge = Litebridge
+    .withDatabase(new PostgresDatabaseProvider(), dataSource)
+    .build();
+
+// Register your entities
+litebridge.register(Person.class);`
+    },
+    {
+        id: 'sqlite',
+        title: 'SQLite',
+        lang: 'java',
+        code: `import javax.sql.DataSource;
+
+import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.db.sqlite.SQLiteDatabaseProvider;
+
+import org.example.entity.Person;
+
+// Create a Litebridge instance without "merge" support
+LitebridgeCore litebridge = Litebridge
+    .withDatabase(new SQLiteDatabaseProvider(), dataSource)
+    .build();
+
+// Register your entities
+litebridge.register(Person.class);`
+    },
+]
+
+const queryJavaCode = `import java.util.Optional;
+
+import org.litebridge.orm.Litebridge;
+
+import org.example.entity.Person;
+
+// Save an entity
+litebridge.save(person);
+
+// Query data
+Optional<Person> alice = litebridge.select(Person.class)
+    .where("name").eq("Alice")
+    .first();`;
 ---
 
 <Layout title={title} description={description}>
@@ -51,14 +257,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
                     </div>
                     <p class="mb-4 text-gray-600 dark:text-gray-400">Add the core ORM dependency to your <code
                             class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">pom.xml</code>:</p>
-                    <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
-                        <Code
-                                code={`<dependency>\n    <groupId>org.litebridgedb</groupId>\n    <artifactId>litebridge-orm</artifactId>\n    <version>0.4.0</version>\n</dependency>`}
-                                lang="xml"
-                                theme="github-dark"
-                                class="p-6 text-sm"
-                        />
-                    </div>
+                    <CodeBlock filename="pom.xml" lang="xml" code={coreDependencyXml}/>
                 </section>
 
                 <!-- DB Provider -->
@@ -71,30 +270,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
                     </div>
                     <p class="mb-6 text-gray-600 dark:text-gray-400">Include the artifact for your target database.
                         Litebridge supports the following providers:</p>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                        {[
-                            {name: 'H2', id: 'litebridge-db-h2'},
-                            {name: 'PostgreSQL', id: 'litebridge-db-postgres'},
-                            {name: 'Oracle', id: 'litebridge-db-oracle'},
-                            {name: 'SQLite', id: 'litebridge-db-sqlite'},
-                        ].map(db => (
-                                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-bg/30">
-                                    <span class="font-bold text-primary dark:text-white">{db.name}</span>
-                                    <code class="text-xs text-accent">{db.id}</code>
-                                </div>
-                        ))}
-                    </div>
-
-                    <p class="mb-4 text-gray-600 dark:text-gray-400 text-sm italic">Example for PostgreSQL:</p>
-                    <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
-                        <Code
-                                code={`<dependency>\n    <groupId>org.litebridgedbdb</groupId>\n    <artifactId>litebridge-db-postgres</artifactId>\n    <version>0.4.0</version>\n</dependency>`}
-                                lang="xml"
-                                theme="github-dark"
-                                class="p-6 text-sm"
-                        />
-                    </div>
+                    <CodeExample filename="pom.xml" examples={databaseProviderDependencyXml}/>
                 </section>
 
                 <!-- Define Entity -->
@@ -107,14 +283,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
                     </div>
                     <p class="mb-4 text-gray-600 dark:text-gray-400">Map your Java classes to database tables using
                         Litebridge annotations:</p>
-                    <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg mb-4">
-                        <Code
-                                code={`import org.litebridge.orm.annotation.Column;\nimport org.litebridge.orm.annotation.Table;\n\n@Table("EXAMPLE.PERSON")\npublic class Person {\n\n    @Column(value = "ID", generateUsingSequence = "PERSON_SEQ")\n    private Long id;\n\n    @Column("NAME")\n    private String name;\n\n    @Column("SURNAME")\n    private String surname;\n\n    // Getters and setters\n}`}
-                                lang="java"
-                                theme="github-dark"
-                                class="p-6 text-sm"
-                        />
-                    </div>
+                    <CodeBlock filename="Person.java" lang="java" code={entityJavaCode} class="mb-4"/>
                     <p class="text-gray-600 dark:text-gray-400 text-sm italic">Note: The Litebridge Maven plugin can
                         automatically generate these entities from your database schema.</p>
                     <p class="text-gray-600 dark:text-gray-400 text-sm italic">Plain, unaltered DTOs can also be used;
@@ -133,14 +302,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
                     <p class="mb-4 text-gray-600 dark:text-gray-400">Create a <code
                             class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Litebridge</code> instance and
                         register your entities:</p>
-                    <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
-                        <Code
-                                code={`// Create a litebridgedb instance\nLitebridge litebridge = new Litebridge(new PostgresDatabaseProvider(), dataSource);\n\n// Register your entities\nlitebridge.register(Person.class);`}
-                                lang="java"
-                                theme="github-dark"
-                                class="p-6 text-sm"
-                        />
-                    </div>
+                    <CodeExample filename="GetStarted.java" lang="java" examples={initJavaCode} hints={exampleCodeHints}/>
                 </section>
 
                 <!-- Operations -->
@@ -153,14 +315,7 @@ const description = "Learn how to integrate Litebridge into your Java 21+ projec
                     </div>
                     <p class="mb-4 text-gray-600 dark:text-gray-400">You are now ready to save and retrieve data using
                         Litebridge's fluent API:</p>
-                    <div class="overflow-hidden rounded-xl bg-gray-900 shadow-lg">
-                        <Code
-                                code={`// Save an entity\nlitebridge.save(person);\n\n// Query data\nOptional<Person> alice = litebridge.select(Person.class)\n    .where("name").eq("Alice")\n    .first();`}
-                                lang="java"
-                                theme="github-dark"
-                                class="p-6 text-sm"
-                        />
-                    </div>
+                    <CodeBlock filename="GetStarted.java" lang="java" code={queryJavaCode}/>
                 </section>
 
                 <!-- Next Steps -->
