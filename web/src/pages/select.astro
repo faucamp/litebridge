@@ -19,19 +19,25 @@ const basicSelectExamples = [
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Select all entities of a specific type.',
-        code: `List<Person> persons = litebridge.select(Person.class).list();`
+        code: `import org.example.dto.Person;
+
+List<Person> persons = litebridge.select(Person.class).list();`
     },
     {
         id: 'sqlMode',
         title: 'SQL mode',
         description: 'Select all records from a table directly, without DTO/entity mapping metadata.',
-        code: `List<Row> rows = litebridge.select().from("LB.PERSON").list();`
+        code: `import org.litebridge.db.spi.Row;
+
+List<Row> rows = litebridge.select().from("LB.PERSON").list();`
     },
     {
         id: 'nativeSql',
         title: 'Native SQL',
         description: 'Select all records using a raw SQL query.',
-        code: `List<Row> rows = litebridge.nativeSql().query("SELECT * FROM LB.PERSON").list();`,
+        code: `import org.litebridge.db.spi.Row;
+
+List<Row> rows = litebridge.nativeSql().query("SELECT * FROM LB.PERSON").list();`,
     },
 ];
 
@@ -40,7 +46,10 @@ const conditionalSelectExamples = [
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Fetch all Person entities where the "name" field value is "Alice" and the "id" field value is less than 5. This does not fetch any related entities.',
-        code: `List<Person> persons = litebridge.select(Person.class)
+        code: `import org.example.dto.Person;
+import org.example.entity.meta.PersonMeta;
+
+List<Person> persons = litebridge.select(Person.class)
     .where(PersonMeta.name).eq("Alice")
     .and(PersonMeta.id).lt(5)
     .list();`,
@@ -49,7 +58,9 @@ const conditionalSelectExamples = [
         id: 'sqlMode',
         title: 'SQL mode',
         description: 'Select all records from the LB.PERSON table where the FIRST_NAME column value is "Alice" and the PERSON_ID column is less than 5.',
-        code: `List<Row> rows = litebridge.select().from("LB.PERSON")
+        code: `import org.litebridge.db.spi.Row;
+
+List<Row> rows = litebridge.select().from("LB.PERSON")
     .where("FIRST_NAME").eq("Alice")
     .and("PERSON_ID").lt(5)
     .list();`
@@ -58,7 +69,9 @@ const conditionalSelectExamples = [
         id: 'nativeSql',
         title: 'Native SQL',
         description: 'Select records matching conditions using a raw SQL query.',
-        code: `// Select records using native SQL
+        code: `import org.litebridge.db.spi.Row;
+
+// Select records using native SQL
 List<Row> rows = litebridge.nativeSql()
     .query("SELECT * FROM LB.PERSON WHERE FIRST_NAME = ? AND PERSON_ID < ?", 
            "Alice", 5)
@@ -78,7 +91,11 @@ const joinSelectExamples = [
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Fetch all Person and related Account entities. Person has an "accounts" field of type "List<Account>".',
-        code: `List<Person> persons = litebridge.select(Person.class)
+        code: `import org.example.dto.Person;
+import org.example.dto.Account;
+import org.example.entity.meta.PersonMeta;
+
+List<Person> persons = litebridge.select(Person.class)
     .join(Account.class).on(PersonMeta.accounts)
     .list();`,
     },
@@ -86,7 +103,9 @@ const joinSelectExamples = [
         id: 'sqlMode',
         title: 'SQL mode',
         description: 'Select from a table and join with another table.',
-        code: `List<Row> rows = litebridge.select().from("LB.PERSON")
+        code: `import org.litebridge.db.spi.Row;
+
+List<Row> rows = litebridge.select().from("LB.PERSON")
     .join("LB.ACCOUNT").using("PERSON_ID")
     .list();`
     },
@@ -94,7 +113,9 @@ const joinSelectExamples = [
         id: 'nativeSql',
         title: 'Native SQL',
         description: 'Select from a table and join with another table using a raw SQL query.',
-        code: `List<Row> rows = litebridge.nativeSql()
+        code: `import org.litebridge.db.spi.Row;
+
+List<Row> rows = litebridge.nativeSql()
     .query("SELECT * FROM LB.PERSON JOIN LB.ACCOUNT USING (PERSON_ID)")
     .list();`
     }
@@ -120,7 +141,8 @@ Person person = litebridge.select(id, name, surname.upper())
         id: 'sqlMode',
         title: 'SQL mode',
         description: 'Select specific columns from the LB.PERSON table, applying an UPPER() function on teh SURNAME column. Retrieve the first ordered result.',
-        code: `import static org.litebridge.orm.expression.Fn.upper;
+        code: `import org.litebridge.db.spi.Row;
+import static org.litebridge.orm.expression.Fn.upper;
     
 Row row = litebridge.select("PERSON_ID", "FIRST_NAME", upper("SURNAME"))
     .from("LB.PERSON")
@@ -132,7 +154,9 @@ Row row = litebridge.select("PERSON_ID", "FIRST_NAME", upper("SURNAME"))
         id: 'nativeSql',
         title: 'Native SQL',
         description: 'Select specific columns using a raw SQL query.',
-        code: `Row row = litebridge.nativeSql()
+        code: `import org.litebridge.db.spi.Row;
+
+Row row = litebridge.nativeSql()
     .query("SELECT PERSON_ID, FIRST_NAME, UPPER(SURNAME) "
            + "FROM LB.PERSON WHERE FIRST_NAME = ? "
            + "ORDER BY PERSON_ID ASC LIMIT 1", 

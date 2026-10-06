@@ -9,7 +9,14 @@ const examples: CodeSnippet[] = [
     id: 'mapping',
     title: 'Registration',
     description: 'Map DTOs to database tables using a fluent, programmatic API.',
-    code: `// Register an annotated Litebridge entity
+    code: `import org.litebridge.orm.Litebridge;
+
+// Example entity; declarative field/column mapping via annotations
+import org.example.entity.PersonEntity;
+// Example DTO; registered via fluent field mapping API
+import org.example.dto.Person;
+
+// Register an annotated Litebridge entity
 litebridge.register(PersonEntity.class);
 
 // Or register any DTO programmatically
@@ -25,7 +32,11 @@ litebridge.register(Person.class, rc -> rc.mapToTable("LB.PERSON")
     id: 'persisting',
     title: 'Persisting',
     description: 'Save, insert, or update DTOs with automatic change tracking.',
-    code: `Person person = new Person();
+    code: `import org.litebridge.orm.Litebridge;
+
+import org.example.dto.Person;
+
+Person person = new Person();
 person.setName("Alice");
 person.setSurname("Smith");
 
@@ -41,7 +52,10 @@ litebridge.save(person);`,
     id: 'querying',
     title: 'Querying',
     description: 'Retrieve data using a familiar, SQL-like fluent builder.',
-    code: `import static org.example.PersonMeta.*;
+    code: `import org.litebridge.orm.Litebridge;
+
+import org.example.dto.Person;
+import static org.example.PersonMeta.*;
 
 // Use metamodels for type-safe queries
 Optional<Person> alice = litebridge.select(Person.class)

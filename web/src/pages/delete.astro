@@ -12,7 +12,9 @@ const deleteExamples = [
         id: 'dtoModePersistence',
         title: 'DTO mode (persistence)',
         description: 'Explicitly delete an entity instance.',
-        code: `Person person = new Person();
+        code: `import org.example.dto.Person;
+
+Person person = new Person();
 person.setId(1);
 
 litebridge.delete(person);`
@@ -21,7 +23,10 @@ litebridge.delete(person);`
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Delete records using entity mapping metadata.',
-        code: `litebridge.delete(Person.class, p -> p
+        code: `import org.example.dto.Person;
+import org.example.entity.meta.PersonMeta;
+
+litebridge.delete(Person.class, p -> p
     .where(PersonMeta.id).eq(1));`
     },
     {

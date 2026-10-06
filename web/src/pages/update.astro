@@ -11,7 +11,9 @@ const saveExamples = [
         id: 'dtoMode',
         title: 'DTO mode',
         description: `The save() method is the primary mechanism for storing entities/mapped DTOs in Litebridge. It automatically executes an INSERT, UPDATE or MERGE as needed.`,
-        code: `// Create a new Person object
+        code: `import org.example.dto.Person;
+        
+// Create a new Person object
 Person person = new Person();
 person.setId(1);
 person.setName("Alice");
@@ -33,7 +35,9 @@ const insertExamples = [
         id: 'dtoModePersistence',
         title: 'DTO mode (persistence)',
         description: 'Explicitly insert an entity instance into the database. This ignores the persisted state of the entity and inserts all fields.',
-        code: `Person person = new Person();
+        code: `import org.example.dto.Person;
+
+Person person = new Person();
 person.setId(1);
 person.setName("Alice");
 person.setSurname("Smith");
@@ -45,7 +49,10 @@ litebridge.insert(person);`
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Insert records into a table using entity mapping metadata.',
-        code: `// Insert columns into a mapped table directly
+        code: `import org.example.dto.Person;
+import org.example.entity.meta.PersonMeta;
+
+// Insert columns into a mapped table directly
 litebridge.insert(Person.class, i -> i
     .into(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
     .values(1, "Alice", "Smith")
@@ -84,7 +91,9 @@ const updateExamples = [
         id: 'dtoModePersistence',
         title: 'DTO mode (persistence)',
         description: 'Explicitly update an entity instance. This ignores the persisted state of the entity and updates all modified fields.',
-        code: `Person person = new Person();
+        code: `import org.example.dto.Person;
+
+Person person = new Person();
 person.setId(1);
 person.setName("Alice");
 person.setSurname("Smith");
@@ -96,7 +105,9 @@ litebridge.update(person);`
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Update records using entity mapping metadata.',
-        code: `
+        code: `import org.example.dto.Person;
+import org.example.entity.meta.PersonMeta;
+
 litebridge.update(Person.class, p -> p
     .set(PersonMeta.name).to("Bob")
     .set(PersonMeta.surname).to("Jones")

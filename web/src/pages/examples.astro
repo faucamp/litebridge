@@ -13,15 +13,14 @@ import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.db.spi.Row;
 
 // Example entities and metamodels
-import org.example.entity.Person;
+import org.example.dto.Person;
 import org.example.entity.Account;
 import org.example.entity.meta.PersonMeta;
 import org.example.entity.meta.AccountMeta; 
 
 // Assuming "dataSource" is a valid javax.sql.DataSource instance
 Litebridge litebridge = Litebridge.withDatabaseProvider(
-        new H2DatabaseProvider(), 
-        dataSource)
+        new H2DatabaseProvider(), dataSource)
     .build();
 `;
 
@@ -162,7 +161,7 @@ const exampleCategories = [
                     <p class="mb-4 text-gray-600 dark:text-gray-400">
                         The examples in this documentation use common imports and initialisation code:
                     </p>
-                    <CodeBlock filename="ExampleBase.java" code={commonExampleCode}/>
+                    <CodeBlock filename="ExampleBase.java" code={commonExampleCode} hints={}/>
                 </section>
             </div>
         </div>

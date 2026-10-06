@@ -1,5 +1,8 @@
 ---
 import { Code } from 'astro:components';
+import { codeToHtml } from 'shiki';
+import { defaultCodeHints, type CodeHint, type CodeHintRegistry } from '../data/codeHints';
+import { parseCodeSnippet } from '../utils/codeParser';
 
 export interface Props {
   code: string;
@@ -7,6 +10,9 @@ export interface Props {
   filename?: string;
   id?: string;
   class?: string;
+  hints?: Record<string, CodeHint>;
+  showImportsDefault?: boolean;
+  showHintsDefault?: boolean;
 }
 
 const {
@@ -15,87 +21,661 @@ const {
   filename = 'LitebridgeExample.java',
   id,
   class: className = '',
+  hints = {},
+  showImportsDefault = false,
+  showHintsDefault = true,
 } = Astro.props;
+
+const mergedHints: CodeHintRegistry = {
+  ...defaultCodeHints,
+  ...hints,
+};
+
+const parsed = parseCodeSnippet(code, Object.keys(mergedHints));
+const hasImports = parsed.hasImports && parsed.imports !== null;
+
+const activeHints: CodeHintRegistry = {};
+for (const key of parsed.detectedHintKeys) {
+  if (mergedHints[key]) {
+    const rawHint = mergedHints[key];
+    let codeHtml = '';
+    try {
+      codeHtml = await codeToHtml(rawHint.code, {
+        lang: rawHint.lang || 'java',
+        theme: 'github-dark',
+      });
+    } catch {
+      codeHtml = `<pre><code>${rawHint.code}</code></pre>`;
+    }
+    activeHints[key] = {
+      ...rawHint,
+      codeHtml,
+    };
+  }
+}
 ---
 
 <div
-  class={`code-block-wrapper overflow-hidden rounded-2xl bg-gray-900 shadow-2xl border border-gray-800 w-full ${className}`}
+  class={`code-block-wrapper relative overflow-visible rounded-2xl bg-gray-900 shadow-2xl border border-gray-800 w-full ${className} ${showHintsDefault ? 'hints-enabled' : 'hints-disabled'}`}
   data-code-block
   id={id}
+  data-has-imports={hasImports ? 'true' : 'false'}
+  data-hints-enabled={showHintsDefault ? 'true' : 'false'}
 >
-  <div class="code-window-header flex items-center justify-between bg-gray-800/80 px-4 py-2.5 border-b border-gray-700/50">
-    <div class="flex gap-1.5">
-      <div class="h-3 w-3 rounded-full bg-red-500/60"></div>
-      <div class="h-3 w-3 rounded-full bg-yellow-500/60"></div>
-      <div class="h-3 w-3 rounded-full bg-green-500/60"></div>
+  <script type="application/json" class="code-hints-data" set:html={JSON.stringify(activeHints)} />
+
+  <div class="code-window-header flex flex-wrap items-center justify-between gap-2 bg-gray-800/80 px-4 py-2.5 border-b border-gray-700/50 rounded-t-2xl">
+    <div class="flex items-center gap-3">
+      <!-- Red dot -->
+      <div class="h-3 w-3 rounded-full bg-red-500/60 flex-shrink-0"></div>
+
+      <!-- Yellow switch (Imports) -->
+      {hasImports ? (
+        <button
+          type="button"
+          class="imports-toggle-btn group flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-mono text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-yellow-400/50"
+          aria-expanded={showImportsDefault ? 'true' : 'false'}
+          title="Toggle imports"
+        >
+          <span
+            class={`imports-toggle-dot h-2.5 w-2.5 rounded-full transition-all duration-300 flex-shrink-0 ${
+              showImportsDefault
+                ? 'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.7)] ring-1 ring-yellow-400/80'
+                : 'bg-yellow-500/50 group-hover:bg-yellow-500/70'
+            }`}
+          ></span>
+          <span class="imports-toggle-label select-none">{showImportsDefault ? 'Hide imports' : 'Show imports'}</span>
+        </button>
+      ) : (
+        <div class="flex items-center gap-1.5 px-2 py-0.5 text-xs font-mono text-gray-600 opacity-40 cursor-not-allowed select-none">
+          <span class="h-2.5 w-2.5 rounded-full bg-yellow-500/30 flex-shrink-0"></span>
+          <span>Imports</span>
+        </div>
+      )}
+
+      <!-- Green switch (Hints) -->
+      <button
+        type="button"
+        class="hints-toggle-btn group flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-mono text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 transition-all cursor-pointer focus:outline-none focus:ring-1 focus:ring-green-400/50"
+        aria-pressed={showHintsDefault ? 'true' : 'false'}
+        title="Toggle hints"
+      >
+        <span
+          class={`hints-toggle-dot h-2.5 w-2.5 rounded-full transition-all duration-300 flex-shrink-0 ${
+            showHintsDefault
+              ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.7)] ring-1 ring-green-400/80'
+              : 'bg-green-500/50 group-hover:bg-green-500/70'
+          }`}
+        ></span>
+        <span class="hints-toggle-label select-none">{showHintsDefault ? 'Hide hints' : 'Show hints'}</span>
+      </button>
     </div>
+
     <span class="text-xs font-mono text-gray-400 code-filename">{filename}</span>
   </div>
+
   <div class="p-6 overflow-x-auto min-h-[140px]">
+    {hasImports && (
+      <div
+        class={`imports-container transition-all duration-300 ease-in-out ${
+          showImportsDefault ? 'imports-expanded' : 'imports-collapsed'
+        }`}
+      >
+        <div class="imports-content pb-3 mb-3 border-b border-gray-700/60 text-gray-400">
+          <Code code={parsed.imports!} lang={lang} theme="github-dark" />
+        </div>
+      </div>
+    )}
+
     <div class="code-content">
-      <Code code={code} lang={lang} theme="github-dark" />
+      <Code code={parsed.body} lang={lang} theme="github-dark" />
     </div>
   </div>
 </div>
 
 <script>
+  let globalPopover: HTMLElement | null = null;
+  let activeToken: HTMLElement | null = null;
+  let activeBlock: HTMLElement | null = null;
+  let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+  let dismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function ensureGlobalPopover(): HTMLElement {
+    if (globalPopover && document.body.contains(globalPopover)) {
+      return globalPopover;
+    }
+
+    const existing = document.getElementById('code-hint-global-popover');
+    if (existing) {
+      globalPopover = existing;
+      return existing;
+    }
+
+    const popover = document.createElement('div');
+    popover.id = 'code-hint-global-popover';
+    popover.className =
+      'code-hint-popover fixed z-[9999] max-w-lg w-[calc(100vw-2rem)] sm:w-[480px] rounded-xl bg-gray-950/95 backdrop-blur-md border border-gray-700/80 shadow-2xl p-4 text-left transition-all duration-200 pointer-events-none opacity-0 scale-95 hidden';
+    popover.setAttribute('role', 'dialog');
+    popover.setAttribute('aria-modal', 'true');
+
+    popover.innerHTML = `
+      <div class="flex items-center justify-between pb-2 mb-2 border-b border-gray-800">
+        <div class="flex items-center gap-2">
+          <div class="h-2.5 w-2.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.7)]"></div>
+          <h4 class="font-mono text-sm font-bold text-white popover-title"></h4>
+        </div>
+        <button type="button" class="popover-close text-gray-400 hover:text-white text-xl leading-none px-2 py-1 rounded hover:bg-gray-800 transition-colors cursor-pointer" aria-label="Close pop-up">&times;</button>
+      </div>
+      <div class="text-xs text-gray-300 mb-3 popover-desc leading-relaxed whitespace-pre-line"></div>
+      <div class="popover-code-wrapper rounded-lg bg-gray-900 border border-gray-800/80 p-3 overflow-x-auto max-h-60 text-xs font-mono text-gray-200">
+        <pre class="m-0 font-mono text-xs leading-relaxed"><code class="popover-code whitespace-pre font-mono"></code></pre>
+      </div>
+    `;
+
+    document.body.appendChild(popover);
+
+    const closeBtn = popover.querySelector('.popover-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closePopover();
+      });
+    }
+
+    popover.addEventListener('mouseenter', () => {
+      if (dismissTimer) {
+        clearTimeout(dismissTimer);
+        dismissTimer = null;
+      }
+    });
+
+    popover.addEventListener('mouseleave', () => {
+      scheduleDismiss(250);
+    });
+
+    globalPopover = popover;
+    return popover;
+  }
+
+  function getDistanceToRect(x: number, y: number, rect: DOMRect): number {
+    const dx = Math.max(rect.left - x, 0, x - rect.right);
+    const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function scheduleDismiss(delay = 250) {
+    if (dismissTimer) clearTimeout(dismissTimer);
+    dismissTimer = setTimeout(() => {
+      closePopover();
+    }, delay);
+  }
+
+  function closePopover() {
+    if (hoverTimer) {
+      clearTimeout(hoverTimer);
+      hoverTimer = null;
+    }
+    if (dismissTimer) {
+      clearTimeout(dismissTimer);
+      dismissTimer = null;
+    }
+
+    if (!globalPopover || globalPopover.classList.contains('hidden')) {
+      activeToken = null;
+      activeBlock = null;
+      return;
+    }
+
+    globalPopover.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+    globalPopover.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+
+    setTimeout(() => {
+      if (globalPopover && globalPopover.classList.contains('opacity-0')) {
+        globalPopover.classList.add('hidden');
+      }
+    }, 200);
+
+    activeToken = null;
+    activeBlock = null;
+  }
+
+  function openPopover(token: HTMLElement, hintKey: string, block: HTMLElement) {
+    if (block.dataset.hintsEnabled !== 'true') return;
+
+    if (dismissTimer) {
+      clearTimeout(dismissTimer);
+      dismissTimer = null;
+    }
+
+    const hintsScript = block.querySelector<HTMLScriptElement>('.code-hints-data');
+    if (!hintsScript) return;
+
+    let hints: Record<string, any> = {};
+    try {
+      hints = JSON.parse(hintsScript.textContent || '{}');
+    } catch {
+      return;
+    }
+
+    const hint = hints[hintKey];
+    if (!hint) return;
+
+    const popover = ensureGlobalPopover();
+    const titleEl = popover.querySelector<HTMLElement>('.popover-title');
+    const descEl = popover.querySelector<HTMLElement>('.popover-desc');
+    const codeWrapperEl = popover.querySelector<HTMLElement>('.popover-code-wrapper');
+    const codeEl = popover.querySelector<HTMLElement>('.popover-code');
+
+    if (titleEl) titleEl.textContent = hint.title || hint.filename || `${hintKey}.java`;
+    if (descEl) descEl.innerHTML = hint.description || '';
+    if (codeWrapperEl) {
+      if (hint.codeHtml) {
+        codeWrapperEl.innerHTML = hint.codeHtml;
+      } else if (codeEl) {
+        codeEl.textContent = hint.code || '';
+      }
+    }
+
+    activeToken = token;
+    activeBlock = block;
+
+    // Show initially to measure layout
+    popover.classList.remove('hidden');
+    popover.classList.remove('pointer-events-none');
+
+    const tokenRect = token.getBoundingClientRect();
+    const popoverWidth = Math.min(480, window.innerWidth - 32);
+    popover.style.width = `${popoverWidth}px`;
+
+    const popoverHeight = popover.offsetHeight || 280;
+
+    // Position calculations
+    let left = tokenRect.left;
+    if (left + popoverWidth > window.innerWidth - 16) {
+      left = window.innerWidth - popoverWidth - 16;
+    }
+    if (left < 16) {
+      left = 16;
+    }
+
+    let top = tokenRect.bottom + 8;
+    if (top + popoverHeight > window.innerHeight - 16) {
+      const aboveTop = tokenRect.top - popoverHeight - 8;
+      if (aboveTop >= 16) {
+        top = aboveTop;
+      } else {
+        top = Math.max(16, window.innerHeight - popoverHeight - 16);
+      }
+    }
+
+    popover.style.top = `${top}px`;
+    popover.style.left = `${left}px`;
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      popover.classList.remove('opacity-0', 'scale-95');
+      popover.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+    });
+  }
+
+  function isInsideStringOrComment(lineText: string, indexInLine: number): boolean {
+    const trimmed = lineText.trim();
+    if (trimmed.startsWith('//')) return true;
+
+    let inDouble = false;
+    let inSingle = false;
+    let escape = false;
+
+    for (let i = 0; i < lineText.length; i++) {
+      const char = lineText[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (char === '\\') {
+        escape = true;
+        continue;
+      }
+      if (char === '"' && !inSingle) {
+        inDouble = !inDouble;
+      } else if (char === "'" && !inDouble) {
+        inSingle = !inSingle;
+      } else if (char === '/' && i + 1 < lineText.length && lineText[i + 1] === '/' && !inDouble && !inSingle) {
+        if (indexInLine >= i) return true;
+      }
+
+      if (i === indexInLine) {
+        return inDouble || inSingle;
+      }
+    }
+
+    return false;
+  }
+
+  function getNodeOffsetInLine(node: Node, lineEl: Node): number {
+    let offset = 0;
+    const walker = document.createTreeWalker(lineEl, NodeFilter.SHOW_TEXT, null);
+    let curr: Node | null;
+    while ((curr = walker.nextNode())) {
+      if (curr === node) break;
+      offset += curr.nodeValue?.length || 0;
+    }
+    return offset;
+  }
+
+  function wrapHintTokens(container: HTMLElement, hints: Record<string, any>) {
+    const keys = Object.keys(hints).sort((a, b) => b.length - a.length);
+    if (keys.length === 0) return;
+
+    const regex = new RegExp(`\\b(${keys.join('|')})\\b`, 'g');
+
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+    const textNodes: Text[] = [];
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      if (node.parentElement?.closest('.code-hint-token, script, style')) continue;
+      if (regex.test(node.nodeValue || '')) {
+        textNodes.push(node as Text);
+      }
+    }
+
+    textNodes.forEach((textNode) => {
+      const text = textNode.nodeValue || '';
+      const lineEl = textNode.parentElement?.closest('.line') || textNode.parentElement || textNode;
+      const lineText = lineEl.textContent || '';
+
+      if (lineText.trim().startsWith('//')) {
+        return;
+      }
+
+      const nodeOffsetInLine = getNodeOffsetInLine(textNode, lineEl);
+
+      regex.lastIndex = 0;
+      const fragment = document.createDocumentFragment();
+      let lastIndex = 0;
+      let match: RegExpExecArray | null;
+      let hasReplacements = false;
+
+      while ((match = regex.exec(text)) !== null) {
+        const matchIndexInLine = nodeOffsetInLine + match.index;
+        if (isInsideStringOrComment(lineText, matchIndexInLine)) {
+          continue;
+        }
+
+        hasReplacements = true;
+        if (match.index > lastIndex) {
+          fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+        }
+        const tokenSpan = document.createElement('span');
+        tokenSpan.className = 'code-hint-token';
+        tokenSpan.dataset.hintKey = match[1];
+        tokenSpan.textContent = match[1];
+        fragment.appendChild(tokenSpan);
+        lastIndex = regex.lastIndex;
+      }
+
+      if (hasReplacements) {
+        if (lastIndex < text.length) {
+          fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+        }
+        textNode.parentNode?.replaceChild(fragment, textNode);
+      }
+    });
+  }
+
+  function initGlobalListeners() {
+    if ((window as any).__codeHintGlobalInit) return;
+    (window as any).__codeHintGlobalInit = true;
+
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      if (target.closest('#code-hint-global-popover') || target.closest('.code-hint-token')) {
+        return;
+      }
+      closePopover();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closePopover();
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!activeToken || !globalPopover || globalPopover.classList.contains('hidden')) {
+        return;
+      }
+
+      const tokenRect = activeToken.getBoundingClientRect();
+      const popoverRect = globalPopover.getBoundingClientRect();
+
+      const distToken = getDistanceToRect(e.clientX, e.clientY, tokenRect);
+      const distPopover = getDistanceToRect(e.clientX, e.clientY, popoverRect);
+
+      // Safe corridor: if cursor is within 45px of either the token or popover, keep open
+      if (distToken > 55 && distPopover > 55) {
+        closePopover();
+      }
+    });
+  }
+
   function initCodeBlocks() {
+    initGlobalListeners();
     const blocks = document.querySelectorAll<HTMLElement>('[data-code-block]');
 
     blocks.forEach((block) => {
       if (block.dataset.codeBlockInit === 'true') return;
       block.dataset.codeBlockInit = 'true';
 
-      const content = block.querySelector<HTMLElement>('.code-content');
-      if (!content) return;
-
-      const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null);
-      const nodes: Text[] = [];
-      let node: Node | null;
-      while ((node = walker.nextNode())) {
-        nodes.push(node as Text);
-      }
-
-      let charIndex = 0;
-      nodes.forEach((textNode) => {
-        const text = textNode.nodeValue || '';
-        const fragment = document.createDocumentFragment();
-        for (let i = 0; i < text.length; i++) {
-          const charSpan = document.createElement('span');
-          charSpan.textContent = text[i];
-          charSpan.className = 'code-char';
-          charSpan.style.transitionDelay = `${charIndex * 10}ms`;
-          fragment.appendChild(charSpan);
-          charIndex++;
+      const hintsScript = block.querySelector<HTMLScriptElement>('.code-hints-data');
+      let hints: Record<string, any> = {};
+      if (hintsScript) {
+        try {
+          hints = JSON.parse(hintsScript.textContent || '{}');
+        } catch {
+          // ignore
         }
-        textNode.parentNode?.replaceChild(fragment, textNode);
-      });
-
-      function triggerAnimation() {
-        block.classList.remove('typing-active');
-        void block.offsetWidth; // Force reflow
-        block.classList.add('typing-active');
       }
 
-      block.addEventListener('code-block:animate', () => {
-        triggerAnimation();
+      // Wrap hint tokens in both body and imports
+      const content = block.querySelector<HTMLElement>('.code-content');
+      const importsContent = block.querySelector<HTMLElement>('.imports-content');
+
+      if (content) wrapHintTokens(content, hints);
+      if (importsContent) wrapHintTokens(importsContent, hints);
+
+      // Event delegation for hint tokens inside this block
+      block.addEventListener('mouseover', (e) => {
+        const token = (e.target as HTMLElement)?.closest('.code-hint-token') as HTMLElement | null;
+        if (!token || block.dataset.hintsEnabled !== 'true' || !block.classList.contains('typing-complete')) return;
+
+        const hintKey = token.dataset.hintKey;
+        if (!hintKey) return;
+
+        if (dismissTimer) {
+          clearTimeout(dismissTimer);
+          dismissTimer = null;
+        }
+
+        if (activeToken === token && globalPopover && !globalPopover.classList.contains('hidden')) {
+          return;
+        }
+
+        if (hoverTimer) clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(() => {
+          openPopover(token, hintKey, block);
+        }, 500);
       });
 
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              if (block.offsetParent !== null) {
-                triggerAnimation();
-                observer.unobserve(entry.target);
-              }
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
+      block.addEventListener('mouseout', (e) => {
+        const token = (e.target as HTMLElement)?.closest('.code-hint-token') as HTMLElement | null;
+        if (!token) return;
 
-      observer.observe(block);
+        if (hoverTimer) {
+          clearTimeout(hoverTimer);
+          hoverTimer = null;
+        }
+
+        if (activeToken === token) {
+          scheduleDismiss(250);
+        }
+      });
+
+      block.addEventListener('click', (e) => {
+        const token = (e.target as HTMLElement)?.closest('.code-hint-token') as HTMLElement | null;
+        if (!token || block.dataset.hintsEnabled !== 'true' || !block.classList.contains('typing-complete')) return;
+
+        const hintKey = token.dataset.hintKey;
+        if (!hintKey) return;
+
+        if (hoverTimer) {
+          clearTimeout(hoverTimer);
+          hoverTimer = null;
+        }
+
+        if (activeToken === token && globalPopover && !globalPopover.classList.contains('hidden')) {
+          closePopover();
+        } else {
+          openPopover(token, hintKey, block);
+        }
+      });
+
+      // 1. Imports toggle switch handler
+      const importsBtn = block.querySelector<HTMLButtonElement>('.imports-toggle-btn');
+      const importsDot = block.querySelector<HTMLElement>('.imports-toggle-dot');
+      const importsLabel = block.querySelector<HTMLElement>('.imports-toggle-label');
+      const importsContainer = block.querySelector<HTMLElement>('.imports-container');
+
+      if (importsBtn && importsContainer) {
+        importsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isExpanded = importsContainer.classList.contains('imports-expanded');
+          if (isExpanded) {
+            importsContainer.classList.remove('imports-expanded');
+            importsContainer.classList.add('imports-collapsed');
+            importsBtn.setAttribute('aria-expanded', 'false');
+            if (importsLabel) importsLabel.textContent = 'Show imports';
+            if (importsDot) {
+              importsDot.className =
+                'imports-toggle-dot h-2.5 w-2.5 rounded-full transition-all duration-300 flex-shrink-0 bg-yellow-500/50 group-hover:bg-yellow-500/70';
+            }
+          } else {
+            importsContainer.classList.remove('imports-collapsed');
+            importsContainer.classList.add('imports-expanded');
+            importsBtn.setAttribute('aria-expanded', 'true');
+            if (importsLabel) importsLabel.textContent = 'Hide imports';
+            if (importsDot) {
+              importsDot.className =
+                'imports-toggle-dot h-2.5 w-2.5 rounded-full transition-all duration-300 flex-shrink-0 bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.7)] ring-1 ring-yellow-400/80';
+            }
+          }
+        });
+      }
+
+      // 2. Hints toggle switch handler
+      const hintsBtn = block.querySelector<HTMLButtonElement>('.hints-toggle-btn');
+      const hintsDot = block.querySelector<HTMLElement>('.hints-toggle-dot');
+      const hintsLabel = block.querySelector<HTMLElement>('.hints-toggle-label');
+
+      if (hintsBtn) {
+        hintsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isEnabled = block.dataset.hintsEnabled === 'true';
+          const newEnabled = !isEnabled;
+          block.dataset.hintsEnabled = newEnabled ? 'true' : 'false';
+          hintsBtn.setAttribute('aria-pressed', newEnabled ? 'true' : 'false');
+
+          if (newEnabled) {
+            block.classList.remove('hints-disabled');
+            block.classList.add('hints-enabled');
+            if (hintsLabel) hintsLabel.textContent = 'Hide hints';
+            if (hintsDot) {
+              hintsDot.className =
+                'hints-toggle-dot h-2.5 w-2.5 rounded-full transition-all duration-300 flex-shrink-0 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.7)] ring-1 ring-green-400/80';
+            }
+          } else {
+            block.classList.remove('hints-enabled');
+            block.classList.add('hints-disabled');
+            if (hintsLabel) hintsLabel.textContent = 'Show hints';
+            if (hintsDot) {
+              hintsDot.className =
+                'hints-toggle-dot h-2.5 w-2.5 rounded-full transition-all duration-300 flex-shrink-0 bg-green-500/50 group-hover:bg-green-500/70';
+            }
+            closePopover();
+          }
+        });
+      }
+
+      // Close modal event
+      block.addEventListener('code-hint:close-all', () => {
+        closePopover();
+      });
+
+      // 3. Typing animation
+      if (content) {
+        const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null);
+        const nodes: Text[] = [];
+        let node: Node | null;
+        while ((node = walker.nextNode())) {
+          nodes.push(node as Text);
+        }
+
+        let charIndex = 0;
+        nodes.forEach((textNode) => {
+          const text = textNode.nodeValue || '';
+          const fragment = document.createDocumentFragment();
+          for (let i = 0; i < text.length; i++) {
+            const charSpan = document.createElement('span');
+            charSpan.textContent = text[i];
+            charSpan.className = 'code-char';
+            charSpan.style.transitionDelay = `${charIndex * 10}ms`;
+            fragment.appendChild(charSpan);
+            charIndex++;
+          }
+          textNode.parentNode?.replaceChild(fragment, textNode);
+        });
+
+        let typingTimer: ReturnType<typeof setTimeout> | null = null;
+
+        function triggerAnimation() {
+          if (typingTimer) {
+            clearTimeout(typingTimer);
+            typingTimer = null;
+          }
+          block.classList.remove('typing-active', 'typing-complete');
+          void block.offsetWidth; // Force reflow
+          block.classList.add('typing-active');
+
+          const totalDuration = charIndex * 10 + 100;
+          typingTimer = setTimeout(() => {
+            block.classList.add('typing-complete');
+          }, totalDuration);
+        }
+
+        block.addEventListener('code-block:animate', () => {
+          triggerAnimation();
+        });
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                if (block.offsetParent !== null) {
+                  triggerAnimation();
+                  observer.unobserve(entry.target);
+                }
+              }
+            });
+          },
+          { threshold: 0.1 }
+        );
+
+        observer.observe(block);
+      } else {
+        block.classList.add('typing-complete');
+      }
     });
   }
 
@@ -113,7 +693,8 @@ const {
     opacity: 1;
   }
 
-  :global(.code-content .astro-code) {
+  :global(.code-content .astro-code),
+  :global(.imports-content .astro-code) {
     background-color: transparent !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -121,9 +702,134 @@ const {
     line-height: 1.6 !important;
   }
 
+  :global(.popover-code-wrapper pre) {
+    background-color: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.75rem !important;
+    line-height: 1.5 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  }
+
+  :global(.popover-code-wrapper code) {
+    font-family: inherit !important;
+    background-color: transparent !important;
+  }
+
+  :global(.popover-desc a) {
+    color: #60a5fa;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s ease;
+  }
+
+  :global(.popover-desc a:hover) {
+    color: #93c5fd;
+  }
+
+  :global(.popover-desc code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+    color: #86efac;
+  }
+
+  :global(.popover-desc strong) {
+    color: #f3f4f6;
+    font-weight: 600;
+  }
+
+  :global(.popover-desc em) {
+    font-style: italic;
+    color: #d1d5db;
+  }
+
+  :global(.popover-desc ul) {
+    list-style-type: disc;
+    padding-left: 1.25rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.popover-desc ol) {
+    list-style-type: decimal;
+    padding-left: 1.25rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.popover-desc li) {
+    margin-bottom: 0.125rem;
+  }
+
+  .imports-container {
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin 0.3s ease;
+  }
+
+  .imports-container.imports-collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    pointer-events: none;
+  }
+
+  .imports-container.imports-expanded {
+    max-height: 600px;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  :global(.code-hint-token) {
+    cursor: default;
+    border-bottom: 1.5px dashed transparent;
+    background-color: transparent;
+    border-radius: 3px;
+    padding: 1px 3px;
+    margin: 0 -1px;
+    display: inline-block;
+    transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  :global(.hints-enabled.typing-complete .code-hint-token) {
+    cursor: pointer;
+    border-bottom-color: rgba(74, 222, 128, 0.7);
+    background-color: rgba(74, 222, 128, 0.08);
+  }
+
+  :global(.hints-enabled.typing-complete .code-hint-token:hover) {
+    background-color: rgba(74, 222, 128, 0.22);
+    border-bottom-color: rgb(74, 222, 128);
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.35);
+  }
+
+  :global(.hints-disabled .code-hint-token),
+  :global(.hints-enabled:not(.typing-complete) .code-hint-token) {
+    border-bottom-color: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  :global(.hints-disabled .code-hint-token) {
+    cursor: text !important;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     :global(.code-char) {
       opacity: 1 !important;
+      transition: none !important;
+    }
+
+    :global(.hints-enabled .code-hint-token) {
+      cursor: pointer !important;
+      border-bottom: 1.5px dashed rgba(74, 222, 128, 0.7) !important;
+      background-color: rgba(74, 222, 128, 0.08) !important;
+      transition: none !important;
+    }
+
+    .imports-container {
       transition: none !important;
     }
   }

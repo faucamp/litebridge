@@ -11,7 +11,9 @@ const upsertExamples = [
         id: 'dtoModePersistence',
         title: 'DTO mode (persistence)',
         description: 'Upsert an entity.',
-        code: `Person person = new Person();
+        code: `import org.example.dto.Person;
+
+Person person = new Person();
 person.setId(1);
 person.setName("Alice");
 person.setSurname("Smith");
@@ -23,7 +25,10 @@ litebridge.merge(person);`
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Upsert a record using entity mapping metadata.',
-        code: `litebridge.mergeInto(Person.class, m -> m
+        code: `import org.example.dto.Person;
+import org.example.entity.meta.PersonMeta;
+
+litebridge.mergeInto(Person.class, m -> m
     .using(Fn.values("newPerson", "id", 123L))
     .on(PersonMeta.id).eq(Fn.aliasRef("newPerson", "id"))
     .whenMatched(u -> u
@@ -38,7 +43,9 @@ litebridge.merge(person);`
         id: 'sqlMode',
         title: 'SQL mode',
         description: 'Upsert a record without entity/DTO mapping metadata.',
-        code: `litebridge.mergeInto("LB.PERSON", m -> m
+        code: `import org.litebridge.orm.expression.Fn;
+
+litebridge.mergeInto("LB.PERSON", m -> m
     .using(Fn.values("newPerson", "id", 123))
     .on("PERSON_ID").eq(Fn.aliasRef("newPerson", "id"))
     .whenMatched(u -> u
@@ -82,7 +89,12 @@ const mergeExamples = [
         id: 'dtoMode',
         title: 'DTO mode',
         description: 'Merge records into a table using entity mapping metadata.',
-        code: `litebridge.mergeInto(Account.class, m -> m
+        code: `import org.example.dto.Person;
+import org.example.dto.Account;
+import org.example.entity.meta.PersonMeta;
+import org.example.entity.meta.AccountMeta;
+
+litebridge.mergeInto(Account.class, m -> m
     .using(Person.class)
     .on(AccountMeta.id).eq(PersonMeta.id)
     .whenMatched(u -> u
@@ -100,7 +112,9 @@ const mergeExamples = [
         id: 'sqlMode',
         title: 'SQL mode',
         description: 'Merge records into a table without entity/DTO mapping metadata.',
-        code: `litebridge.mergeInto("LB.ACCOUNT", m -> m
+        code: `import org.litebridge.orm.expression.Fn;
+
+litebridge.mergeInto("LB.ACCOUNT", m -> m
     .using("LB.PERSON")
     .on(Fn.c("LB.ACCOUNT", "PERSON_ID")).eq(Fn.c("LB.PERSON", "PERSON_ID"))
     .whenMatched(u -> u
