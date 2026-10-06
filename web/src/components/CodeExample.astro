@@ -143,7 +143,7 @@ const instanceId = id ?? `ce-${Math.random().toString(36).slice(2, 9)}`;
       container.dataset.codeExampleInit = 'true';
 
       const tabs = container.querySelectorAll<HTMLButtonElement>('.example-tab');
-      const descs = container.querySelectorAll<HTMLElement>('.example-desc');
+      const descs = container.querySelectorAll<HTMLElement>('[data-desc-id]');
       const panels = container.querySelectorAll<HTMLElement>('.example-code-panel');
 
       tabs.forEach((tab) => {
