@@ -962,17 +962,21 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final Map<ColumnMetaData, String> rightColumnAliases = new HashMap<>(rightMappedFieldTargets.length);
 
         for (int i = 0; i < rightMappedFieldTargets.length; i++) {
-            final ColumnMetaData rightColumnMetaData = (ColumnMetaData) rightMappedFieldTargets[i];
-
             // Left column
             final ColumnMetaData leftColumnMetaData = leftColumnMetadatas[i];
             final Column leftColumn = leftColumnMetaData.column();
             final String leftColumnAlias = aliasGenerator.columnAlias(leftColumn);
             leftSelectColumnSpecs[i] = new SelectColumnSpec(leftColumn, leftColumnAlias, leftTableAlias);
+
+            // Right column
+            final ColumnMetaData rightColumnMetaData = (ColumnMetaData) rightMappedFieldTargets[i];
+            final Column rightColumn = rightColumnMetaData.column();
+            final String rightColumnAlias = aliasGenerator.newColumnAlias(rightColumn);
+            rightColumnAliases.put(rightColumnMetaData, rightColumnAlias);
             rightSelectColumnSpecs[i] = new SelectColumnSpec(rightColumnMetaData.column(), null, rightTableAlias);
         }
 
-        projectJoinedTableColumns(rightTableMetaData.columns(), rightTableAlias, Collections.emptyMap());
+        projectJoinedTableColumns(rightTableMetaData.columns(), rightTableAlias, rightColumnAliases);
 
         return new JoinOnSpec(leftSelectColumnSpecs, rightSelectColumnSpecs);
     }

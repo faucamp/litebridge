@@ -130,21 +130,44 @@ class CompositePkTest extends AbstractE2eTest {
         litebridge.save(test1);
         litebridge.save(test2);
 
-        // Then
-        final CompositePkFkTest test1Result = litebridge.select(CompositePkFkTest.class)
-                .join(CompositePkLookup.class).on("lookup")
-                .where("lookup.id").eq(123L)
-                .and("testId").eq(1L)
-                .oneOrThrow();
-        assertEquals(test1, test1Result);
+        // Retrieve with JOIN, and PK is part of the JOINed field
+        {
+            final CompositePkFkTest result = litebridge.select(CompositePkFkTest.class)
+                    .join(CompositePkLookup.class).on("lookup")
+                    .where("lookup.id").eq(123L)
+                    .and("testId").eq(1L)
+                    .oneOrThrow();
+
+            assertEquals(test1, result);
+        }
 
         // Retrieve without join - NULL non-joined fields (default behaviour)
-        final CompositePkFkTest result2 = litebridge.select(CompositePkFkTest.class)
-                .withIdOrThrow(List.of(123, 1L));
+        {
+            final CompositePkFkTest result = litebridge.select(CompositePkFkTest.class)
+                    .withIdOrThrow(List.of(123, 1L));
 
-        assertNull(result2.lookup());
-        assertEquals(test1.testId(), result2.testId());
-        assertEquals(test1.description(), result2.description());
+            assertNull(result.lookup());
+            assertEquals(test1.testId(), result.testId());
+            assertEquals(test1.description(), result.description());
+        }
+
+        // Retrieve without join - Partial non-joined fields
+        {
+            final CompositePkFkTest result = litebridge.select(CompositePkFkTest.class, RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN)
+                    .withIdOrThrow(List.of(123, 1L));
+
+            assertNotNull(result.lookup());
+            assertEquals(lookup.id(), result.lookup().id());
+            assertNull(result.lookup().name());
+            assertEquals(test1.testId(), result.testId());
+            assertEquals(test1.description(), result.description());
+
+            // Save the result back and ensure the NULL lookup name does not get set
+            litebridge.save(result);
+
+            final CompositePkLookup resultLookup = litebridge.select(CompositePkLookup.class).withIdOrThrow(lookup.id());
+            assertEquals(lookup, resultLookup);
+        }
     }
 
     @TestTemplate

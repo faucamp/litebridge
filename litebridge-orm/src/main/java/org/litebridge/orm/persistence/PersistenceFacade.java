@@ -740,6 +740,7 @@ public class PersistenceFacade {
                                 } else {
                                     // If the collection does not exist yet (or is immutable), initialise it
                                     final Collection<Object> mutableCollection = (Collection<Object>) ClassUtils.newInstance(collectionField.type());
+
                                     if (collection != null) {
                                         mutableCollection.addAll(collection);
                                     }

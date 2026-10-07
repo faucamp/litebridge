@@ -234,7 +234,15 @@ public final class QueryBindValueExtractor {
                         bindValues.add(rhs);
                     }
                 }
-                case final ConditionWithIdNode conditionWithIdNode -> bindValues.add(conditionWithIdNode.id());
+                case final ConditionWithIdNode conditionWithIdNode -> {
+                    final Object id = conditionWithIdNode.id();
+
+                    if (id instanceof Collection<?> collection) {
+                        bindValues.addAll(collection);
+                    } else {
+                        bindValues.add(id);
+                    }
+                }
                 case SelectNode selectNode -> {
                     final ExpressionSpec[] expressionSpecs = selectNode.expressions();
 
