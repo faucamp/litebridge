@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select.dto;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
@@ -12,10 +13,15 @@ import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.ConditionWithIdNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Represents the terminal part of a JOIN condition clause in a DTO-based query.
@@ -99,6 +105,57 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         return whereImpl(LogicOperator.NOOP, null, expression);
     }
 
+    /**
+     * Convenience method to select a DTO by its primary key.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
+     *
+     * @param id the primary key value
+     * @return the selected DTO, if found
+     */
+    public Optional<DTO> withId(final Object id) {
+        return createWithIdClause(id).one();
+    }
+
+    /**
+     * Convenience method to select a DTO by its primary key.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
+     *
+     * @param id the primary key value
+     * @return the selected DTO, or {@code null} if not found
+     */
+    public @Nullable DTO withIdOrNull(final Object id) {
+        return createWithIdClause(id).oneOrNull();
+    }
+
+    /**
+     * Retrieves a DTO by its primary key and throws an exception if no matching entry is found.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
+     *
+     * @param id the primary key value used to identify the DTO
+     * @return the DTO associated with the given primary key
+     * @throws NoSuchElementException if no DTO is found with the specified primary key
+     */
+    public DTO withIdOrThrow(final Object id) throws NoSuchElementException {
+        return createWithIdClause(id).oneOrThrow();
+    }
+
+    /**
+     * Retrieves a DTO by its primary key and throws the specified exception if no matching entry is found.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
+     *
+     * @param id                the primary key value used to identify the DTO
+     * @param exceptionSupplier a supplier that provides the exception to be thrown if the DTO is not found
+     * @param <X>               the type of exception to be thrown
+     * @return the DTO associated with the given primary key
+     * @throws X the exception provided by the supplier if no DTO is found with the specified primary key
+     */
+    public <X extends Throwable> DTO withIdOrThrow(final Object id, final Supplier<? extends X> exceptionSupplier) throws X {
+        return createWithIdClause(id).oneOrThrow(exceptionSupplier);
+    }
 
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
@@ -160,5 +217,10 @@ public final class DtoJoinConditionClauseTerminal<DTO>
                 expression,
                 null,
                 conditionNode -> new DtoWhereConditionClauseTerminal<>(new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+    }
+
+    private DtoWhereConditionClauseTerminal<DTO> createWithIdClause(final Object id) {
+        final WhereNode whereNode = new WhereNode(this.node, new ConditionWithIdNode(null, LogicOperator.NOOP, Operator.EQ, id));
+        return new DtoWhereConditionClauseTerminal<>(whereNode, selectEngineTerminal, litebridgeContext);
     }
 }

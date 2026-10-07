@@ -79,6 +79,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     /**
      * Convenience method to select a DTO by its primary key.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
      *
      * @param id the primary key value
      * @return the selected DTO, if found
@@ -89,6 +91,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     /**
      * Convenience method to select a DTO by its primary key.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
      *
      * @param id the primary key value
      * @return the selected DTO, or {@code null} if not found
@@ -99,6 +103,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     /**
      * Retrieves a DTO by its primary key and throws an exception if no matching entry is found.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
      *
      * @param id the primary key value used to identify the DTO
      * @return the DTO associated with the given primary key
@@ -110,6 +116,8 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
 
     /**
      * Retrieves a DTO by its primary key and throws the specified exception if no matching entry is found.
+     * <p>
+     * Use a {@code Collection}/{@code List} to specify composite primary keys.
      *
      * @param id                the primary key value used to identify the DTO
      * @param exceptionSupplier a supplier that provides the exception to be thrown if the DTO is not found

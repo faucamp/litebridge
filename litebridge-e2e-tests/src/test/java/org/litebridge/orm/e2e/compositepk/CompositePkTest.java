@@ -283,9 +283,7 @@ class CompositePkTest extends AbstractE2eTest {
         {
             final CompositePkChild result = litebridge.select(CompositePkChild.class)
                     .join(CompositePkParent.class).on("parent")
-                    .where("pk1").eq(100L)
-                    .and("pk2").eq(200L)
-                    .oneOrThrow();
+                    .withIdOrThrow(List.of(100L, 200L));
             assertEquals(100L, result.pk1());
             assertEquals(200L, result.pk2());
             assertEquals(child1.description(), result.description());
@@ -303,9 +301,7 @@ class CompositePkTest extends AbstractE2eTest {
         {
             final CompositePkParent result = litebridge.select(CompositePkParent.class)
                     .join(CompositePkChild.class).on("children")
-                    .where("pk1").eq(1L)
-                    .and("pk2").eq(2L)
-                    .oneOrThrow();
+                    .withIdOrThrow(List.of(1L, 2L));
             assertEquals(1L, result.pk1());
             assertEquals(2L, result.pk2());
             assertEquals(parent.description(), result.description());
