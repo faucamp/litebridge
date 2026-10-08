@@ -21,13 +21,17 @@ import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.MergeNode;
+import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.engine.ast.WhenMatchedNode;
 import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.ast.WhereNode;
+import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.expression.select.ValuesSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 import org.litebridge.tracking.FieldAccessor;
@@ -382,6 +386,132 @@ class QueryBindValueExtractorTest {
 
         // Then
         assertEquals(List.of(1, 77L, "name", 10), result);
+    }
+
+    @Test
+    void extractBindValues_usingNodeWithQueryAndValues() {
+        // Given
+        final MergeNode root = new MergeNode("target", null, null, null);
+        final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
+
+        final ConditionNode queryCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 99);
+
+        final ValuesSpec valuesSpec = new ValuesSpec("src", new String[]{"a", "b"}, new Object[]{"val1", "val2"});
+
+        final UsingNode usingWithQuery = new UsingNode(root, "source", null, queryCondition, null, "s", onCondition);
+        final UsingNode usingWithValues = new UsingNode(root, "source", null, null, valuesSpec, "s", onCondition);
+
+        // When
+        final List<Object> queryResult = QueryBindValueExtractor.extractBindValues(usingWithQuery, mock(LitebridgeContext.class));
+        final List<Object> valuesResult = QueryBindValueExtractor.extractBindValues(usingWithValues, mock(LitebridgeContext.class));
+
+        // Then
+        assertEquals(List.of(99, 1), queryResult);
+        assertEquals(List.of("val1", "val2", 1), valuesResult);
+    }
+
+    @Test
+    void extractBindValues_selectNodeLiteralsAndExpressions() {
+        // Given
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final MergeNode root = new MergeNode("target", null, null, null);
+        final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
+
+        final SelectNode nullExprs = new SelectNode(null, null, null);
+        final UsingNode usingWithNull = new UsingNode(root, "source", null, nullExprs, null, "s", onCondition);
+
+        final ExpressionSpec[] expressionSpecs = new ExpressionSpec[]{
+                new LiteralExpressionSpec<>("litValue"),
+                new SelectColumnSpec(new Column("col"))
+        };
+        final SelectNode withLiterals = new SelectNode(null, expressionSpecs, null);
+        final UsingNode usingWithLiterals = new UsingNode(root, "source", null, withLiterals, null, "s", onCondition);
+
+        // When
+        final List<Object> nullResult = QueryBindValueExtractor.extractBindValues(usingWithNull, context);
+        final List<Object> literalResult = QueryBindValueExtractor.extractBindValues(usingWithLiterals, context);
+
+        // Then
+        assertEquals(List.of(1), nullResult);
+        assertEquals(List.of("litValue", 1), literalResult);
+    }
+
+    @Test
+    void extractBindValues_conditionWithIdCollection() {
+        // Given
+        final ConditionWithIdNode node = new ConditionWithIdNode(null, LogicOperator.AND, Operator.IN, List.of(10L, 20L));
+
+        // When
+        final List<Object> result = QueryBindValueExtractor.extractBindValues(new WhereNode(null, node), mock(LitebridgeContext.class));
+
+        // Then
+        assertEquals(List.of(10L, 20L), result);
+    }
+
+    @Test
+    void extractBindValues_conditionNodeRhsVariations() {
+        // Given
+        final ConditionNode nullRhs = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, null);
+        final ConditionNode collectionRhs = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, List.of("x", "y"));
+
+        // When
+        final List<Object> nullResult = QueryBindValueExtractor.extractBindValues(new WhereNode(null, nullRhs), mock(LitebridgeContext.class));
+        final List<Object> collectionResult = QueryBindValueExtractor.extractBindValues(new WhereNode(null, collectionRhs), mock(LitebridgeContext.class));
+
+        // Then
+        assertEquals(Collections.singletonList(null), nullResult);
+        assertEquals(List.of("x", "y"), collectionResult);
+    }
+
+    @Test
+    void extractDtoValues_nonNullableWithoutGeneratorOrAutoIncrement() {
+        // Given
+        final Table table = new Table("test_table");
+        final ColumnMetaData colRequired = new ColumnMetaData(table, "required_field", false, java.sql.Types.VARCHAR, 0, 0, false, null, null);
+
+        final OrmTable ormTable = mock(OrmTable.class);
+        when(ormTable.mappedColumns()).thenReturn(List.of(colRequired));
+
+        final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
+        when(fieldAccessor.type()).thenReturn((Class) String.class);
+        when(fieldAccessor.get(any())).thenReturn(null);
+        when(ormTable.fieldForColumnNameOrNull("required_field")).thenReturn(fieldAccessor);
+
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        when(tableRegistry.getOrmTable(SampleDto.class)).thenReturn(ormTable);
+
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        when(context.tableRegistry()).thenReturn(tableRegistry);
+
+        final InsertNode insertNode = new InsertNode(null, SampleDto.class, null, null, null);
+        final InsertDtoValuesNode insertDto = new InsertDtoValuesNode(insertNode, new SampleDto());
+
+        // When
+        final List<Object> result = QueryBindValueExtractor.extractBindValues(insertDto, context);
+
+        // Then
+        assertEquals(Collections.singletonList(null), result);
+    }
+
+    @Test
+    void extractBindValues_whenMatchedWithMixedNodesInUpdateChain() {
+        // Given
+        final MergeNode root = new MergeNode("target", null, null, null);
+        final ConditionNode onCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 1);
+        final UsingNode using = new UsingNode(root, "source", null, null, null, null, onCondition);
+
+        final UpdateNode update = new UpdateNode("target");
+        final DeleteNode deleteNoOp = new DeleteNode(update, "target", null);
+        final SetNode set = new SetNode(deleteNoOp, "balance", 500);
+        final ConditionNode whereCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.LT, 5);
+        final WhereNode where = new WhereNode(set, whereCondition);
+        final WhenMatchedNode matched = new WhenMatchedNode(using, where);
+
+        // When
+        final List<Object> result = QueryBindValueExtractor.extractBindValues(matched, mock(LitebridgeContext.class));
+
+        // Then
+        assertEquals(List.of(1, 5, 500), result);
     }
 
     @Test

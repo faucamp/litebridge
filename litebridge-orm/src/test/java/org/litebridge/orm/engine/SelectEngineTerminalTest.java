@@ -1,38 +1,53 @@
 package org.litebridge.orm.engine;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
+import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.PreparedOperation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.VirtualTable;
+import org.litebridge.db.spi.VirtualTableMetaData;
 import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.AliasedExpression;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
 import org.litebridge.db.spi.expression.ConvertExpression;
+import org.litebridge.db.spi.expression.DelegateExpression;
 import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.query.Select;
 import org.litebridge.db.spi.query.TypeConversionMetaData;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.TransactionManager;
+import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
+import org.litebridge.orm.exception.NonUniqueResultException;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
+import org.litebridge.orm.persistence.MappingPlanCache;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableMetaDataCache;
 import org.litebridge.orm.persistence.TableRegistry;
+import org.litebridge.tracking.ChangeTracker;
+import org.litebridge.tracking.ClassFieldAccessorCache;
+import org.litebridge.tracking.FieldAccessor;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -505,9 +520,351 @@ class SelectEngineTerminalTest {
         verify(tableRegistry).getOrmTableInContextOrThrow(UserDto.class, ContextDto.class);
     }
 
+    @Test
+    void fetchDtoModeTerminalOperationsAndSyncPersistedDto() throws Exception {
+        // Given
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final Table table = new Table("users");
+        final ColumnMetaData idCol = new ColumnMetaData(table, "id", false, Types.BIGINT);
+        final TableMetaData meta = new TableMetaData(table, List.of("id"), List.of(idCol));
+        final FieldAccessor idField = cache.fieldAccessorOrThrow(UserDto.class, "id");
+
+        final OrmTable ormTable = new OrmTable(
+                UserDto.class,
+                meta,
+                Map.of(idField, idCol),
+                new ChangeTracker(lookup),
+                cache);
+
+        final TableRegistry tableRegistry = new TableRegistry();
+        tableRegistry.addTable(UserDto.class, ormTable);
+
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final SelectEngineTerminal terminal = new SelectEngineTerminal(dtoConstructor);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final QueryPlanCache queryPlanCache = mock(QueryPlanCache.class);
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final TransactionManager txManager = mock(TransactionManager.class);
+        final TypeConverter typeConverter = mock(TypeConverter.class);
+        final MappingPlanCache mappingPlanCache = new MappingPlanCache();
+
+        when(context.queryPlanCache()).thenReturn(queryPlanCache);
+        when(context.databaseProvider()).thenReturn(databaseProvider);
+        when(context.transactionManager()).thenReturn(txManager);
+        when(context.typeConverter()).thenReturn(typeConverter);
+        when(context.tableRegistry()).thenReturn(tableRegistry);
+        when(context.mappingPlanCache()).thenReturn(mappingPlanCache);
+        when(context.getRelatedDtoStrategy()).thenReturn(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+
+        when(typeConverter.convert(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        final SelectNode selectNode = new SelectNode(UserDto.class, null, null, null, new ExpressionSpec[0], null);
+        final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation("SELECT id FROM users", Collections.emptyList(), null, null);
+        when(queryPlanCache.get(anyInt())).thenReturn(cachedOperation);
+
+        // Case 1: 0 rows returned
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(Collections.emptyList());
+
+        final Optional<UserDto> emptyOpt = terminal.fetchOne(selectNode, context);
+        assertFalse(emptyOpt.isPresent());
+
+        final UserDto nullDto = terminal.fetchOneOrNull(selectNode, context);
+        assertNull(nullDto);
+
+        assertThrows(NoSuchElementException.class, () -> terminal.fetchOneOrThrow(selectNode, context));
+        assertThrows(CustomException.class, () -> terminal.fetchOneOrThrow(selectNode, context, () -> new CustomException("empty")));
+
+        final Optional<UserDto> firstEmptyOpt = terminal.fetchFirst(selectNode, context);
+        assertFalse(firstEmptyOpt.isPresent());
+
+        final UserDto firstNullDto = terminal.fetchFirstOrNull(selectNode, context);
+        assertNull(firstNullDto);
+
+        assertThrows(NoSuchElementException.class, () -> terminal.fetchFirstOrThrow(selectNode, context));
+        assertThrows(CustomException.class, () -> terminal.fetchFirstOrThrow(selectNode, context, () -> new CustomException("empty")));
+
+        // Case 2: 1 row returned
+        final Row singleRow = new Row(new ArrayList<>(List.of(new RowColumn("id", 101L, new Column(table, "id")))));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleRow));
+
+        final Optional<UserDto> singleOpt = terminal.fetchOne(selectNode, context);
+        assertTrue(singleOpt.isPresent());
+        assertEquals(101L, singleOpt.get().id);
+
+        final UserDto singleFetched = terminal.fetchOneOrNull(selectNode, context);
+        assertNotNull(singleFetched);
+        assertEquals(101L, singleFetched.id);
+        assertTrue(ormTable.isPersistedDto(singleFetched));
+
+        final UserDto singleThrow = terminal.fetchOneOrThrow(selectNode, context);
+        assertEquals(101L, singleThrow.id);
+
+        final UserDto singleCustomThrow = terminal.fetchOneOrThrow(selectNode, context, () -> new CustomException("not thrown"));
+        assertEquals(101L, singleCustomThrow.id);
+
+        final Optional<UserDto> singleFirstOpt = terminal.fetchFirst(selectNode, context);
+        assertTrue(singleFirstOpt.isPresent());
+        assertEquals(101L, singleFirstOpt.get().id);
+
+        final UserDto singleFirst = terminal.fetchFirstOrNull(selectNode, context);
+        assertNotNull(singleFirst);
+        assertEquals(101L, singleFirst.id);
+
+        final UserDto singleFirstThrow = terminal.fetchFirstOrThrow(selectNode, context);
+        assertEquals(101L, singleFirstThrow.id);
+
+        final UserDto singleFirstCustomThrow = terminal.fetchFirstOrThrow(selectNode, context, () -> new CustomException("not thrown"));
+        assertEquals(101L, singleFirstCustomThrow.id);
+
+        // Case 3: > 1 rows (2 rows) returned
+        final Row row2 = new Row(new ArrayList<>(List.of(new RowColumn("id", 102L, new Column(table, "id")))));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleRow, row2));
+
+        final NonUniqueResultException nonUniqueEx = assertThrows(NonUniqueResultException.class, () -> terminal.fetchOneOrNull(selectNode, context));
+        assertEquals("Expected exactly one mapped result, but got 2", nonUniqueEx.getMessage());
+        assertThrows(NonUniqueResultException.class, () -> terminal.fetchOne(selectNode, context));
+
+        final Optional<UserDto> multiFirstOpt = terminal.fetchFirst(selectNode, context);
+        assertTrue(multiFirstOpt.isPresent());
+        assertEquals(101L, multiFirstOpt.get().id);
+
+        final UserDto multiFirst = terminal.fetchFirstOrNull(selectNode, context);
+        assertNotNull(multiFirst);
+        assertEquals(101L, multiFirst.id);
+
+        final UserDto multiFirstThrow = terminal.fetchFirstOrThrow(selectNode, context);
+        assertEquals(101L, multiFirstThrow.id);
+
+        final UserDto multiFirstCustomThrow = terminal.fetchFirstOrThrow(selectNode, context, () -> new CustomException("not thrown"));
+        assertEquals(101L, multiFirstCustomThrow.id);
+    }
+
+    @Test
+    void fetchDtoModeTypeOverridesAndUnwrap() throws Exception {
+        // Given
+        final DtoConstructor dtoConstructor = mock(DtoConstructor.class);
+        final SelectEngineTerminal terminal = new SelectEngineTerminal(dtoConstructor);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final QueryPlanCache queryPlanCache = mock(QueryPlanCache.class);
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final TransactionManager txManager = mock(TransactionManager.class);
+        final TypeConverter typeConverter = mock(TypeConverter.class);
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+
+        when(context.queryPlanCache()).thenReturn(queryPlanCache);
+        when(context.databaseProvider()).thenReturn(databaseProvider);
+        when(context.transactionManager()).thenReturn(txManager);
+        when(context.typeConverter()).thenReturn(typeConverter);
+        when(context.tableRegistry()).thenReturn(tableRegistry);
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.DTO);
+
+        final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation("SELECT 1", Collections.emptyList(), null, null);
+        when(queryPlanCache.get(anyInt())).thenReturn(cachedOperation);
+
+        final Table table = new Table("users");
+        final Column idCol = new Column(table, "id");
+        final Column nameCol = new Column(table, "name");
+
+        final OrmTable ormTable = mock(OrmTable.class);
+        when(ormTable.dtoClass()).thenReturn((Class) UserDto.class);
+        when(ormTable.getDtoClassInterfaces()).thenReturn(Collections.emptySet());
+        when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
+
+        // Branch A: Multiple type overrides -> DTO class is Row.class
+        final SelectNode multipleOverridesNode = new SelectNode(UserDto.class, null, null, null, new ExpressionSpec[0], new Class<?>[]{Long.class, String.class});
+        final Row twoColumnRow = new Row(new ArrayList<>(List.of(new RowColumn("id", 1L, idCol), new RowColumn("name", "Bob", nameCol))));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(twoColumnRow));
+
+        final List<Row> rowsResult = terminal.fetchList(multipleOverridesNode, context);
+        assertEquals(1, rowsResult.size());
+        assertSame(twoColumnRow, rowsResult.getFirst());
+
+        // Branch B: Single type override -> unwrap(dtoClass, rows, typeConverter)
+        final SelectNode singleOverrideNode = new SelectNode(UserDto.class, null, null, null, new ExpressionSpec[0], new Class<?>[]{Long.class});
+        final Row singleColRow = new Row(new ArrayList<>(List.of(new RowColumn("id", "555", idCol))));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleColRow));
+        when(typeConverter.convert("555", Long.class)).thenReturn(555L);
+
+        final List<Long> unwrappedResult = terminal.fetchList(singleOverrideNode, context);
+        assertEquals(1, unwrappedResult.size());
+        assertEquals(555L, unwrappedResult.getFirst());
+
+        // Branch C: unwrap when type is Row.class
+        final SelectNode rowClassOverrideNode = new SelectNode(UserDto.class, null, null, null, new ExpressionSpec[0], new Class<?>[]{UserDto.class, Row.class});
+        final Row rowForUnwrap = new Row(new ArrayList<>(List.of(new RowColumn("id", 10L, idCol), new RowColumn("name", "Test", nameCol))));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(rowForUnwrap));
+
+        final List<Row> rowClassResult = terminal.fetchList(rowClassOverrideNode, context);
+        assertEquals(1, rowClassResult.size());
+        assertSame(rowForUnwrap, rowClassResult.getFirst());
+    }
+
+    @Test
+    void convertRowValueSkipsWhenAlreadyAssignable() throws Exception {
+        // Given
+        final DtoConstructor dtoConstructor = mock(DtoConstructor.class);
+        final SelectEngineTerminal terminal = new SelectEngineTerminal(dtoConstructor);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final QueryPlanCache queryPlanCache = mock(QueryPlanCache.class);
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final TransactionManager txManager = mock(TransactionManager.class);
+        final TypeConverter typeConverter = mock(TypeConverter.class);
+
+        when(context.queryPlanCache()).thenReturn(queryPlanCache);
+        when(context.databaseProvider()).thenReturn(databaseProvider);
+        when(context.transactionManager()).thenReturn(txManager);
+        when(context.typeConverter()).thenReturn(typeConverter);
+
+        final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation("SELECT 1", Collections.emptyList(), null, null);
+        when(queryPlanCache.get(anyInt())).thenReturn(cachedOperation);
+
+        final Table table = new Table("users");
+        final Column idCol = new Column(table, "id");
+        final Row row = new Row(List.of(new RowColumn("id", 123L, idCol)));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(row));
+
+        final SelectNode node = new SelectNode(null, null, null, null, new ExpressionSpec[0], new Class<?>[]{Number.class});
+
+        // When
+        final List<Row> result = terminal.fetchList(node, context);
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals(123L, result.getFirst().column(0).value());
+        // Verify typeConverter.convert was NEVER called because 123L is already assignable to Number.class
+        verify(typeConverter, never()).convert(any(), any());
+    }
+
+    @Test
+    void createTypeConversionMetaDataWithVirtualTableAndDelegateExpressions() throws Exception {
+        // Given
+        final DtoConstructor dtoConstructor = mock(DtoConstructor.class);
+        final SelectEngineTerminal terminal = new SelectEngineTerminal(dtoConstructor);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final QueryCompiler compiler = mock(QueryCompiler.class);
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final TransactionManager txManager = mock(TransactionManager.class);
+        final QueryPlanCache queryPlanCache = new QueryPlanCache();
+        final AliasTransformer aliasTransformer = mock(AliasTransformer.class);
+
+        when(context.createQueryCompiler()).thenReturn(compiler);
+        when(context.databaseProvider()).thenReturn(databaseProvider);
+        when(context.transactionManager()).thenReturn(txManager);
+        when(context.queryPlanCache()).thenReturn(queryPlanCache);
+        when(databaseProvider.aliasTransformer()).thenReturn(aliasTransformer);
+
+        final VirtualTable virtualTable = new VirtualTable("vt");
+        final Column virtualCol = new Column(virtualTable, "val");
+
+        final ColumnExpression innerColExpr = mock(ColumnExpression.class);
+        when(innerColExpr.column()).thenReturn(virtualCol);
+        when(innerColExpr.tableAlias()).thenReturn("vt_alias");
+
+        final TestAliasedDelegateExpression delegateExpr = new TestAliasedDelegateExpression(innerColExpr, "val_alias");
+
+        final Select selectOperation = mock(Select.class);
+        when(selectOperation.expressions()).thenReturn((List) List.of(delegateExpr));
+
+        final SelectNode selectNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], null);
+        final PreparedOperation preparedOperation = new PreparedOperation(selectOperation, Collections.emptyList());
+        when(compiler.compile(selectNode)).thenReturn(preparedOperation);
+        when(databaseProvider.toSql(selectOperation, txManager)).thenReturn("SELECT val AS val_alias FROM (VALUES (1)) AS vt");
+        when(databaseProvider.executeQuery(any(PreparedSql.class), eq(txManager))).thenReturn(Collections.emptyList());
+
+        // When
+        final List<Row> result = terminal.fetchList(selectNode, context);
+
+        // Then
+        assertTrue(result.isEmpty());
+        final QueryPlanCache.CachedOperation cached = queryPlanCache.get(selectNode.hashCode());
+        assertNotNull(cached);
+        final TypeConversionMetaData metaData = cached.typeConversionMetaData();
+        assertNotNull(metaData);
+        assertEquals("vt_alias", metaData.columnLabelsToTableAliases().get("val_alias"));
+        assertNotNull(metaData.columnLabelsToColumnMetaData().get("val_alias"));
+    }
+
+    @Test
+    void fetchSqlModeExtendedBranches() throws Exception {
+        // Given
+        final DtoConstructor dtoConstructor = mock(DtoConstructor.class);
+        final SelectEngineTerminal terminal = new SelectEngineTerminal(dtoConstructor);
+        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final QueryPlanCache queryPlanCache = mock(QueryPlanCache.class);
+        final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
+        final TransactionManager txManager = mock(TransactionManager.class);
+        final TypeConverter typeConverter = mock(TypeConverter.class);
+
+        when(context.queryPlanCache()).thenReturn(queryPlanCache);
+        when(context.databaseProvider()).thenReturn(databaseProvider);
+        when(context.transactionManager()).thenReturn(txManager);
+        when(context.typeConverter()).thenReturn(typeConverter);
+        when(context.mode()).thenReturn(LitebridgeContext.Mode.SQL);
+
+        final QueryPlanCache.CachedOperation cachedOperation = new QueryPlanCache.CachedOperation("SELECT 1", Collections.emptyList(), null, null);
+        when(queryPlanCache.get(anyInt())).thenReturn(cachedOperation);
+
+        final Table table = new Table("users");
+        final Column idCol = new Column(table, "id");
+        final Column nameCol = new Column(table, "name");
+
+        // Case 1: selectNode.table() != null with single result type in SQL mode
+        final SelectNode tableWithSingleResultTypeNode = new SelectNode("users", null, null, new ExpressionSpec[0], new Class<?>[]{String.class});
+        final Row singleColRow = new Row(new ArrayList<>(List.of(new RowColumn("id", 42, idCol))));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleColRow));
+        when(typeConverter.convert(42, String.class)).thenReturn("42_str");
+
+        final Row resultRow = terminal.fetchOneOrNull(tableWithSingleResultTypeNode, context);
+        assertNotNull(resultRow);
+        assertEquals("42_str", resultRow.column(0).value());
+
+        // Case 2: row == null on fetchOneOrNullImpl in SQL mode with single result type
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(Collections.emptyList());
+        final Row nullRow = terminal.fetchOneOrNull(tableWithSingleResultTypeNode, context);
+        assertNull(nullRow);
+
+        // Case 3: selectNode.table() == null and multiple result types in SQL mode
+        final SelectNode multipleTypesSqlNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], new Class<?>[]{String.class, String.class});
+        final Row twoColRow = new Row(new ArrayList<>(List.of(new RowColumn("id", 1, idCol), new RowColumn("name", "Alice", nameCol))));
+        when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(twoColRow));
+        when(typeConverter.convert(1, String.class)).thenReturn("1_str");
+
+        final Row multipleTypesResult = terminal.fetchOneOrNull(multipleTypesSqlNode, context);
+        assertNotNull(multipleTypesResult);
+        assertEquals("1_str", multipleTypesResult.column(0).value());
+        assertEquals("Alice", multipleTypesResult.column(1).value());
+    }
+
     private static class CustomException extends RuntimeException {
         CustomException(final String message) {
             super(message);
+        }
+    }
+
+    private static class TestAliasedDelegateExpression implements DelegateExpression, AliasedExpression {
+        private final SelectExpression target;
+        private final String alias;
+
+        TestAliasedDelegateExpression(final SelectExpression target, final String alias) {
+            this.target = target;
+            this.alias = alias;
+        }
+
+        @Override
+        public SelectExpression target() {
+            return target;
+        }
+
+        @Override
+        public String alias() {
+            return alias;
+        }
+
+        @Override
+        public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
+            return target.toSql(operation, clause, parent);
         }
     }
 
@@ -515,7 +872,7 @@ class SelectEngineTerminalTest {
     }
 
     static class UserDto implements TestInterface {
-        private Long id;
+        public Long id;
     }
 
     static class ContextDto {
