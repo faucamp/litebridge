@@ -5,6 +5,8 @@ import org.litebridge.spring.testentities.ScannedEntityOne;
 import org.litebridge.spring.testentities.ScannedEntityTwo;
 import org.litebridge.spring.testentities.one.PackageOneEntity;
 import org.litebridge.spring.testentities.two.PackageTwoEntity;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 
 import java.util.Arrays;
@@ -12,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LitebridgeEntityScannerTest {
@@ -65,6 +68,36 @@ class LitebridgeEntityScannerTest {
 
         // Then
         assertEquals(0, result.length);
+    }
+
+    @Test
+    void scanBasePackage_withNoPackageNamesReturnsEmptyArray() {
+        // Given
+        final LitebridgeEntityScanner scanner = new LitebridgeEntityScanner();
+
+        // When
+        final Class<?>[] result = scanner.scanBasePackage();
+
+        // Then
+        assertEquals(0, result.length);
+    }
+
+    @Test
+    void scanBasePackage_throwsIllegalStateExceptionWhenClassCannotBeLoaded() {
+        // Given
+        final LitebridgeEntityScanner scanner = Mockito.spy(new LitebridgeEntityScanner());
+        final ClassPathScanningCandidateComponentProvider mockProvider = Mockito.mock(ClassPathScanningCandidateComponentProvider.class);
+        final BeanDefinition mockBeanDefinition = Mockito.mock(BeanDefinition.class);
+        Mockito.when(mockBeanDefinition.getBeanClassName()).thenReturn("org.litebridge.spring.NonExistentClass");
+        Mockito.when(mockProvider.findCandidateComponents("org.litebridge.spring.invalid")).thenReturn(Set.of(mockBeanDefinition));
+        Mockito.doReturn(mockProvider).when(scanner).createScanningProvider();
+
+        // When / Then
+        final IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> scanner.scanBasePackage("org.litebridge.spring.invalid")
+        );
+        assertEquals("Failed to load class for Litebridge entity: org.litebridge.spring.NonExistentClass", exception.getMessage());
     }
 
     @Test
