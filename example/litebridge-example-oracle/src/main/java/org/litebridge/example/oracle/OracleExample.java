@@ -50,7 +50,9 @@ public class OracleExample {
 
     private static void runExamples(final DataSource dataSource) {
         // Initialise Oracle-extended Litebridge and register DTO-table mappings
-        final LitebridgeOracle litebridge = Litebridge.withDatabase(new OracleDatabaseProvider(), dataSource).build();
+        final LitebridgeOracle litebridge = Litebridge.withDatabase(new OracleDatabaseProvider())
+                .withDataSource(dataSource)
+                .build();
         CommonDtoRegistration.registerPersonAndAccount(litebridge);
 
         // Basic Litebridge functionality

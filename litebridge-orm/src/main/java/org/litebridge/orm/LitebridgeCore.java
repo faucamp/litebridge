@@ -112,26 +112,24 @@ public class LitebridgeCore implements SelectApi {
      * Returns a new instance of {@link LitebridgeBuilder} with the specified database provider and data source.
      * <p>
      * Crucially, this allows the database provider to dynamically alter the available Litebridge APIs
-     * by determining the implemention of Litebridge returned.
+     * by determining the subclass/implementation of {@code LitebridgeCodre} returned.
      *
      * @param <LB>             the type of LitebridgeCore
      * @param databaseProvider the provider managing database interactions
-     * @param dataSource       the data source for database connections
      * @return a new instance of LitebridgeBuilder configured with the provided database provider and data source
      */
-    public static <LB extends LitebridgeCore> LitebridgeBuilder<LB> withDatabase(final LitebridgeOverrideDatabaseProvider<LB> databaseProvider, final DataSource dataSource) {
-        return new LitebridgeBuilder<>(databaseProvider, dataSource);
+    public static <LB extends LitebridgeCore> LitebridgeBuilder<LB> withDatabase(final LitebridgeOverrideDatabaseProvider<LB> databaseProvider) {
+        return new LitebridgeBuilder<>(databaseProvider);
     }
 
     /**
      * Create a builder for default Litebridge instances.
      *
      * @param databaseProvider the provider managing database interactions
-     * @param dataSource       the data source for database connections
      * @return a new instance of LitebridgeBuilder configured with the provided database provider and data source
      */
-    public static LitebridgeBuilder<Litebridge> withDatabase(final DatabaseProvider databaseProvider, final DataSource dataSource) {
-        return new LitebridgeBuilder<>(databaseProvider, dataSource);
+    public static LitebridgeBuilder<Litebridge> withDatabase(final DatabaseProvider databaseProvider) {
+        return new LitebridgeBuilder<>(databaseProvider);
     }
 
     /**

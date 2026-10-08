@@ -30,9 +30,11 @@ public interface DbEnvironment<LB extends LitebridgeCore> {
         final LitebridgeBuilder<LB> litebridgeBuilder;
 
         if (databaseProvider instanceof LitebridgeOverrideDatabaseProvider litebridgeOverrideDatabaseProvider) {
-            litebridgeBuilder = Litebridge.withDatabase(litebridgeOverrideDatabaseProvider, dataSource);
+            litebridgeBuilder = Litebridge.withDatabase(litebridgeOverrideDatabaseProvider)
+                    .withDataSource(dataSource);
         } else {
-            litebridgeBuilder = (LitebridgeBuilder<LB>) Litebridge.withDatabase(getDatabaseProvider(), dataSource);
+            litebridgeBuilder = (LitebridgeBuilder<LB>) Litebridge.withDatabase(getDatabaseProvider())
+                    .withDataSource(dataSource);
         }
 
         return litebridgeBuilder.withConfig(litebridgeConfig)

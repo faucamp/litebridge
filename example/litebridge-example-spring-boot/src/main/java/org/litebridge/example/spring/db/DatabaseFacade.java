@@ -42,7 +42,7 @@ public class DatabaseFacade {
 
     @Transactional(readOnly = true)
     public Optional<Person> findPersonWithId(final Long personId) {
-        return litebridge.select(Person.class).where("id").eq(personId).one();
+        return litebridge.select(Person.class).withId(personId);
     }
 
     @Transactional(readOnly = true)

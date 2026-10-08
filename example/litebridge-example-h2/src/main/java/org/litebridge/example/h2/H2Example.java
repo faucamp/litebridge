@@ -33,7 +33,9 @@ public class H2Example {
 
     private static void runExamples(final DataSource dataSource) {
         // Initialise Litebridge and register DTO-table mappings
-        final Litebridge litebridge = Litebridge.withDatabase(new H2DatabaseProvider(), dataSource).build();
+        final Litebridge litebridge = Litebridge.withDatabase(new H2DatabaseProvider())
+                .withDataSource(dataSource)
+                .build();
         CommonDtoRegistration.registerPersonAndAccount(litebridge);
 
         new PersistenceExample(litebridge).run();

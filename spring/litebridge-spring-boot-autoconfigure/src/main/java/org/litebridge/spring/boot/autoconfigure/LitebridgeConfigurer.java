@@ -1,6 +1,6 @@
 package org.litebridge.spring.boot.autoconfigure;
 
-import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 
 /**
  * Provides a mechanism for configuring an instance of Litebridge.
@@ -15,6 +15,6 @@ public interface LitebridgeConfigurer {
      *
      * @param litebridge the Litebridge instance to configure
      */
-    void configure(final Litebridge litebridge);
+    void configure(final LitebridgeCore litebridge);
 
 }

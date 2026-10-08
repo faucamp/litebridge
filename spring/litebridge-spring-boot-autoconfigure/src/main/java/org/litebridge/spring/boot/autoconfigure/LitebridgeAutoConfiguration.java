@@ -1,9 +1,9 @@
 package org.litebridge.spring.boot.autoconfigure;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.config.LitebridgeConfig;
-import org.litebridge.spring.LitebridgeEntityScanner;
+import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.spring.LitebridgeTransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +22,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import javax.sql.DataSource;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -37,6 +35,20 @@ import java.util.Set;
 public class LitebridgeAutoConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LitebridgeAutoConfiguration.class);
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DatabaseProvider databaseProvider(final LitebridgeProperties properties) {
+        final DatabaseProvider databaseProvider;
+        if (properties.getDatabaseProvider().getProviderClass() != null) {
+            // Specific database provider class configured
+            databaseProvider = configBasedDatabaseProvider(properties);
+        } else {
+            // Database provider class not explicitly set; detect it from the classpath
+            databaseProvider = autoDetectDatabaseProvider(properties);
+        }
+        return databaseProvider;
+    }
 
     /**
      * Creates a Litebridge Spring transaction manager bean.
@@ -54,55 +66,21 @@ public class LitebridgeAutoConfiguration {
     /**
      * Instantiates a Litebridge instance.
      * <p>
-     * The DatabaseProvider is specified by the {@code litebridge.database-provider.class} property,
-     * or by detecting an implementation on the classpath if not specified.
+     * This uses a {@code FactoryBean} in order to allow for specialised versions of Litebridge (e.g. vendor-specific
+     * extensions such as {@code LitebridgeOracle}).
      *
      * @param properties         Litebridge Spring Boot autoconfiguration properties
      * @param transactionManager Litebridge Spring transaction manager
      * @param configurer         Optional Litebridge configurer
      * @return Litebridge instance
      */
-    @Bean(name = "litebridge")
-    @ConditionalOnMissingBean
-    @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "ConstantValue"})
-    public Litebridge litebridge(final LitebridgeProperties properties,
-                                 final LitebridgeTransactionManager transactionManager,
-                                 final Optional<LitebridgeConfigurer> configurer) {
-        LOGGER.trace("Starting Litebridge Spring Boot autoconfiguration");
-        final DatabaseProvider databaseProvider;
-
-        if (properties.getDatabaseProvider().getProviderClass() != null) {
-            // Specific database provider class configured
-            databaseProvider = configBasedDatabaseProvider(properties);
-        } else {
-            // Database provider class not explicitly set; detect it from the classpath
-            databaseProvider = autoDetectDatabaseProvider(properties);
-        }
-
-        LOGGER.trace("Creating Litebridge instance with DatabaseProvider: {} (transaction manager: {})", databaseProvider.getClass().getName(), transactionManager.getClass().getName());
-
-        final LitebridgeConfig litebridgeConfig = new LitebridgeConfig(properties.getRelatedDtoStrategy());
-
-        final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager, litebridgeConfig, MethodHandles.lookup());
-        final String[] scanBasePackages = properties.getScanBasePackage();
-
-        if (scanBasePackages != null) {
-            final Class<?>[] entityClasses = new LitebridgeEntityScanner().scanBasePackage(scanBasePackages);
-            LOGGER.debug("Found {} entity classes after scanning base packages: {}", entityClasses.length, scanBasePackages);
-            LOGGER.trace("Found entity classes: {}", (Object) entityClasses);
-
-            if (entityClasses.length > 0) {
-                litebridge.register(entityClasses);
-            }
-        }
-
-        configurer.ifPresent(litebridgeConfigurer -> {
-            LOGGER.trace("Applying LitebridgeConfigurer: {}", litebridgeConfigurer.getClass().getName());
-            litebridgeConfigurer.configure(litebridge);
-        });
-
-        LOGGER.trace("Litebridge Spring Boot autoconfiguration complete");
-        return litebridge;
+    @Bean
+    @ConditionalOnMissingBean({Litebridge.class, LitebridgeCore.class})
+    public LitebridgeFactoryBean litebridge(final DatabaseProvider databaseProvider,
+                                            final LitebridgeTransactionManager transactionManager,
+                                            final LitebridgeProperties properties,
+                                            final @Nullable LitebridgeConfigurer configurer) {
+        return new LitebridgeFactoryBean(databaseProvider, transactionManager, properties, configurer);
     }
 
     /**

@@ -34,7 +34,8 @@ public class H2JpmsExample {
 
     private static void runExamples(final DataSource dataSource) {
         // Initialise litebridgedb and register DTO-table mappings
-        final Litebridge litebridge = Litebridge.withDatabase(new H2DatabaseProvider(), dataSource)
+        final Litebridge litebridge = Litebridge.withDatabase(new H2DatabaseProvider())
+                .withDataSource(dataSource)
                 .withLookup(MethodHandles.lookup())
                 .build();
         CommonDtoRegistration.registerPersonAndAccount(litebridge);

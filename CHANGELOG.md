@@ -83,8 +83,10 @@
 - PostgreSQL Database Provider:
     - Add postgres-specific `COUNT(*)` expression to handle references to it in conditions using expression functions correctly.
 - Oracle Database Provider:
-    - Improve aliasing behaviour by enforcing Oracle's SELECT clause processing order
- 
+    - Improve aliasing behaviour by enforcing Oracle's SELECT clause processing order 
+- Spring Boot starter:
+    - The autoconfiguration class now uses a `FactoryBean` to create a database provider-specific Litebridge bean type (e.g. `LitebridgeOracle`)
+
 ### Fixed
 
 - Oracle Database Provider:

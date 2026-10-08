@@ -27,7 +27,7 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
 
     private final Class<LB> litebridgeClass;
     private final DatabaseProvider databaseProvider;
-    private final DataSource dataSource;
+    private @Nullable DataSource dataSource;
     private @Nullable TransactionManager transactionManager;
     private @Nullable LitebridgeConfig config;
     private MethodHandles.@Nullable Lookup lookup;
@@ -38,10 +38,9 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
      * The Litebridge type constructed by this builder is {@link Litebridge}.
      *
      * @param databaseProvider The database provider responsible for database interactions.
-     * @param dataSource       The data source for database connections.
      */
     @SuppressWarnings("unchecked")
-    LitebridgeBuilder(final DatabaseProvider databaseProvider, final DataSource dataSource) {
+    LitebridgeBuilder(final DatabaseProvider databaseProvider) {
         this.litebridgeClass = (Class<LB>) Litebridge.class;
         this.databaseProvider = databaseProvider;
         this.dataSource = dataSource;
@@ -52,12 +51,23 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
      * type provided by the specified Litebridge-overriding database provider.
      *
      * @param databaseProvider The database provider responsible for database interactions.
-     * @param dataSource       The data source for database connections.
      */
-    LitebridgeBuilder(final LitebridgeOverrideDatabaseProvider<LB> databaseProvider, final DataSource dataSource) {
+    LitebridgeBuilder(final LitebridgeOverrideDatabaseProvider<LB> databaseProvider) {
         this.litebridgeClass = databaseProvider.litebridgeClass();
         this.databaseProvider = databaseProvider;
+    }
+
+    /**
+     * Sets the data source to be used by the Litebridge instance, using the default transaction manager.
+     * <p>
+     * This is not needed if {@link #withTransactionManager(TransactionManager)} is used.
+     *
+     * @param dataSource the data source to use
+     * @return this builder instance for method chaining
+     */
+    public LitebridgeBuilder<LB> withDataSource(final DataSource dataSource) {
         this.dataSource = dataSource;
+        return this;
     }
 
     /**
@@ -105,6 +115,10 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
      */
     @SuppressWarnings("unchecked")
     public LB build() {
+        if (transactionManager == null && dataSource == null) {
+            throw new IllegalStateException("Either a transaction manager or data source must be provided");
+        }
+
         final TransactionManager finalTransactionManager = transactionManager != null ? transactionManager : new DefaultTransactionManager(dataSource);
         final LitebridgeConfig finalLitebridgeConfig = config != null ? config : new LitebridgeConfig();
         final MethodHandles.Lookup finalLookup = lookup != null ? lookup : MethodHandles.lookup();
