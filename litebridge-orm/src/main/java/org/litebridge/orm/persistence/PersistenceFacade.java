@@ -760,7 +760,7 @@ public class PersistenceFacade {
         }
     }
 
-    private StatementBuilder createStatementBuilder(final Object dto, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
+    StatementBuilder createStatementBuilder(final Object dto, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
         if (inProgressDtos.contains(dto)) {
             throw new IllegalStateException("DTO already in progress: %s".formatted(dto));
         }
@@ -883,12 +883,12 @@ public class PersistenceFacade {
         return updateResult;
     }
 
-    private static class TableProvider {
+    static class TableProvider {
 
         private final Deque<Class<?>> contextDtoStack = new ArrayDeque<>();
         private final Deque<TableRegistry> contextTableRegistryStack = new ArrayDeque<>();
 
-        private TableProvider(final TableRegistry rootTableRegistry) {
+        TableProvider(final TableRegistry rootTableRegistry) {
             // Omit the root DTO from the context DTO stack as it's the top level
             contextTableRegistryStack.push(rootTableRegistry);
         }

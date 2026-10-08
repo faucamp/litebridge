@@ -705,7 +705,7 @@ public class DtoMapper {
         currentCollection.add(hostDto);
     }
 
-    private Object createDtoPrimaryKeyOnly(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final Pk primaryKey) {
+    Object createDtoPrimaryKeyOnly(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final Pk primaryKey) {
         final OrmTable ormTable;
         if (contextDtoClass != null) {
             ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
@@ -760,7 +760,7 @@ public class DtoMapper {
         return dto;
     }
 
-    private Column parseTargetColumn(String sqlFunction, final @Nullable String defaultSchema, final TableMetaData rootTableMetaData) {
+    Column parseTargetColumn(String sqlFunction, final @Nullable String defaultSchema, final TableMetaData rootTableMetaData) {
         final Matcher matcher = FUNCTION_SQL_COLUMN_PATTERN.matcher(sqlFunction);
 
         if (matcher.find()) {
@@ -791,7 +791,7 @@ public class DtoMapper {
     /**
      * Cache of "under construction" DTOs.
      */
-    private static class DtoCache {
+    static class DtoCache {
         /**
          * Map of OrmTable -> map of primary key -> PartiallyConstructedDtos
          */
@@ -832,13 +832,13 @@ public class DtoMapper {
         }
     }
 
-    private interface Pk {
+    interface Pk {
         int size();
 
         @Nullable Object get(int index);
     }
 
-    private record SinglePk(@Nullable Object value) implements Pk {
+    static record SinglePk(@Nullable Object value) implements Pk {
         @Override
         public int size() {
             return 1;
@@ -851,7 +851,7 @@ public class DtoMapper {
         }
     }
 
-    private record CompositePk(Object[] values) implements Pk {
+    static record CompositePk(Object[] values) implements Pk {
         @Override
         public int size() {
             return values.length;
@@ -876,7 +876,7 @@ public class DtoMapper {
         }
     }
 
-    private enum EmptyPk implements Pk {
+    enum EmptyPk implements Pk {
         INSTANCE;
 
         @Override
@@ -927,7 +927,7 @@ public class DtoMapper {
     record MappingPlan(Map<String, MappingData> mappingDataMap, @Nullable MappingData rootMappingData) {
     }
 
-    private static final class DtoData {
+    static final class DtoData {
         private final Map<FieldAccessor, @Nullable Object> values = new HashMap<>();
         private final Map<FieldAccessor, Collection<Object>> collections = new HashMap<>();
 
@@ -950,7 +950,7 @@ public class DtoMapper {
         }
     }
 
-    private static final class PartiallyConstructedDto {
+    static final class PartiallyConstructedDto {
         private final DtoData dtoData;
         private @Nullable Object dto;
         private final Pk primaryKey;
@@ -958,10 +958,10 @@ public class DtoMapper {
         private final MappingData mappingData;
         private boolean instantiating;
 
-        private PartiallyConstructedDto(final DtoData dtoData,
-                                        final Pk primaryKey,
-                                        final List<SpecificDtoDependency> dependencies,
-                                        final MappingData mappingData) {
+        PartiallyConstructedDto(final DtoData dtoData,
+                                final Pk primaryKey,
+                                final List<SpecificDtoDependency> dependencies,
+                                final MappingData mappingData) {
             this.dtoData = dtoData;
             this.primaryKey = primaryKey;
             this.dependencies = dependencies;
@@ -1001,7 +1001,7 @@ public class DtoMapper {
         }
     }
 
-    private static final class FieldMapping {
+    static final class FieldMapping {
         private final FieldAccessor fieldAccessor;
         private final List<Column> columns;
         private final List<String> columnLabels;
@@ -1011,13 +1011,13 @@ public class DtoMapper {
         private final @Nullable Class<?> relatedDtoClass;
         private int @Nullable [] columnIndexes;
 
-        private FieldMapping(final FieldAccessor fieldAccessor,
-                             final List<Column> columns,
-                             final List<String> columnLabels,
-                             final boolean isBasicType,
-                             final boolean isRelatedDto,
-                             final @Nullable FieldAccessor relatedCollectionField,
-                             final @Nullable Class<?> relatedDtoClass) {
+        FieldMapping(final FieldAccessor fieldAccessor,
+                     final List<Column> columns,
+                     final List<String> columnLabels,
+                     final boolean isBasicType,
+                     final boolean isRelatedDto,
+                     final @Nullable FieldAccessor relatedCollectionField,
+                     final @Nullable Class<?> relatedDtoClass) {
             this.fieldAccessor = fieldAccessor;
             this.columns = columns;
             this.columnLabels = columnLabels;
@@ -1064,7 +1064,7 @@ public class DtoMapper {
         }
     }
 
-    private static final class MappingData {
+    static final class MappingData {
         private final Class<?> dtoClass;
         private final @Nullable Class<?> contextDtoClass;
         private final Table table;
@@ -1073,12 +1073,12 @@ public class DtoMapper {
         private final List<FieldMapping> fieldMappings;
         private @Nullable List<GenericDtoDependency> genericDtoDependencies;
 
-        private MappingData(final Class<?> dtoClass,
-                            final @Nullable Class<?> contextDtoClass,
-                            final Table table,
-                            final OrmTable ormTable,
-                            final int[] pkColumnIndexes,
-                            final List<FieldMapping> fieldMappings) {
+        MappingData(final Class<?> dtoClass,
+                    final @Nullable Class<?> contextDtoClass,
+                    final Table table,
+                    final OrmTable ormTable,
+                    final int[] pkColumnIndexes,
+                    final List<FieldMapping> fieldMappings) {
             this.dtoClass = dtoClass;
             this.contextDtoClass = contextDtoClass;
             this.table = table;
@@ -1124,23 +1124,23 @@ public class DtoMapper {
         }
     }
 
-    private record GenericDtoDependency(FieldAccessor field,
-                                        FieldMapping relatedFieldMapping) {
+    static record GenericDtoDependency(FieldAccessor field,
+                                       FieldMapping relatedFieldMapping) {
     }
 
-    private record SpecificDtoDependency(FieldAccessor field,
-                                         Class<?> relatedDtoClass,
-                                         @Nullable MappingData targetMappingData,
-                                         Pk primaryKeyValue,
-                                         @Nullable FieldAccessor relatedCollectionField,
-                                         boolean reverseUpdateOnly) {
+    static record SpecificDtoDependency(FieldAccessor field,
+                                        Class<?> relatedDtoClass,
+                                        @Nullable MappingData targetMappingData,
+                                        Pk primaryKeyValue,
+                                        @Nullable FieldAccessor relatedCollectionField,
+                                        boolean reverseUpdateOnly) {
     }
 
-    private record LateReverseCollectionUpdate(PartiallyConstructedDto hostPartialDto, Object relatedDto,
-                                               FieldAccessor relatedCollectionField) {
+    static record LateReverseCollectionUpdate(PartiallyConstructedDto hostPartialDto, Object relatedDto,
+                                              FieldAccessor relatedCollectionField) {
     }
 
-    private record DeferredCollectionAddition(Collection<Object> collection,
-                                              PartiallyConstructedDto itemPartialDto) {
+    static record DeferredCollectionAddition(Collection<Object> collection,
+                                             PartiallyConstructedDto itemPartialDto) {
     }
 }

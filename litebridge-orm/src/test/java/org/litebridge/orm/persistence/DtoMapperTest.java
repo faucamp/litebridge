@@ -954,6 +954,526 @@ class DtoMapperTest {
         return new DtoMapper(dtoConstructor, context);
     }
 
+    @Test
+    void singlePk_methods() {
+        // Given
+        final DtoMapper.SinglePk pk1 = new DtoMapper.SinglePk(1L);
+        final DtoMapper.SinglePk pk2 = new DtoMapper.SinglePk(1L);
+        final DtoMapper.SinglePk pk3 = new DtoMapper.SinglePk(2L);
+
+        // When / Then
+        assertEquals(1, pk1.size());
+        assertEquals(1L, pk1.get(0));
+        assertThrows(IndexOutOfBoundsException.class, () -> pk1.get(1));
+        assertEquals(pk1, pk2);
+        assertEquals(pk1.hashCode(), pk2.hashCode());
+        org.junit.jupiter.api.Assertions.assertNotEquals(pk1, pk3);
+        org.junit.jupiter.api.Assertions.assertNotEquals(pk1, "other");
+    }
+
+    @Test
+    void toDtos_withMappedCompositeKeySorting() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+
+        final Table childTable = new Table("", "public", "child_tbl");
+        final ColumnMetaData childPkA = new ColumnMetaData(childTable, "tenant_id", false, Types.VARCHAR);
+        final ColumnMetaData childPkB = new ColumnMetaData(childTable, "entity_id", false, Types.BIGINT);
+        final TableMetaData childMeta = new TableMetaData(childTable, List.of("tenant_id", "entity_id"), List.of(childPkA, childPkB));
+        final FieldAccessor childTenantField = cache.fieldAccessorOrThrow(CompositeKeyDto.class, "tenantId");
+        final FieldAccessor childEntityField = cache.fieldAccessorOrThrow(CompositeKeyDto.class, "entityId");
+        final OrmTable childOrmTable = new OrmTable(
+                CompositeKeyDto.class,
+                childMeta,
+                Map.of(childTenantField, childPkA, childEntityField, childPkB),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(CompositeKeyDto.class, childOrmTable);
+
+        final Table parentTable = new Table("", "public", "parent_tbl");
+        final ColumnMetaData parentIdCol = new ColumnMetaData(parentTable, "id", false, Types.BIGINT);
+        final ColumnMetaData parentFkEntity = new ColumnMetaData(parentTable, "fk_entity", false, Types.BIGINT);
+        parentFkEntity.setJoinColumnSupplier(() -> childPkB);
+        final ColumnMetaData parentFkTenant = new ColumnMetaData(parentTable, "fk_tenant", false, Types.VARCHAR);
+        parentFkTenant.setJoinColumnSupplier(() -> childPkA);
+        final TableMetaData parentMeta = new TableMetaData(parentTable, List.of("id"), List.of(parentIdCol, parentFkEntity, parentFkTenant));
+        final FieldAccessor parentIdField = cache.fieldAccessorOrThrow(ParentWithCompositeChildDto.class, "id");
+        final FieldAccessor parentChildField = cache.fieldAccessorOrThrow(ParentWithCompositeChildDto.class, "child");
+
+        final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(
+                new MappedFieldTarget[]{parentFkEntity, parentFkTenant},
+                () -> childOrmTable,
+                new String[]{"entity_id", "tenant_id"}
+        );
+        final OrmTable parentOrmTable = new OrmTable(
+                ParentWithCompositeChildDto.class,
+                parentMeta,
+                Map.of(parentIdField, parentIdCol, parentChildField, mappedCompositeKey),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(ParentWithCompositeChildDto.class, parentOrmTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        final Row childRow = new Row(List.of(
+                new RowColumn("tenant_id", "T1", new Column(childTable, "tenant_id")),
+                new RowColumn("entity_id", 99L, new Column(childTable, "entity_id"))
+        ));
+        dtoMapper.toDtos(CompositeKeyDto.class, null, List.of(childRow));
+
+        final Row parentRow = new Row(List.of(
+                new RowColumn("id", 1L, new Column(parentTable, "id")),
+                new RowColumn("fk_entity", 99L, new Column(parentTable, "fk_entity")),
+                new RowColumn("fk_tenant", "T1", new Column(parentTable, "fk_tenant"))
+        ));
+
+        // When
+        final List<ParentWithCompositeChildDto> parents = dtoMapper.toDtos(ParentWithCompositeChildDto.class, null, List.of(parentRow));
+
+        // Then
+        assertEquals(1, parents.size());
+    }
+
+    @Test
+    void compositePk_methods() {
+        // Given
+        final DtoMapper.CompositePk pk1 = new DtoMapper.CompositePk(new Object[]{1L, "A"});
+        final DtoMapper.CompositePk pk2 = new DtoMapper.CompositePk(new Object[]{1L, "A"});
+        final DtoMapper.CompositePk pk3 = new DtoMapper.CompositePk(new Object[]{1L, "B"});
+
+        // When / Then
+        assertEquals(2, pk1.size());
+        assertEquals(1L, pk1.get(0));
+        assertEquals("A", pk1.get(1));
+        assertEquals(pk1, pk1);
+        assertEquals(pk1, pk2);
+        assertEquals(pk1.hashCode(), pk2.hashCode());
+        org.junit.jupiter.api.Assertions.assertNotEquals(pk1, pk3);
+        org.junit.jupiter.api.Assertions.assertNotEquals(pk1, null);
+        org.junit.jupiter.api.Assertions.assertNotEquals(pk1, "other");
+    }
+
+    @Test
+    void emptyPk_methods() {
+        // Given
+        final DtoMapper.Pk pk = DtoMapper.EmptyPk.INSTANCE;
+
+        // When / Then
+        assertEquals(0, pk.size());
+        assertThrows(IndexOutOfBoundsException.class, () -> pk.get(0));
+    }
+
+    @Test
+    void dtoCache_methods() {
+        // Given
+        final DtoMapper.DtoCache cache = new DtoMapper.DtoCache();
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache accessorCache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idField = accessorCache.fieldAccessorOrThrow(TestPersonDto.class, "id");
+        final FieldAccessor nameField = accessorCache.fieldAccessorOrThrow(TestPersonDto.class, "name");
+
+        final Table canonicalTable = new Table("", "public", "test_person");
+        final ColumnMetaData idCol = new ColumnMetaData(canonicalTable, "id", false, Types.BIGINT);
+        final ColumnMetaData nameCol = new ColumnMetaData(canonicalTable, "name", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("id"), List.of(idCol, nameCol));
+
+        final OrmTable ormTable = new OrmTable(
+                TestPersonDto.class,
+                metaData,
+                Map.of(idField, idCol, nameField, nameCol),
+                new ChangeTracker(lookup),
+                accessorCache);
+
+        final DtoMapper.FieldMapping fieldMapping = new DtoMapper.FieldMapping(idField, List.of(new Column(canonicalTable, "id")), List.of("id"), true, false, null, null);
+        final DtoMapper.FieldMapping otherFieldMapping = new DtoMapper.FieldMapping(nameField, List.of(new Column(canonicalTable, "name")), List.of("name"), true, false, null, null);
+        final DtoMapper.MappingData mappingData = new DtoMapper.MappingData(TestPersonDto.class, null, canonicalTable, ormTable, new int[]{0}, List.of(fieldMapping));
+        final DtoMapper.PartiallyConstructedDto partialDto = new DtoMapper.PartiallyConstructedDto(new DtoMapper.DtoData(), new DtoMapper.SinglePk(100L), Collections.emptyList(), mappingData);
+
+        // When
+        cache.put(mappingData, new DtoMapper.SinglePk(100L), partialDto);
+
+        // Then
+        assertEquals(partialDto, cache.get(mappingData, new DtoMapper.SinglePk(100L)));
+        assertEquals(partialDto, cache.getByClassAndPk(TestPersonDto.class, new DtoMapper.SinglePk(100L)));
+        assertEquals(partialDto, cache.get(fieldMapping));
+        assertNull(cache.get(otherFieldMapping));
+        assertNull(cache.getByClassAndPk(TestPersonDto.class, new DtoMapper.SinglePk(999L)));
+        assertNull(cache.getByClassAndPk(String.class, new DtoMapper.SinglePk(100L)));
+    }
+
+    @Test
+    void helperRecords_methods() {
+        // Given
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache accessorCache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor nameField = accessorCache.fieldAccessorOrThrow(TestPersonDto.class, "name");
+        final FieldAccessor idField = accessorCache.fieldAccessorOrThrow(TestPersonDto.class, "id");
+
+        final Table canonicalTable = new Table("", "public", "test_person");
+        final ColumnMetaData idCol = new ColumnMetaData(canonicalTable, "id", false, Types.BIGINT);
+        final ColumnMetaData nameCol = new ColumnMetaData(canonicalTable, "name", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("id"), List.of(idCol, nameCol));
+
+        final OrmTable ormTable = new OrmTable(
+                TestPersonDto.class,
+                metaData,
+                Map.of(idField, idCol, nameField, nameCol),
+                new ChangeTracker(lookup),
+                accessorCache);
+
+        final DtoMapper.FieldMapping fieldMapping = new DtoMapper.FieldMapping(idField, List.of(new Column(canonicalTable, "id")), List.of("id"), true, false, null, null);
+        final DtoMapper.MappingData mappingData = new DtoMapper.MappingData(TestPersonDto.class, null, canonicalTable, ormTable, new int[]{0}, List.of(fieldMapping));
+        final DtoMapper.PartiallyConstructedDto partialDto = new DtoMapper.PartiallyConstructedDto(new DtoMapper.DtoData(), new DtoMapper.SinglePk(1L), Collections.emptyList(), mappingData);
+
+        final TestPersonDto child = new TestPersonDto();
+
+        // When / Then
+        final List<Object> col = new ArrayList<>();
+        final DtoMapper.DeferredCollectionAddition dca = new DtoMapper.DeferredCollectionAddition(col, partialDto);
+        assertEquals(col, dca.collection());
+        assertEquals(partialDto, dca.itemPartialDto());
+        assertNotNull(dca.toString());
+
+        final DtoMapper.LateReverseCollectionUpdate lrcu = new DtoMapper.LateReverseCollectionUpdate(partialDto, child, nameField);
+        assertEquals(partialDto, lrcu.hostPartialDto());
+        assertEquals(child, lrcu.relatedDto());
+        assertEquals(nameField, lrcu.relatedCollectionField());
+        assertNotNull(lrcu.toString());
+
+        final DtoMapper.GenericDtoDependency gdd = new DtoMapper.GenericDtoDependency(nameField, fieldMapping);
+        assertEquals(nameField, gdd.field());
+        assertEquals(fieldMapping, gdd.relatedFieldMapping());
+        assertNotNull(gdd.toString());
+    }
+
+    @Test
+    void parseTargetColumn_formats() {
+        // Given
+        final Table table = new Table("", "public", "test_person");
+        final ColumnMetaData idCol = new ColumnMetaData(table, "id", false, Types.BIGINT);
+        final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
+        final TableRegistry tableRegistry = new TableRegistry();
+        tableRegistry.getOrCreateSpiTable("public.test_person");
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        // When
+        final Column simple = dtoMapper.parseTargetColumn("id", null, metaData);
+        final Column functionWithTable = dtoMapper.parseTargetColumn("UPPER(test_person.id)", "public", metaData);
+        final Column functionWithoutTable = dtoMapper.parseTargetColumn("LOWER(id)", null, metaData);
+
+        // Then
+        assertEquals("id", simple.name());
+        assertEquals(table, simple.table());
+
+        assertEquals("id", functionWithTable.name());
+        assertEquals("public.test_person", functionWithTable.table().qualifiedName());
+
+        assertEquals("id", functionWithoutTable.name());
+        assertEquals(table, functionWithoutTable.table());
+
+        assertThrows(IllegalStateException.class, () -> dtoMapper.parseTargetColumn("UNKNOWN()", null, metaData));
+        assertThrows(IllegalStateException.class, () -> dtoMapper.parseTargetColumn("missing_column", null, metaData));
+    }
+
+    @Test
+    void createDtoPrimaryKeyOnly_forRecord() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table canonicalTable = new Table("", "public", "person_record");
+        final ColumnMetaData idCol = new ColumnMetaData(canonicalTable, "id", false, Types.BIGINT);
+        final ColumnMetaData nameCol = new ColumnMetaData(canonicalTable, "name", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("id"), List.of(idCol, nameCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idField = cache.fieldAccessorOrThrow(TestRecordDto.class, "id");
+        final FieldAccessor nameField = cache.fieldAccessorOrThrow(TestRecordDto.class, "name");
+        final OrmTable ormTable = new OrmTable(
+                TestRecordDto.class,
+                metaData,
+                Map.of(idField, idCol, nameField, nameCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(TestRecordDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        // When
+        final TestRecordDto record = (TestRecordDto) dtoMapper.createDtoPrimaryKeyOnly(TestRecordDto.class, null, new DtoMapper.SinglePk(42L));
+
+        // Then
+        assertNotNull(record);
+        assertEquals(42L, record.id());
+        assertNull(record.name());
+    }
+
+    @Test
+    void createDtoPrimaryKeyOnly_forClass() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table canonicalTable = new Table("", "public", "test_person");
+        final ColumnMetaData idCol = new ColumnMetaData(canonicalTable, "id", false, Types.BIGINT);
+        final ColumnMetaData nameCol = new ColumnMetaData(canonicalTable, "name", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("id"), List.of(idCol, nameCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idField = cache.fieldAccessorOrThrow(TestPersonDto.class, "id");
+        final FieldAccessor nameField = cache.fieldAccessorOrThrow(TestPersonDto.class, "name");
+        final OrmTable ormTable = new OrmTable(
+                TestPersonDto.class,
+                metaData,
+                Map.of(idField, idCol, nameField, nameCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(TestPersonDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        // When
+        final TestPersonDto person = (TestPersonDto) dtoMapper.createDtoPrimaryKeyOnly(TestPersonDto.class, null, new DtoMapper.SinglePk(77L));
+
+        // Then
+        assertNotNull(person);
+        assertEquals(77L, person.id);
+        assertNull(person.name);
+    }
+
+    @Test
+    void createDtoPrimaryKeyOnly_pkMismatch_throwsIllegalStateException() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table canonicalTable = new Table("", "public", "test_person");
+        final ColumnMetaData idCol = new ColumnMetaData(canonicalTable, "id", false, Types.BIGINT);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("id"), List.of(idCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idField = cache.fieldAccessorOrThrow(TestPersonDto.class, "id");
+        final OrmTable ormTable = new OrmTable(
+                TestPersonDto.class,
+                metaData,
+                Map.of(idField, idCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(TestPersonDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        // When / Then - PK has 2 parts but OrmTable has 1 PK column
+        assertThrows(IllegalStateException.class, () -> dtoMapper.createDtoPrimaryKeyOnly(TestPersonDto.class, null, new DtoMapper.CompositePk(new Object[]{1L, 2L})));
+    }
+
+    @Test
+    void toDtos_withGenericDtoDependency() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+
+        final Table settingTable = new Table("", "public", "shared_settings");
+        final ColumnMetaData settingIdCol = new ColumnMetaData(settingTable, "id", false, Types.BIGINT);
+        final ColumnMetaData settingNameCol = new ColumnMetaData(settingTable, "name", false, Types.VARCHAR);
+        final TableMetaData settingMeta = new TableMetaData(settingTable, List.of("id"), List.of(settingIdCol, settingNameCol));
+        final FieldAccessor settingIdField = cache.fieldAccessorOrThrow(SharedSettingDto.class, "id");
+        final FieldAccessor settingNameField = cache.fieldAccessorOrThrow(SharedSettingDto.class, "name");
+        final OrmTable settingOrmTable = new OrmTable(
+                SharedSettingDto.class,
+                settingMeta,
+                Map.of(settingIdField, settingIdCol, settingNameField, settingNameCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(SharedSettingDto.class, settingOrmTable);
+
+        final Table parentTable = new Table("", "public", "parent_setting");
+        final ColumnMetaData parentIdCol = new ColumnMetaData(parentTable, "id", false, Types.BIGINT);
+        final ColumnMetaData parentSettingIdCol = new ColumnMetaData(parentTable, "setting_id", true, Types.BIGINT);
+        final TableMetaData parentMeta = new TableMetaData(parentTable, List.of("id"), List.of(parentIdCol, parentSettingIdCol));
+        final FieldAccessor parentIdField = cache.fieldAccessorOrThrow(ParentWithSharedSettingDto.class, "id");
+        final FieldAccessor parentSettingField = cache.fieldAccessorOrThrow(ParentWithSharedSettingDto.class, "setting");
+        final OrmTable parentOrmTable = new OrmTable(
+                ParentWithSharedSettingDto.class,
+                parentMeta,
+                Map.of(parentIdField, parentIdCol, parentSettingField, parentSettingIdCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(ParentWithSharedSettingDto.class, parentOrmTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        final Row settingRow = new Row(List.of(
+                new RowColumn("id", 10L, new Column(settingTable, "id")),
+                new RowColumn("name", "DarkTheme", new Column(settingTable, "name"))
+        ));
+        dtoMapper.toDtos(SharedSettingDto.class, null, List.of(settingRow));
+
+        final Row parentRow = new Row(List.of(
+                new RowColumn("id", 1L, new Column(parentTable, "id")),
+                new RowColumn("setting_id", 10L, new Column(parentTable, "setting_id"))
+        ));
+
+        // When
+        final List<ParentWithSharedSettingDto> parents = dtoMapper.toDtos(ParentWithSharedSettingDto.class, null, List.of(parentRow));
+
+        // Then
+        assertEquals(1, parents.size());
+        assertEquals(1L, parents.getFirst().getId());
+    }
+
+    @Test
+    void toDtos_withForeignKeyConstraints() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+
+        final Table authorTable = new Table("", "public", "author");
+        final ColumnMetaData authorIdCol = new ColumnMetaData(authorTable, "id", false, Types.BIGINT);
+        final ColumnMetaData authorNameCol = new ColumnMetaData(authorTable, "name", false, Types.VARCHAR);
+        final TableMetaData authorMeta = new TableMetaData(authorTable, List.of("id"), List.of(authorIdCol, authorNameCol));
+        final FieldAccessor authorIdField = cache.fieldAccessorOrThrow(AuthorDto.class, "id");
+        final FieldAccessor authorNameField = cache.fieldAccessorOrThrow(AuthorDto.class, "name");
+        final OrmTable authorOrmTable = new OrmTable(
+                AuthorDto.class,
+                authorMeta,
+                Map.of(authorIdField, authorIdCol, authorNameField, authorNameCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(AuthorDto.class, authorOrmTable);
+
+        final Table bookTable = new Table("", "public", "book");
+        final ColumnMetaData bookIdCol = new ColumnMetaData(bookTable, "id", false, Types.BIGINT);
+        final ColumnMetaData bookAuthorIdCol = new ColumnMetaData(bookTable, "author_id", true, Types.BIGINT);
+        bookAuthorIdCol.addForeignKeyConstraint(new org.litebridge.db.spi.ForeignKeyConstraint(
+                "fk_author",
+                new Column(authorTable, "id")
+        ));
+        final TableMetaData bookMeta = new TableMetaData(bookTable, List.of("id"), List.of(bookIdCol, bookAuthorIdCol));
+        final FieldAccessor bookIdField = cache.fieldAccessorOrThrow(BookDto.class, "id");
+        final FieldAccessor bookAuthorField = cache.fieldAccessorOrThrow(BookDto.class, "author");
+        final OrmTable bookOrmTable = new OrmTable(
+                BookDto.class,
+                bookMeta,
+                Map.of(bookIdField, bookIdCol, bookAuthorField, bookAuthorIdCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(BookDto.class, bookOrmTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        final Row row = new Row(List.of(
+                new RowColumn("id", 1L, new Column(bookTable, "id")),
+                new RowColumn("author_id", 100L, new Column(bookTable, "author_id")),
+                new RowColumn("a_id", 100L, new Column(authorTable, "id")),
+                new RowColumn("a_name", "Author Name", new Column(authorTable, "name"))
+        ));
+
+        // When
+        final List<BookDto> books = dtoMapper.toDtos(BookDto.class, null, List.of(row));
+
+        // Then
+        assertEquals(1, books.size());
+        final BookDto book = books.getFirst();
+        assertEquals(1L, book.id);
+        assertNotNull(book.author);
+        assertEquals(100L, book.author.id);
+        assertEquals("Author Name", book.author.name);
+    }
+
+    @Test
+    void toDtos_withInlineTableAndColumnMatching() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+
+        final Table childTable = new Table("", "public", "child_tbl");
+        final ColumnMetaData childPkA = new ColumnMetaData(childTable, "k_a", false, Types.BIGINT);
+        final ColumnMetaData childPkB = new ColumnMetaData(childTable, "k_b", false, Types.VARCHAR);
+        final TableMetaData childMeta = new TableMetaData(childTable, List.of("k_a", "k_b"), List.of(childPkA, childPkB));
+        final FieldAccessor childTenantField = cache.fieldAccessorOrThrow(CompositeKeyDto.class, "tenantId");
+        final FieldAccessor childEntityField = cache.fieldAccessorOrThrow(CompositeKeyDto.class, "entityId");
+        final OrmTable childOrmTable = new OrmTable(
+                CompositeKeyDto.class,
+                childMeta,
+                Map.of(childTenantField, childPkA, childEntityField, childPkB),
+                new ChangeTracker(lookup),
+                cache);
+
+        final Table parentTable = new Table("", "public", "parent_tbl");
+        final ColumnMetaData parentIdCol = new ColumnMetaData(parentTable, "id", false, Types.BIGINT);
+        final ColumnMetaData parentFkA = new ColumnMetaData(parentTable, "fk_a", true, Types.BIGINT);
+        final TableMetaData parentMeta = new TableMetaData(parentTable, List.of("id"), List.of(parentIdCol, parentFkA));
+        final FieldAccessor parentIdField = cache.fieldAccessorOrThrow(ParentWithCompositeChildDto.class, "id");
+        final FieldAccessor parentChildField = cache.fieldAccessorOrThrow(ParentWithCompositeChildDto.class, "child");
+
+        final ColumnAndInlineTable columnAndInlineTable = new ColumnAndInlineTable(parentFkA, childOrmTable);
+        final OrmTable parentOrmTable = new OrmTable(
+                ParentWithCompositeChildDto.class,
+                parentMeta,
+                Map.of(parentIdField, parentIdCol, parentChildField, columnAndInlineTable),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(ParentWithCompositeChildDto.class, parentOrmTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        final Row row = new Row(List.of(
+                new RowColumn("id", 1L, new Column(parentTable, "id")),
+                new RowColumn("fk_a", 10L, new Column(parentTable, "fk_a"))
+        ));
+
+        // When
+        final List<ParentWithCompositeChildDto> parents = dtoMapper.toDtos(ParentWithCompositeChildDto.class, null, List.of(row));
+
+        // Then
+        assertEquals(1, parents.size());
+    }
+
+    @Test
+    void createDtoPrimaryKeyOnly_throwingConstructor_throwsIllegalStateException() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table table = new Table("", "public", "throwing_class");
+        final ColumnMetaData idCol = new ColumnMetaData(table, "id", false, Types.BIGINT);
+        final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idField = cache.fieldAccessorOrThrow(ThrowingClassDto.class, "id");
+        final OrmTable ormTable = new OrmTable(
+                ThrowingClassDto.class,
+                metaData,
+                Map.of(idField, idCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(ThrowingClassDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> dtoMapper.createDtoPrimaryKeyOnly(ThrowingClassDto.class, null, new DtoMapper.SinglePk(1L)));
+    }
+
+    public static class AuthorDto {
+        private Long id;
+        private String name;
+    }
+
+    public record TestRecordDto(Long id, String name) {
+    }
+
+    public static class BookDto {
+        private Long id;
+        private AuthorDto author;
+    }
+
+    public static class ThrowingClassDto {
+        private Long id;
+
+        public ThrowingClassDto() {
+            throw new RuntimeException("Constructor intentional failure");
+        }
+    }
+
     public static class TestPersonDto {
         private Long id;
         private String name;

@@ -44,6 +44,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -714,6 +715,630 @@ class PersistenceFacadeTest {
         assertEquals(20L, product.id);
     }
 
+    @Test
+    void merge_withGeneratedKeys() throws SQLException {
+        // Given
+        final CustomerDto dto = new CustomerDto();
+        dto.name = "new customer";
+
+        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any()))
+                .thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 99L)));
+
+        // When
+        persistenceFacade.merge(dto);
+
+        // Then
+        assertEquals(99L, dto.id);
+        assertTrue(table.isPersistedDto(dto));
+        verify(databaseProvider).executeUpdate(any(), eq(UpdateResult.class), any());
+    }
+
+    @Test
+    void merge_withOneToManyReverseMappings() throws SQLException {
+        // Given
+        final CategoryDto category = new CategoryDto();
+        category.id = 1L;
+        category.name = "Electronics";
+
+        final ProductDto product = new ProductDto();
+        product.name = "Phone";
+        category.products = new ArrayList<>(List.of(product));
+
+        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories",
+                Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(
+                        changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "category"),
+                        changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products")
+                )), List.of("ID"));
+
+        final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products",
+                Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CATEGORY_ID")), List.of("ID"));
+        productTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"));
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        lenient().when(databaseProvider.executeUpdate(any(), any(), any())).thenReturn(new InsertResult(1));
+
+        // When
+        persistenceFacade.merge(category);
+
+        // Then
+        verify(databaseProvider, times(2)).executeUpdate(any(), any(), any());
+    }
+
+    @Test
+    void merge_manualUpsert_updateSucceeds() throws SQLException {
+        // Given
+        final TransactionalDatabaseProvider customDbProvider = mock(TransactionalDatabaseProvider.class);
+        final DatabaseProviderMetaData notSupportedMetaData = new DatabaseProviderMetaData(true,
+                DatabaseProviderMetaData.MergeCapability.NOT_SUPPORTED,
+                DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(customDbProvider.metaData()).thenReturn(notSupportedMetaData);
+        final PersistenceFacade facade = createFacade(tableRegistry, customDbProvider, changeTracker, dtoConstructor);
+
+        final CustomerDto dto = new CustomerDto();
+        dto.id = 1L;
+        dto.name = "Updated Customer";
+
+        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
+        table.trackDto(dto);
+        dto.name = "Changed Name";
+
+        when(customDbProvider.transactionManager()).thenReturn(transactionManager);
+        when(customDbProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
+
+        // When
+        facade.save(dto);
+
+        // Then
+        verify(customDbProvider).executeUpdate(any(), eq(UpdateResult.class), any());
+        verify(customDbProvider, never()).executeUpdate(any(), eq(InsertResult.class), any());
+    }
+
+    @Test
+    void merge_manualUpsert_insertFallback() throws SQLException {
+        // Given
+        final TransactionalDatabaseProvider customDbProvider = mock(TransactionalDatabaseProvider.class);
+        final DatabaseProviderMetaData notSupportedMetaData = new DatabaseProviderMetaData(true,
+                DatabaseProviderMetaData.MergeCapability.NOT_SUPPORTED,
+                DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        when(customDbProvider.metaData()).thenReturn(notSupportedMetaData);
+        final PersistenceFacade facade = createFacade(tableRegistry, customDbProvider, changeTracker, dtoConstructor);
+
+        final CustomerDto dto = new CustomerDto();
+        dto.id = 1L;
+        dto.name = "New Customer";
+
+        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
+
+        when(customDbProvider.transactionManager()).thenReturn(transactionManager);
+        when(customDbProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(0));
+        when(customDbProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1));
+
+        // When
+        facade.save(dto);
+
+        // Then
+        verify(customDbProvider).executeUpdate(any(), eq(UpdateResult.class), any());
+        verify(customDbProvider).executeUpdate(any(), eq(InsertResult.class), any());
+    }
+
+    @Test
+    void insert_noOpStatement_whenNoChanges() throws SQLException {
+        // Given
+        final CustomerDto dto = new CustomerDto();
+        dto.id = 1L;
+        dto.name = "name";
+
+        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
+        table.syncPersistedDto(dto);
+
+        // When - update with no changes produces NO_OP_STATEMENT_BUILDER
+        persistenceFacade.update(dto);
+
+        // Then
+        verify(databaseProvider, never()).executeUpdate(any(), any(), any());
+    }
+
+    @Test
+    void update_untrackedDto_ensuresTracked() throws SQLException {
+        // Given
+        final CustomerDto dto = new CustomerDto();
+        dto.id = 1L;
+        dto.name = "name";
+
+        final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
+
+        // When
+        persistenceFacade.update(dto);
+
+        // Then
+        verify(databaseProvider).executeUpdate(any(), eq(UpdateResult.class), any());
+    }
+
+    @Test
+    void prepareUpdateStatement_withNoOpFieldAccessor() throws SQLException {
+        // Given
+        final CustomerDto dto = new CustomerDto();
+        dto.id = 1L;
+        dto.name = "name";
+
+        final Table table = new Table("", "public", "customers");
+        final ColumnMetaData idCol = new ColumnMetaData(table, "ID", false, Types.NUMERIC);
+        final ColumnMetaData nameCol = new ColumnMetaData(table, "NAME", false, Types.VARCHAR);
+        final ColumnMetaData noopCol = new ColumnMetaData(table, "NOOP_COL", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(table, List.of("ID"), List.of(idCol, nameCol, noopCol));
+        metaDataMap.put(table.qualifiedName(), metaData);
+
+        final FieldAccessor idAccessor = changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "id");
+        final FieldAccessor nameAccessor = changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "name");
+
+        final Map<FieldAccessor, MappedFieldTarget> fieldTargetMap = new HashMap<>();
+        fieldTargetMap.put(idAccessor, idCol);
+        fieldTargetMap.put(nameAccessor, nameCol);
+        fieldTargetMap.put(new NoOpFieldAccessor(), noopCol);
+
+        final OrmTable ormTable = new OrmTable(CustomerDto.class, metaData, fieldTargetMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+        changeTracker.trackDtoFields(dto, Set.of(idAccessor, nameAccessor), true);
+        dto.name = "changed";
+
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(ormTable);
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
+
+        // When
+        persistenceFacade.update(dto);
+
+        // Then
+        verify(databaseProvider).executeUpdate(any(), eq(UpdateResult.class), any());
+    }
+
+    @Test
+    void processRelatedDto_withColumnAndInlineTable() throws SQLException {
+        // Given
+        final OrderDto order = new OrderDto();
+        order.orderNo = "ORD-1";
+        final CustomerDto customer = new CustomerDto();
+        customer.name = "Inline customer";
+        order.customer = customer;
+
+        final Table custTable = new Table("", "public", "customers");
+        final ColumnMetaData custIdCol = new ColumnMetaData(custTable, "ID", false, Types.NUMERIC, 0, 0, true, null, null);
+        final ColumnMetaData custNameCol = new ColumnMetaData(custTable, "NAME", false, Types.VARCHAR);
+        final TableMetaData custMeta = new TableMetaData(custTable, List.of("ID"), List.of(custIdCol, custNameCol));
+        metaDataMap.put(custTable.qualifiedName(), custMeta);
+
+        final OrmTable custOrmTable = new OrmTable(CustomerDto.class, custMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "id"), custIdCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "name"), custNameCol
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        final Table orderTable = new Table("", "public", "orders");
+        final ColumnMetaData orderIdCol = new ColumnMetaData(orderTable, "ID", false, Types.NUMERIC, 0, 0, true, null, null);
+        final ColumnMetaData orderNoCol = new ColumnMetaData(orderTable, "ORDER_NO", false, Types.VARCHAR);
+        final ColumnMetaData orderCustIdCol = new ColumnMetaData(orderTable, "CUST_ID", false, Types.NUMERIC);
+        orderCustIdCol.setJoinColumnSupplier(() -> custIdCol);
+        final TableMetaData orderMeta = new TableMetaData(orderTable, List.of("ID"), List.of(orderIdCol, orderNoCol, orderCustIdCol));
+        metaDataMap.put(orderTable.qualifiedName(), orderMeta);
+
+        final ColumnAndInlineTable columnAndInlineTable = new ColumnAndInlineTable(orderCustIdCol, custOrmTable);
+
+        final OrmTable orderOrmTable = new OrmTable(OrderDto.class, orderMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "id"), orderIdCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "orderNo"), orderNoCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "customer"), columnAndInlineTable
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        when(tableRegistry.getOrmTableOrThrow(OrderDto.class)).thenReturn(orderOrmTable);
+        when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(custOrmTable);
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenAnswer(inv -> {
+            final PreparedSql ps = inv.getArgument(0);
+            if (ps.sql().contains("customers")) {
+                return new InsertResult(1, Map.of(custIdCol, 55L));
+            }
+            return new InsertResult(1);
+        });
+
+        // When
+        persistenceFacade.save(order);
+
+        // Then
+        assertEquals(55L, customer.id);
+        verify(databaseProvider, times(2)).executeUpdate(any(), eq(InsertResult.class), any());
+    }
+
+    @Test
+    void processRelatedDto_withMappedCompositeKey() throws SQLException {
+        // Given
+        final CompositeParentEntity parent = new CompositeParentEntity();
+        final CompositeChildDto child = new CompositeChildDto();
+        child.keyPartA = 100L;
+        child.keyPartB = "B1";
+        child.detail = "child detail";
+        parent.child = child;
+
+        final Table childTable = new Table("", "public", "composite_child");
+        final ColumnMetaData childPkA = new ColumnMetaData(childTable, "KEY_A", false, Types.NUMERIC);
+        final ColumnMetaData childPkB = new ColumnMetaData(childTable, "KEY_B", false, Types.VARCHAR);
+        final ColumnMetaData childDetail = new ColumnMetaData(childTable, "DETAIL", false, Types.VARCHAR);
+        final TableMetaData childMeta = new TableMetaData(childTable, List.of("KEY_A", "KEY_B"), List.of(childPkA, childPkB, childDetail));
+        metaDataMap.put(childTable.qualifiedName(), childMeta);
+
+        final OrmTable childOrmTable = new OrmTable(CompositeChildDto.class, childMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "keyPartA"), childPkA,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "keyPartB"), childPkB,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "detail"), childDetail
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        final Table parentTable = new Table("", "public", "composite_parent");
+        final ColumnMetaData parentId = new ColumnMetaData(parentTable, "ID", false, Types.NUMERIC, 0, 0, true, null, null);
+        final ColumnMetaData parentFkA = new ColumnMetaData(parentTable, "FK_A", false, Types.NUMERIC);
+        final ColumnMetaData parentFkB = new ColumnMetaData(parentTable, "FK_B", false, Types.VARCHAR);
+        final TableMetaData parentMeta = new TableMetaData(parentTable, List.of("ID"), List.of(parentId, parentFkA, parentFkB));
+        metaDataMap.put(parentTable.qualifiedName(), parentMeta);
+
+        final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(
+                new MappedFieldTarget[]{parentFkA, parentFkB},
+                () -> childOrmTable,
+                new String[]{"KEY_A", "KEY_B"}
+        );
+
+        final OrmTable parentOrmTable = new OrmTable(CompositeParentEntity.class, parentMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeParentEntity.class, "id"), parentId,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeParentEntity.class, "child"), mappedCompositeKey
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        lenient().when(tableRegistry.getOrmTable(CompositeParentEntity.class)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CompositeParentEntity.class)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTable(parentTable)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(parentTable)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTable(parentTable.name())).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(parentTable.name())).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTable(parentTable.qualifiedName())).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(parentTable.qualifiedName())).thenReturn(parentOrmTable);
+
+        lenient().when(tableRegistry.getOrmTable(CompositeChildDto.class)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CompositeChildDto.class)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTable(childTable)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(childTable)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTable(childTable.name())).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(childTable.name())).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTable(childTable.qualifiedName())).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(childTable.qualifiedName())).thenReturn(childOrmTable);
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        lenient().when(databaseProvider.executeUpdate(any(), any(), any())).thenReturn(new InsertResult(1));
+
+        // When
+        persistenceFacade.save(parent);
+
+        // Then
+        verify(databaseProvider, times(2)).executeUpdate(any(), any(), any());
+    }
+
+    @Test
+    void processOneToMany_compositePk_throwsUnsupportedOperationException() throws SQLException {
+        // Given
+        final CategoryDto category = new CategoryDto();
+        category.name = "Cat";
+        final ProductDto product = new ProductDto();
+        product.name = "Prod";
+        category.products = List.of(product);
+
+        // Parent category table has composite primary key
+        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories",
+                Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(
+                        changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "category"),
+                        changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products")
+                )), List.of("ID", "NAME"));
+
+        final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products",
+                Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CATEGORY_ID")), List.of("ID"));
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.executeUpdate(any(), any(), any())).thenReturn(new InsertResult(1));
+
+        // When / Then
+        assertThrows(UnsupportedOperationException.class, () -> persistenceFacade.save(category));
+    }
+
+    @Test
+    void tableProvider_throwsIllegalArgumentException_whenTableNotFound() {
+        // Given
+        final TableRegistry mockRegistry = mock(TableRegistry.class);
+        when(mockRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(null);
+        final PersistenceFacade.TableProvider tableProvider = new PersistenceFacade.TableProvider(mockRegistry);
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> tableProvider.getTableOrThrow(CustomerDto.class));
+    }
+
+    @Test
+    void update_withCompositePrimaryKey_generatesCompositeConditions() throws SQLException {
+        // Given
+        final CompositePkEntity entity = new CompositePkEntity();
+        final CompositeChildDto pk = new CompositeChildDto();
+        pk.keyPartA = 1L;
+        pk.keyPartB = "K2";
+        entity.pk = pk;
+        entity.name = "initial";
+
+        final Table pkTable = new Table("", "public", "composite_pk_sub");
+        final ColumnMetaData pkColA = new ColumnMetaData(pkTable, "KEY_A", false, Types.NUMERIC);
+        final ColumnMetaData pkColB = new ColumnMetaData(pkTable, "KEY_B", false, Types.VARCHAR);
+        final TableMetaData pkMeta = new TableMetaData(pkTable, List.of("KEY_A", "KEY_B"), List.of(pkColA, pkColB));
+        metaDataMap.put(pkTable.qualifiedName(), pkMeta);
+
+        final OrmTable pkOrmTable = new OrmTable(CompositeChildDto.class, pkMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "keyPartA"), pkColA,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "keyPartB"), pkColB
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        final Table table = new Table("", "public", "composite_pk_entity");
+        final ColumnMetaData pkFieldCol = new ColumnMetaData(table, "PK", false, Types.OTHER);
+        final ColumnMetaData nameCol = new ColumnMetaData(table, "NAME", false, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(table, List.of("PK"), List.of(pkFieldCol, nameCol));
+        metaDataMap.put(table.qualifiedName(), metaData);
+
+        final OrmTable ormTable = new OrmTable(CompositePkEntity.class, metaData, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositePkEntity.class, "pk"), pkFieldCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositePkEntity.class, "name"), nameCol
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        ormTable.trackDto(entity);
+        entity.name = "modified";
+
+        lenient().when(tableRegistry.getOrmTable(CompositePkEntity.class)).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CompositePkEntity.class)).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTable(table)).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(table)).thenReturn(ormTable);
+
+        lenient().when(tableRegistry.getOrmTable(CompositeChildDto.class)).thenReturn(pkOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CompositeChildDto.class)).thenReturn(pkOrmTable);
+        lenient().when(tableRegistry.getOrmTable(pkTable)).thenReturn(pkOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(pkTable)).thenReturn(pkOrmTable);
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
+
+        // When
+        persistenceFacade.update(entity);
+
+        // Then
+        verify(databaseProvider).executeUpdate(any(), eq(UpdateResult.class), any());
+    }
+
+    @Test
+    void processRelatedDto_withMappedCompositeKey_update() throws SQLException {
+        // Given
+        final CompositeParentEntity parent = new CompositeParentEntity();
+        parent.id = 1L;
+        final CompositeChildDto child = new CompositeChildDto();
+        child.keyPartA = 100L;
+        child.keyPartB = "B1";
+        child.detail = "child detail";
+        parent.child = child;
+
+        final Table childTable = new Table("", "public", "composite_child");
+        final ColumnMetaData childPkA = new ColumnMetaData(childTable, "KEY_A", false, Types.NUMERIC);
+        final ColumnMetaData childPkB = new ColumnMetaData(childTable, "KEY_B", false, Types.VARCHAR);
+        final ColumnMetaData childDetail = new ColumnMetaData(childTable, "DETAIL", false, Types.VARCHAR);
+        final TableMetaData childMeta = new TableMetaData(childTable, List.of("KEY_A", "KEY_B"), List.of(childPkA, childPkB, childDetail));
+        metaDataMap.put(childTable.qualifiedName(), childMeta);
+
+        final OrmTable childOrmTable = new OrmTable(CompositeChildDto.class, childMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "keyPartA"), childPkA,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "keyPartB"), childPkB,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeChildDto.class, "detail"), childDetail
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        final Table parentTable = new Table("", "public", "composite_parent");
+        final ColumnMetaData parentId = new ColumnMetaData(parentTable, "ID", false, Types.NUMERIC, 0, 0, true, null, null);
+        final ColumnMetaData parentFkA = new ColumnMetaData(parentTable, "FK_A", false, Types.NUMERIC);
+        final ColumnMetaData parentFkB = new ColumnMetaData(parentTable, "FK_B", false, Types.VARCHAR);
+        final TableMetaData parentMeta = new TableMetaData(parentTable, List.of("ID"), List.of(parentId, parentFkA, parentFkB));
+        metaDataMap.put(parentTable.qualifiedName(), parentMeta);
+
+        final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(
+                new MappedFieldTarget[]{parentFkA, parentFkB},
+                () -> childOrmTable,
+                new String[]{"KEY_A", "KEY_B"}
+        );
+
+        final OrmTable parentOrmTable = new OrmTable(CompositeParentEntity.class, parentMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeParentEntity.class, "id"), parentId,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CompositeParentEntity.class, "child"), mappedCompositeKey
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+        parent.child = null;
+        parentOrmTable.trackDto(parent);
+        parent.child = child;
+
+        lenient().when(tableRegistry.getOrmTable(CompositeParentEntity.class)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CompositeParentEntity.class)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTable(parentTable)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(parentTable)).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTable(parentTable.name())).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(parentTable.name())).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTable(parentTable.qualifiedName())).thenReturn(parentOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(parentTable.qualifiedName())).thenReturn(parentOrmTable);
+
+        lenient().when(tableRegistry.getOrmTable(CompositeChildDto.class)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CompositeChildDto.class)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTable(childTable)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(childTable)).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTable(childTable.name())).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(childTable.name())).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTable(childTable.qualifiedName())).thenReturn(childOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(childTable.qualifiedName())).thenReturn(childOrmTable);
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        lenient().when(databaseProvider.executeUpdate(any(), any(), any())).thenReturn(new UpdateResult(1));
+
+        // When
+        persistenceFacade.update(parent);
+
+        // Then
+        verify(databaseProvider, times(2)).executeUpdate(any(), any(), any());
+    }
+
+    @Test
+    void update_referencingPersistedNestedDto() throws SQLException {
+        // Given
+        final OrderDto order = new OrderDto();
+        order.id = 1L;
+        order.orderNo = "ORD-1";
+        final CustomerDto customer = new CustomerDto();
+        customer.id = 5L;
+        customer.name = "Existing Cust";
+        order.customer = customer;
+
+        final Table custTable = new Table("", "public", "customers");
+        final ColumnMetaData custIdCol = new ColumnMetaData(custTable, "ID", false, Types.NUMERIC);
+        final ColumnMetaData custNameCol = new ColumnMetaData(custTable, "NAME", false, Types.VARCHAR);
+        final TableMetaData custMeta = new TableMetaData(custTable, List.of("ID"), List.of(custIdCol, custNameCol));
+        metaDataMap.put(custTable.qualifiedName(), custMeta);
+
+        final OrmTable custOrmTable = new OrmTable(CustomerDto.class, custMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "id"), custIdCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "name"), custNameCol
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+        custOrmTable.syncPersistedDto(customer);
+
+        final Table orderTable = new Table("", "public", "orders");
+        final ColumnMetaData orderIdCol = new ColumnMetaData(orderTable, "ID", false, Types.NUMERIC);
+        final ColumnMetaData orderNoCol = new ColumnMetaData(orderTable, "ORDER_NO", false, Types.VARCHAR);
+        final ColumnMetaData orderCustIdCol = new ColumnMetaData(orderTable, "CUST_ID", false, Types.NUMERIC);
+        orderCustIdCol.setJoinColumnSupplier(() -> custIdCol);
+        final TableMetaData orderMeta = new TableMetaData(orderTable, List.of("ID"), List.of(orderIdCol, orderNoCol, orderCustIdCol));
+        metaDataMap.put(orderTable.qualifiedName(), orderMeta);
+
+        final OrmTable orderOrmTable = new OrmTable(OrderDto.class, orderMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "id"), orderIdCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "orderNo"), orderNoCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "customer"), orderCustIdCol
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        orderOrmTable.trackDto(order);
+        order.orderNo = "ORD-2";
+
+        lenient().when(tableRegistry.getOrmTable(OrderDto.class)).thenReturn(orderOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(OrderDto.class)).thenReturn(orderOrmTable);
+        lenient().when(tableRegistry.getOrmTable(orderTable)).thenReturn(orderOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(orderTable)).thenReturn(orderOrmTable);
+
+        lenient().when(tableRegistry.getOrmTable(CustomerDto.class)).thenReturn(custOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(custOrmTable);
+        lenient().when(tableRegistry.getOrmTable(custTable)).thenReturn(custOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(custTable)).thenReturn(custOrmTable);
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any())).thenReturn(new UpdateResult(1));
+
+        // When
+        persistenceFacade.update(order);
+
+        // Then
+        verify(databaseProvider).executeUpdate(any(), eq(UpdateResult.class), any());
+    }
+
+    @Test
+    void update_referencingUnpersistedDtoWithPkSet() throws SQLException {
+        // Given
+        final OrderDto order = new OrderDto();
+        order.id = 1L;
+        order.orderNo = "ORD-1";
+        final CustomerDto customer = new CustomerDto();
+        customer.id = 5L;
+        customer.name = "Unpersisted Cust With PK";
+        order.customer = customer;
+
+        final Table custTable = new Table("", "public", "customers");
+        final ColumnMetaData custIdCol = new ColumnMetaData(custTable, "ID", false, Types.NUMERIC);
+        final ColumnMetaData custNameCol = new ColumnMetaData(custTable, "NAME", false, Types.VARCHAR);
+        final TableMetaData custMeta = new TableMetaData(custTable, List.of("ID"), List.of(custIdCol, custNameCol));
+        metaDataMap.put(custTable.qualifiedName(), custMeta);
+
+        final OrmTable custOrmTable = new OrmTable(CustomerDto.class, custMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "id"), custIdCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(CustomerDto.class, "name"), custNameCol
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        final Table orderTable = new Table("", "public", "orders");
+        final ColumnMetaData orderIdCol = new ColumnMetaData(orderTable, "ID", false, Types.NUMERIC);
+        final ColumnMetaData orderNoCol = new ColumnMetaData(orderTable, "ORDER_NO", false, Types.VARCHAR);
+        final ColumnMetaData orderCustIdCol = new ColumnMetaData(orderTable, "CUST_ID", false, Types.NUMERIC);
+        orderCustIdCol.setJoinColumnSupplier(() -> custIdCol);
+        final TableMetaData orderMeta = new TableMetaData(orderTable, List.of("ID"), List.of(orderIdCol, orderNoCol, orderCustIdCol));
+        metaDataMap.put(orderTable.qualifiedName(), orderMeta);
+
+        final OrmTable orderOrmTable = new OrmTable(OrderDto.class, orderMeta, Map.of(
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "id"), orderIdCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "orderNo"), orderNoCol,
+                changeTracker.classFieldAccessorCache().fieldAccessor(OrderDto.class, "customer"), orderCustIdCol
+        ), changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+
+        order.customer = null;
+        orderOrmTable.trackDto(order);
+        order.customer = customer;
+        order.orderNo = "ORD-2";
+
+        lenient().when(tableRegistry.getOrmTable(OrderDto.class)).thenReturn(orderOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(OrderDto.class)).thenReturn(orderOrmTable);
+        lenient().when(tableRegistry.getOrmTable(orderTable)).thenReturn(orderOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(orderTable)).thenReturn(orderOrmTable);
+
+        lenient().when(tableRegistry.getOrmTable(CustomerDto.class)).thenReturn(custOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(custOrmTable);
+        lenient().when(tableRegistry.getOrmTable(custTable)).thenReturn(custOrmTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(custTable)).thenReturn(custOrmTable);
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        lenient().when(databaseProvider.executeUpdate(any(), any(), any())).thenReturn(new UpdateResult(1));
+
+        // When
+        persistenceFacade.update(order);
+
+        // Then
+        verify(databaseProvider, times(2)).executeUpdate(any(), any(), any());
+    }
+
+    @Test
+    void updateReverseMapping_withExistingMutableCollection() throws SQLException {
+        // Given
+        final CategoryDto category = new CategoryDto();
+        category.id = 1L;
+        category.name = "Electronics";
+        category.products = new ArrayList<>();
+
+        final ProductDto product = new ProductDto();
+        product.name = "Tablet";
+
+        final OrmTable categoryTable = createOrmTable(changeTracker, CategoryDto.class, "categories",
+                Map.of("id", numeric("ID"), "name", varchar("NAME"), "products", new MappedOneToMany(
+                        changeTracker.classFieldAccessorCache().fieldAccessor(ProductDto.class, "category"),
+                        changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products")
+                )), List.of("ID"));
+        categoryTable.trackDto(category);
+
+        final OrmTable productTable = createOrmTable(changeTracker, ProductDto.class, "products",
+                Map.of("id", numeric("ID"), "name", varchar("NAME"), "category", numeric("CATEGORY_ID")), List.of("ID"));
+        productTable.addOneToManyReverseMapping(changeTracker.classFieldAccessorCache().fieldAccessor(CategoryDto.class, "products"));
+
+        when(databaseProvider.transactionManager()).thenReturn(transactionManager);
+        when(databaseProvider.executeUpdate(any(), any(), any())).thenReturn(new InsertResult(1));
+
+        // When
+        persistenceFacade.save(product);
+
+        // Then
+        assertTrue(category.products.contains(product));
+        verify(transactionManager).addRollbackCallback(any());
+    }
+
     private PersistenceFacade createFacade(TableRegistry tableRegistry, TransactionalDatabaseProvider databaseProvider, ChangeTracker changeTracker, DtoConstructor dtoConstructor) {
         if (databaseProvider.metaData() == null) {
             final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
@@ -754,11 +1379,6 @@ class PersistenceFacadeTest {
 
         final SqlFunctionRegistry sqlFunctionRegistry = new SqlFunctionRegistryFactory(new LabelGenerator(), mock(SelectSqlGenerator.class)).create();
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-
-        final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true,
-                DatabaseProviderMetaData.MergeCapability.USING_VALUES,
-                DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
-        when(databaseProvider.metaData()).thenReturn(providerMetaData);
 
         final TableMetaDataCache tableMetaDataCache = new TableMetaDataCache(databaseProvider, databaseProvider.transactionManager());
         final LitebridgeConfig litebridgeConfig = new LitebridgeConfig();
@@ -812,7 +1432,16 @@ class PersistenceFacadeTest {
             }
         });
 
-        return new OrmTable(dtoClass, tableMetaData, fieldTargetMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+        final OrmTable ormTable = new OrmTable(dtoClass, tableMetaData, fieldTargetMap, changeTracker, new ClassFieldAccessorCache(MethodHandles.lookup()));
+        lenient().when(tableRegistry.getOrmTable(dtoClass)).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(dtoClass)).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTable(table)).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(table)).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTable(table.name())).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(table.name())).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTable(table.qualifiedName())).thenReturn(ormTable);
+        lenient().when(tableRegistry.getOrmTableOrThrow(table.qualifiedName())).thenReturn(ormTable);
+        return ormTable;
     }
 
     private static TestCol varchar(String name) {
@@ -863,6 +1492,22 @@ class PersistenceFacadeTest {
         private Long id;
         private String name;
         private DepartmentRecord department;
+    }
+
+    public static class CompositeChildDto {
+        private Long keyPartA;
+        private String keyPartB;
+        private String detail;
+    }
+
+    public static class CompositeParentEntity {
+        private Long id;
+        private CompositeChildDto child;
+    }
+
+    public static class CompositePkEntity {
+        private CompositeChildDto pk;
+        private String name;
     }
 
     private record TestCol(String name, int type) {
