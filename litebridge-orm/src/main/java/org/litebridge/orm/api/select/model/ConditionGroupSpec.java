@@ -38,15 +38,6 @@ public record ConditionGroupSpec(List<LogicConditionSpec> conditions,
     }
 
     /**
-     * Constructs a {@code ConditionGroupSpec} with the specified conditions.
-     *
-     * @param conditions the list of logic condition specifications
-     */
-    public ConditionGroupSpec(final List<LogicConditionSpec> conditions) {
-        this(conditions, new ArrayList<>());
-    }
-
-    /**
      * Constructs an empty {@code ConditionGroupSpec}.
      */
     public ConditionGroupSpec() {
