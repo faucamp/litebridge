@@ -1,6 +1,7 @@
 package org.litebridge.db.sqlite;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.orm.LitebridgeCore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -20,5 +21,17 @@ class SQLiteDatabaseProviderTest {
 
         // Then
         assertEquals("SQLite does not support sequences", exception.getMessage());
+    }
+
+    @Test
+    void litebridgeClass() {
+        // Given
+        final SQLiteDatabaseProvider provider = new SQLiteDatabaseProvider();
+
+        // When
+        final Class<?> result = provider.litebridgeClass();
+
+        // Then
+        assertEquals(LitebridgeCore.class, result);
     }
 }
