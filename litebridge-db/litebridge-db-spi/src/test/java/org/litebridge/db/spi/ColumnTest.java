@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ColumnTest {
@@ -121,5 +122,77 @@ class ColumnTest {
 
         // Then
         assertEquals(result1, result2);
+    }
+
+    @Test
+    void constructor_nameOnly() {
+        // Given
+        final Column column = new Column("testName");
+
+        // When & Then
+        assertEquals("testName", column.name());
+        assertFalse(column.hasTable());
+    }
+
+    @Test
+    void hasTable_true() {
+        // Given
+        final Column column = new Column(table, "testName");
+
+        // When & Then
+        assertTrue(column.hasTable());
+    }
+
+    @Test
+    void hasTable_false_whenNoTable() {
+        // Given
+        final Column column = new Column("testName");
+
+        // When & Then
+        assertFalse(column.hasTable());
+    }
+
+    @Test
+    void hasTable_false_whenNullTable() {
+        // Given
+        final Column column = new Column("testName", null);
+
+        // When & Then
+        assertFalse(column.hasTable());
+    }
+
+    @Test
+    void qualifiedName_withTable() {
+        // Given
+        final Column column = new Column(table, "testName");
+
+        // When
+        final String result = column.qualifiedName();
+
+        // Then
+        assertEquals("TEST_TABLE.testName", result);
+    }
+
+    @Test
+    void qualifiedName_withoutTable() {
+        // Given
+        final Column column = new Column("testName");
+
+        // When
+        final String result = column.qualifiedName();
+
+        // Then
+        assertEquals("testName", result);
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void equalsColumnOnlyIgnoreAlias_throwsException() {
+        // Given
+        final Column column1 = new Column(table, "testName");
+        final Column column2 = new Column(table, "testName");
+
+        // When & Then
+        assertThrows(UnsupportedOperationException.class, () -> column1.equalsColumnOnlyIgnoreAlias(column2));
     }
 }

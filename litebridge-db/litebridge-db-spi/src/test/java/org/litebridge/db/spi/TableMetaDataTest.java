@@ -510,4 +510,29 @@ class TableMetaDataTest {
         // Then
         assertTrue(result != 0);
     }
+
+    @Test
+    void getters_and_delegation() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final TableMetaData meta = new TableMetaData(table, List.of(), List.of());
+
+        // When & Then
+        assertEquals("TEST_CATALOG", meta.catalog());
+        assertEquals("TEST_SCHEMA", meta.schema());
+        assertEquals("TEST_TABLE", meta.name());
+        assertEquals("TEST_SCHEMA.TEST_TABLE", meta.qualifiedName());
+    }
+
+    @Test
+    void equals_sameInstance_andNullAndDifferentType() {
+        // Given
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final TableMetaData meta = new TableMetaData(table, List.of(), List.of());
+
+        // When & Then
+        assertTrue(meta.equals(meta));
+        assertFalse(meta.equals(null));
+        assertFalse(meta.equals("not a TableMetaData"));
+    }
 }

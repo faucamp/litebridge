@@ -83,12 +83,22 @@ class TableTest {
     @Test
     void constructor_tableName() {
         // When
-        final Table result = new Table("TEST_SCHEMA.TEST_TABLE");
+        final Table result = new Table("TEST_TABLE");
 
         // Then
         assertNull(result.catalog());
-        assertEquals("TEST_SCHEMA", result.schema());
+        assertNull(result.schema());
         assertEquals("TEST_TABLE", result.name());
+        assertEquals("TEST_TABLE", result.qualifiedName());
+    }
+
+    @Test
+    void isVirtual() {
+        // Given
+        final Table table = new Table("TEST_TABLE");
+
+        // When & Then
+        assertFalse(table.isVirtual());
     }
 
     @Test

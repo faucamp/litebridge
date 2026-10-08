@@ -89,4 +89,16 @@ class SqlReservedWordsTest {
         // Then
         assertFalse(result, "Whitespace is not a reserved word and should return false.");
     }
+
+    @Test
+    void contains_withParenthesis() {
+        // Given
+        final String word = "COUNT(ID)";
+
+        // When
+        final boolean result = SqlReservedWords.contains(word);
+
+        // Then
+        assertTrue(result);
+    }
 }

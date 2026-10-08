@@ -52,4 +52,34 @@ class SelectTest {
         assertEquals(List.of(orderBy), result.orderBy());
         assertEquals(limit, result.limit());
     }
+
+    @Test
+    void constructor_twoArgs() {
+        // Given
+        final Table table = new Table("T");
+        final List<SelectExpression> expressions = List.of(new ColumnTestExpression(new Column(table, "C")));
+
+        // When
+        final Select select = new Select(table, expressions);
+
+        // Then
+        assertEquals(table, select.table());
+        assertEquals(table, select.from());
+        assertEquals(expressions, select.expressions());
+        assertNull(select.joins());
+        assertNull(select.where());
+        assertNull(select.groupBy());
+        assertNull(select.having());
+        assertNull(select.orderBy());
+        assertNull(select.limit());
+    }
+
+    @Test
+    void selectTarget_voidTarget() {
+        // When
+        final SelectTarget.Void voidTarget = SelectTarget.voidTarget();
+
+        // Then
+        assertEquals(SelectTarget.voidTarget(), voidTarget);
+    }
 }

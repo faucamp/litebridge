@@ -197,13 +197,105 @@ class ColumnMetaDataTest {
     }
 
     @Test
-    void getters_nullable_dataType_size_decimalDigits() {
+    void getters_nullable_dataType_size_decimalDigits_defaultValue() {
+        // Given
         final Table table = new Table("T1");
-        final ColumnMetaData column = new ColumnMetaData(table, "C1", true, 1, 10, 2, false, null, null);
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", true, 1, 10, 2, false, "DEFAULT_VAL", null);
 
+        // Then
         assertTrue(column.isNullable());
         assertEquals(1, column.getDataType());
         assertEquals(10, column.getSize());
         assertEquals(2, column.getDecimalDigits());
+        assertEquals("DEFAULT_VAL", column.getDefaultValue());
+    }
+
+    @Test
+    void setGenerator() {
+        // Given
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        final ColumnValueGenerator generator = mock(ColumnValueGenerator.class);
+
+        // When
+        column.setGenerator(generator);
+
+        // Then
+        assertEquals(generator, column.getGenerator());
+    }
+
+    @Test
+    void getJoinColumn_withSupplierAndCaching() {
+        // Given
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        final ColumnMetaData targetJoinColumn = new ColumnMetaData(new Table("T2"), "C2", false, 1);
+
+        // When
+        assertNull(column.getJoinColumn());
+        column.setJoinColumnSupplier(() -> targetJoinColumn);
+
+        // Then
+        assertEquals(targetJoinColumn, column.getJoinColumn());
+        assertEquals(targetJoinColumn, column.getJoinColumn()); // Cached branch
+    }
+
+    @Test
+    void addForeignKeyConstraint_multiple() {
+        // Given
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        final ForeignKeyConstraint c1 = new ForeignKeyConstraint("FK1", new Column(new Table("T2"), "C2"));
+        final ForeignKeyConstraint c2 = new ForeignKeyConstraint("FK2", new Column(new Table("T3"), "C3"));
+
+        // When
+        column.addForeignKeyConstraint(c1);
+        column.addForeignKeyConstraint(c2);
+
+        // Then
+        assertEquals(2, column.getForeignKeyConstraints().size());
+        assertEquals(c1, column.getForeignKeyConstraints().get(0));
+        assertEquals(c2, column.getForeignKeyConstraints().get(1));
+    }
+
+    @Test
+    void addForeignReference_multiple() {
+        // Given
+        final Table table = new Table("T1");
+        final ColumnMetaData column = new ColumnMetaData(table, "C1", false, 1);
+        final ForeignKeyConstraint r1 = new ForeignKeyConstraint("FK1", new Column(new Table("T2"), "C2"));
+        final ForeignKeyConstraint r2 = new ForeignKeyConstraint("FK2", new Column(new Table("T3"), "C3"));
+
+        // When
+        column.addForeignReference(r1);
+        column.addForeignReference(r2);
+
+        // Then
+        assertEquals(2, column.getForeignReferences().size());
+        assertEquals(r1, column.getForeignReferences().get(0));
+        assertEquals(r2, column.getForeignReferences().get(1));
+    }
+
+    @Test
+    void equals_and_hashCode_differences() {
+        // Given
+        final Table table = new Table("T1");
+        final ColumnValueGenerator gen1 = mock(ColumnValueGenerator.class);
+        final ColumnValueGenerator gen2 = mock(ColumnValueGenerator.class);
+        final ColumnMetaData base = new ColumnMetaData(table, "C1", false, 1, 10, 2, false, null, gen1);
+
+        // Then
+        assertNotEquals(base, new ColumnMetaData(table, "C1", true, 1, 10, 2, false, null, gen1));
+        assertNotEquals(base, new ColumnMetaData(table, "C1", false, 2, 10, 2, false, null, gen1));
+        assertNotEquals(base, new ColumnMetaData(table, "C1", false, 1, 20, 2, false, null, gen1));
+        assertNotEquals(base, new ColumnMetaData(table, "C1", false, 1, 10, 3, false, null, gen1));
+        assertNotEquals(base, new ColumnMetaData(table, "C1", false, 1, 10, 2, true, null, gen1));
+        assertNotEquals(base, new ColumnMetaData(table, "C1", false, 1, 10, 2, false, null, gen2));
+
+        final ColumnMetaData withJoin1 = new ColumnMetaData(table, "C1", false, 1, 10, 2, false, null, gen1);
+        final ColumnMetaData targetJoin = new ColumnMetaData(new Table("T2"), "C2", false, 1);
+        withJoin1.setJoinColumnSupplier(() -> targetJoin);
+        withJoin1.getJoinColumn();
+        assertNotEquals(base, withJoin1);
     }
 }

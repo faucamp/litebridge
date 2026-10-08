@@ -26,6 +26,9 @@ class ConditionGroupTest {
         );
         assertFalse(new ConditionGroup(List.of(condition)).isEmpty());
         assertFalse(new ConditionGroup(condition).isEmpty());
+
+        final LogicConditionGroup subgroup = new LogicConditionGroup(LogicOperator.AND, new ConditionGroup(Collections.emptyList()));
+        assertFalse(new ConditionGroup(Collections.emptyList(), List.of(subgroup)).isEmpty());
     }
 
     @Test

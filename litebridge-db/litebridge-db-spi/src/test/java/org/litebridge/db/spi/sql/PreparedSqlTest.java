@@ -39,4 +39,18 @@ class PreparedSqlTest {
         assertEquals(sql, result.sql());
         assertEquals(bindValues, result.bindValues());
     }
+
+    @Test
+    void preparedSql_twoArgConstructor() {
+        // Given
+        final List<BindValue> bindValues = List.of(new BindValue("test", Types.VARCHAR));
+        final String sql = "SELECT * FROM table WHERE expression = ?";
+
+        // When
+        final PreparedSql result = new PreparedSql(sql, bindValues);
+
+        // Then
+        assertEquals(sql, result.sql());
+        assertEquals(bindValues, result.bindValues());
+    }
 }

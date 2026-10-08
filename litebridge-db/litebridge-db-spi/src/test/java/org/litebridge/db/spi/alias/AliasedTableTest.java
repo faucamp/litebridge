@@ -36,5 +36,10 @@ class AliasedTableTest {
         assertFalse(aliasedTable1.equals(aliasedTable2));
         assertFalse(aliasedTable1.equals(aliasedTable1DiffAlias));
         assertTrue(aliasedTable1.equals(aliasedTable1Alt));
+
+        assertTrue(aliasedTable1.equals(table1));
+        assertFalse(aliasedTable1.equals(table2));
+        assertFalse(aliasedTable1.equals(null));
+        assertFalse(aliasedTable1.equals("not an aliased table"));
     }
 }

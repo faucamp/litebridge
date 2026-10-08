@@ -10,24 +10,19 @@ class SequenceColumnValueGeneratorTest {
     @Test
     void generate() {
         // Given
-        final SequenceColumnValueGenerator generator = new TestSequenceColumnValueGenerator("test_sequence");
+        final SequenceColumnValueGenerator generator = new TestSequenceColumnValueGenerator("NEXT VALUE FOR test_seq");
 
         // When
         final String result = generator.generate();
 
         // Then
-        assertEquals("TEST", result);
+        assertEquals("NEXT VALUE FOR test_seq", result);
     }
 
     @NullMarked
     private static class TestSequenceColumnValueGenerator extends SequenceColumnValueGenerator {
-        public TestSequenceColumnValueGenerator(String sequenceName) {
-            super(sequenceName);
-        }
-
-        @Override
-        public String generate() {
-            return "TEST";
+        public TestSequenceColumnValueGenerator(final String sqlFragment) {
+            super(sqlFragment);
         }
     }
 }

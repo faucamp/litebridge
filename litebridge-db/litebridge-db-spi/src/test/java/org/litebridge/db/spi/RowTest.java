@@ -5,10 +5,15 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RowTest {
@@ -226,5 +231,108 @@ class RowTest {
 
         // Then
         assertFalse(initialHash == updatedHash);
+    }
+
+    @Test
+    void value_byIndex() {
+        // Given
+        final Column column = new Column("col");
+        final Row row = new Row(List.of(new RowColumn("col", "val", column)));
+
+        // When
+        final Object val = row.value(0);
+
+        // Then
+        assertEquals("val", val);
+    }
+
+    @Test
+    void columnMap_withFallbackColumnName() {
+        // Given
+        final Column column1 = new Column("real_name1");
+        final Column column2 = new Column("alias_name2");
+        final RowColumn rc1 = new RowColumn("alias_name1", "val1", column1);
+        final RowColumn rc2 = new RowColumn("alias_name2", "val2", column2);
+        final Row row = new Row(List.of(rc1, rc2));
+
+        // When
+        final Map<String, RowColumn> map = row.columnMap();
+        final Map<String, RowColumn> cachedMap = row.columnMap();
+
+        // Then
+        assertEquals(3, map.size());
+        assertEquals(map, cachedMap);
+        assertEquals(rc1, map.get("alias_name1"));
+        assertEquals(rc1, map.get("real_name1"));
+        assertEquals(rc2, map.get("alias_name2"));
+    }
+
+    @Test
+    void columnMap_columnNameOverlapsWithExistingLabel() {
+        // Given
+        final RowColumn rc1 = new RowColumn("C1", "val1", null);
+        final Column col2 = new Column("C1");
+        final RowColumn rc2 = new RowColumn("ALIAS2", "val2", col2);
+        final Row row = new Row(List.of(rc1, rc2));
+
+        // When
+        final Map<String, RowColumn> map = row.columnMap();
+
+        // Then
+        assertEquals(2, map.size());
+        assertEquals(rc1, map.get("C1"));
+        assertEquals(rc2, map.get("ALIAS2"));
+    }
+
+    @Test
+    void column_notFound_throwsNoSuchElementException() {
+        // Given
+        final Row row = new Row(Collections.emptyList());
+
+        // When & Then
+        assertThrows(NoSuchElementException.class, () -> row.column("nonExistent"));
+    }
+
+    @Test
+    void indexOf_byColumn() {
+        // Given
+        final Table table = new Table("T1");
+        final Column col1 = new Column(table, "C1");
+        final Column col2 = new Column(table, "C2");
+        final Row row = new Row(List.of(new RowColumn("C1", "v1", col1), new RowColumn("C2", "v2", col2)));
+
+        // When & Then
+        assertEquals(0, row.indexOf(col1));
+        assertEquals(1, row.indexOf(col2));
+        assertEquals(-1, row.indexOf(new Column("C3")));
+    }
+
+    @Test
+    void indexOf_byString() {
+        // Given
+        final Column col1 = new Column("C1");
+        final Row row = new Row(List.of(new RowColumn("C1", "v1", col1)));
+
+        // When & Then
+        assertEquals(0, row.indexOf("c1")); // case insensitive
+        assertEquals(-1, row.indexOf("C2"));
+    }
+
+    @Test
+    void equals_and_hashCode() {
+        // Given
+        final Column col = new Column("C1");
+        final Row row1 = new Row(List.of(new RowColumn("C1", "v1", col)));
+        final Row row2 = new Row(List.of(new RowColumn("C1", "v1", col)));
+        final Row rowDifferent = new Row(List.of(new RowColumn("C1", "v2", col)));
+
+        // When & Then
+        assertEquals(row1, row1);
+        assertEquals(row1, row2);
+        assertEquals(row1.hashCode(), row2.hashCode());
+
+        assertNotEquals(row1, rowDifferent);
+        assertNotEquals(row1, null);
+        assertNotEquals(row1, "not a row");
     }
 }

@@ -43,6 +43,25 @@ class InsertResultTest {
     }
 
     @Test
+    void constructor_listOfGeneratedKeys() {
+        // Given
+        final int rowsAffected = 2;
+        final Table table = new Table("TEST_TABLE");
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "ID", false, 1);
+        final List<Map<ColumnMetaData, Object>> keysList = List.of(
+                Map.of(columnMetaData, 1L),
+                Map.of(columnMetaData, 2L)
+        );
+
+        // When
+        final InsertResult result = new InsertResult(rowsAffected, keysList);
+
+        // Then
+        assertEquals(rowsAffected, result.rowsAffected());
+        assertEquals(keysList, result.generatedKeys());
+    }
+
+    @Test
     void testToString() {
         final InsertResult result = new InsertResult(1, Collections.emptyMap());
         assertTrue(result.toString().contains("InsertResult"));
