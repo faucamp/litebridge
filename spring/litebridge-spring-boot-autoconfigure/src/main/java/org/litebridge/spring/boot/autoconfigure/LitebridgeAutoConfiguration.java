@@ -1,6 +1,5 @@
 package org.litebridge.spring.boot.autoconfigure;
 
-import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.LitebridgeCore;
@@ -8,6 +7,7 @@ import org.litebridge.spring.LitebridgeTransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -69,9 +69,10 @@ public class LitebridgeAutoConfiguration {
      * This uses a {@code FactoryBean} in order to allow for specialised versions of Litebridge (e.g. vendor-specific
      * extensions such as {@code LitebridgeOracle}).
      *
-     * @param properties         Litebridge Spring Boot autoconfiguration properties
+     * @param databaseProvider   Configured database provider
      * @param transactionManager Litebridge Spring transaction manager
-     * @param configurer         Optional Litebridge configurer
+     * @param properties         Litebridge Spring Boot autoconfiguration properties
+     * @param configurerProvider Optional Litebridge configurer provider
      * @return Litebridge instance
      */
     @Bean
@@ -79,8 +80,8 @@ public class LitebridgeAutoConfiguration {
     public LitebridgeFactoryBean litebridge(final DatabaseProvider databaseProvider,
                                             final LitebridgeTransactionManager transactionManager,
                                             final LitebridgeProperties properties,
-                                            final @Nullable LitebridgeConfigurer configurer) {
-        return new LitebridgeFactoryBean(databaseProvider, transactionManager, properties, configurer);
+                                            final ObjectProvider<LitebridgeConfigurer> configurerProvider) {
+        return new LitebridgeFactoryBean(databaseProvider, transactionManager, properties, configurerProvider.getIfAvailable());
     }
 
     /**

@@ -3,6 +3,7 @@ package org.litebridge.spring.boot3.test;
 import org.flywaydb.core.Flyway;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
+import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
@@ -16,18 +17,26 @@ import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
+import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.BatchUpdateResult;
 import org.litebridge.db.spi.update.Result;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeBuilder;
+import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.config.LitebridgeConfig;
+import org.litebridge.orm.config.RelatedDtoStrategy;
+import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
 import org.litebridge.spring.LitebridgeTransactionManager;
 import org.litebridge.spring.boot.autoconfigure.LitebridgeAutoConfiguration;
 import org.litebridge.spring.boot.autoconfigure.LitebridgeConfigurer;
+import org.litebridge.spring.boot.autoconfigure.LitebridgeFactoryBean;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -179,15 +188,192 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
 
     @Test
     void autoConfigure_appliesConfigurerWhenPresent() {
+        // Given
         final AtomicBoolean configured = new AtomicBoolean(false);
 
+        // When / Then
         this.contextRunner
                 .withBean(LitebridgeConfigurer.class, () -> litebridge -> configured.set(true))
                 .withPropertyValues("litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider")
                 .run(context -> {
                     assertThat(context).hasSingleBean(Litebridge.class);
+                    context.getBean(Litebridge.class);
                     assertThat(configured).isTrue();
                 });
+    }
+
+    @Test
+    void autoConfigure_customLitebridgeBean_overridesFactoryBean() {
+        // Given
+        final Litebridge customLitebridge = mock(Litebridge.class);
+
+        // When / Then
+        this.contextRunner
+                .withBean(Litebridge.class, () -> customLitebridge)
+                .withPropertyValues("litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(Litebridge.class);
+                    assertThat(context.getBean(Litebridge.class)).isSameAs(customLitebridge);
+                    assertThat(context).doesNotHaveBean(LitebridgeFactoryBean.class);
+                });
+    }
+
+    @Test
+    void autoConfigure_customLitebridgeCoreBean_overridesFactoryBean() {
+        // Given
+        final LitebridgeCore customLitebridgeCore = mock(LitebridgeCore.class);
+
+        // When / Then
+        this.contextRunner
+                .withBean(LitebridgeCore.class, () -> customLitebridgeCore)
+                .withPropertyValues("litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(LitebridgeCore.class);
+                    assertThat(context.getBean(LitebridgeCore.class)).isSameAs(customLitebridgeCore);
+                    assertThat(context).doesNotHaveBean(LitebridgeFactoryBean.class);
+                });
+    }
+
+    @Test
+    void autoConfigure_overrideDatabaseProvider_registersExactBeanType() {
+        // When / Then
+        this.contextRunner
+                .withPropertyValues("litebridge.database-provider.class=org.litebridge.spring.boot3.test.LitebridgeSpringBoot3AutoConfigurationTest$TestOverrideDatabaseProvider")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(LitebridgeCore.class);
+                    assertThat(context.getBean(LitebridgeCore.class)).isInstanceOf(LitebridgeCore.class);
+                    assertThat(context).doesNotHaveBean(Litebridge.class);
+                    assertThat(context).hasSingleBean(LitebridgeTransactionManager.class);
+                });
+    }
+
+    @Test
+    void autoConfigure_customLitebridgeSubtypeDatabaseProvider_registersExactBeanType() {
+        // When / Then
+        this.contextRunner
+                .withPropertyValues("litebridge.database-provider.class=org.litebridge.spring.boot3.test.LitebridgeSpringBoot3AutoConfigurationTest$TestCustomLitebridgeDatabaseProvider")
+                .run(context -> {
+                    assertThat(context).hasSingleBean(CustomLitebridge.class);
+                    assertThat(context.getBean(CustomLitebridge.class)).isInstanceOf(CustomLitebridge.class);
+                    assertThat(context).hasSingleBean(LitebridgeTransactionManager.class);
+                });
+    }
+
+    @Test
+    void autoConfigure_relatedDtoStrategy() {
+        this.contextRunner
+                .withPropertyValues(
+                        "litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider",
+                        "litebridge.related-dto-strategy=PARTIAL_OBJECT_IF_NO_JOIN"
+                )
+                .run(context -> {
+                    assertThat(context).hasSingleBean(Litebridge.class);
+                    final Litebridge litebridge = context.getBean(Litebridge.class);
+
+                    // Verify via reflection since it's not exposed
+                    final java.lang.reflect.Field configField = ClassUtils.getField(Litebridge.class, "litebridgeConfig");
+                    configField.setAccessible(true);
+                    final LitebridgeConfig config = (LitebridgeConfig) configField.get(litebridge);
+                    assertThat(config.relatedDtoStrategy()).isEqualTo(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+                });
+    }
+
+    public static class CustomLitebridge extends LitebridgeCore {
+        public CustomLitebridge(final DatabaseProvider databaseProvider,
+                                final TransactionManager transactionManager,
+                                final LitebridgeConfig litebridgeConfig,
+                                final MethodHandles.Lookup lookup) {
+            super(databaseProvider, transactionManager, litebridgeConfig, lookup);
+        }
+    }
+
+    public static class TestDatabaseProvider implements DatabaseProvider {
+        private final DatabaseProvider delegate = new org.litebridge.db.h2.H2DatabaseProvider();
+
+        @Override
+        public DatabaseProviderMetaData metaData() {
+            return delegate.metaData();
+        }
+
+        @Override
+        public DatabaseMetaData databaseMetaData(final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+            return delegate.databaseMetaData(connectionProvider);
+        }
+
+        @Override
+        public TableMetaData tableMetaData(final @NonNull Table table, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+            return delegate.tableMetaData(table, connectionProvider);
+        }
+
+        @Override
+        public <T extends Result> T executeUpdate(final @NonNull PreparedSql preparedSql, final @NonNull Class<T> resultType, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+            return delegate.executeUpdate(preparedSql, resultType, connectionProvider);
+        }
+
+        @Override
+        public BatchUpdateResult executeBatch(final @NonNull List<PreparedSql> preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+            return delegate.executeBatch(preparedSql, connectionProvider);
+        }
+
+        @Override
+        public List<Row> executeQuery(final @NonNull PreparedSql preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+            return delegate.executeQuery(preparedSql, connectionProvider);
+        }
+
+        @Override
+        public String toSql(final @NonNull Operation operation, final @NonNull ConnectionProvider connectionProvider) {
+            return delegate.toSql(operation, connectionProvider);
+        }
+
+        @Override
+        public TypeConverter typeConverter() {
+            return delegate.typeConverter();
+        }
+
+        @Override
+        public SequenceColumnValueGenerator sequenceColumnValueGenerator(final @NonNull String sequence) throws UnsupportedOperationException {
+            return delegate.sequenceColumnValueGenerator(sequence);
+        }
+
+        @Override
+        public SqlFunctionRegistry sqlFunctionRegistry() {
+            return delegate.sqlFunctionRegistry();
+        }
+
+        @Override
+        public AliasTransformer aliasTransformer() {
+            return delegate.aliasTransformer();
+        }
+    }
+
+    public static class TestOverrideDatabaseProvider extends TestDatabaseProvider implements LitebridgeOverrideDatabaseProvider<LitebridgeCore> {
+        public TestOverrideDatabaseProvider() {
+        }
+
+        @Override
+        public Class<LitebridgeCore> litebridgeClass() {
+            return LitebridgeCore.class;
+        }
+    }
+
+    public static class TestCustomLitebridgeDatabaseProvider extends TestDatabaseProvider implements LitebridgeOverrideDatabaseProvider<CustomLitebridge> {
+        public TestCustomLitebridgeDatabaseProvider() {
+        }
+
+        @Override
+        public Class<CustomLitebridge> litebridgeClass() {
+            return CustomLitebridge.class;
+        }
+
+        @Override
+        public CustomLitebridge createLitebridge(final LitebridgeBuilder.ConstructorArgs constructorArgs) {
+            return new CustomLitebridge(
+                    constructorArgs.databaseProvider(),
+                    constructorArgs.transactionManager(),
+                    constructorArgs.litebridgeConfig(),
+                    constructorArgs.lookup()
+            );
+        }
     }
 
     public static class NoConstructorDatabaseProvider implements DatabaseProvider {
