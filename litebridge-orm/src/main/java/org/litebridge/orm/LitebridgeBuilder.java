@@ -43,7 +43,6 @@ public final class LitebridgeBuilder<LB extends LitebridgeCore> {
     LitebridgeBuilder(final DatabaseProvider databaseProvider) {
         this.litebridgeClass = (Class<LB>) Litebridge.class;
         this.databaseProvider = databaseProvider;
-        this.dataSource = dataSource;
     }
 
     /**
