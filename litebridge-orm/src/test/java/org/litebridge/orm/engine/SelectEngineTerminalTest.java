@@ -12,8 +12,6 @@ import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.VirtualTable;
-import org.litebridge.db.spi.VirtualTableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.AliasedExpression;
 import org.litebridge.db.spi.expression.ClauseType;
@@ -134,13 +132,11 @@ class SelectEngineTerminalTest {
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionManager txManager = mock(TransactionManager.class);
         final QueryPlanCache queryPlanCache = mock(QueryPlanCache.class);
-        final AliasTransformer aliasTransformer = mock(AliasTransformer.class);
 
         when(context.createQueryCompiler()).thenReturn(compiler);
         when(context.databaseProvider()).thenReturn(databaseProvider);
         when(context.transactionManager()).thenReturn(txManager);
         when(context.queryPlanCache()).thenReturn(queryPlanCache);
-        when(databaseProvider.aliasTransformer()).thenReturn(aliasTransformer);
 
         final SelectNode selectNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], null);
         final Select selectOperation = mock(Select.class);
@@ -166,13 +162,11 @@ class SelectEngineTerminalTest {
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionManager txManager = mock(TransactionManager.class);
         final QueryPlanCache queryPlanCache = new QueryPlanCache();
-        final AliasTransformer aliasTransformer = mock(AliasTransformer.class);
 
         when(context.createQueryCompiler()).thenReturn(compiler);
         when(context.databaseProvider()).thenReturn(databaseProvider);
         when(context.transactionManager()).thenReturn(txManager);
         when(context.queryPlanCache()).thenReturn(queryPlanCache);
-        when(databaseProvider.aliasTransformer()).thenReturn(aliasTransformer);
 
         final SelectNode selectNode = new SelectNode(null, null, null, null, new ExpressionSpec[0], null);
         final Select selectOperation = mock(Select.class);
@@ -211,7 +205,6 @@ class SelectEngineTerminalTest {
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionManager txManager = mock(TransactionManager.class);
         final QueryPlanCache queryPlanCache = new QueryPlanCache();
-        final AliasTransformer aliasTransformer = mock(AliasTransformer.class);
         final TableMetaDataCache tableMetaDataCache = mock(TableMetaDataCache.class);
 
         when(context.createQueryCompiler()).thenReturn(compiler);
@@ -219,7 +212,6 @@ class SelectEngineTerminalTest {
         when(context.transactionManager()).thenReturn(txManager);
         when(context.queryPlanCache()).thenReturn(queryPlanCache);
         when(context.tableMetaDataCache()).thenReturn(tableMetaDataCache);
-        when(databaseProvider.aliasTransformer()).thenReturn(aliasTransformer);
 
         final Table table = new Table("users");
         final Column nameColumn = new Column(table, "name");
@@ -242,9 +234,6 @@ class SelectEngineTerminalTest {
         final PreparedOperation preparedOperation = new PreparedOperation(selectOperation, Collections.emptyList());
         when(compiler.compile(selectNode)).thenReturn(preparedOperation);
         when(databaseProvider.toSql(selectOperation, txManager)).thenReturn("SELECT other, name AS u_name, age FROM users");
-
-        when(aliasTransformer.transformAlias("u_name")).thenReturn("u_name");
-        when(aliasTransformer.transformAlias("age")).thenReturn("age");
 
         final TableMetaData tableMetaData = mock(TableMetaData.class);
         final ColumnMetaData nameMeta = new ColumnMetaData(table, "name", false, Types.VARCHAR);
@@ -747,13 +736,11 @@ class SelectEngineTerminalTest {
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
         final TransactionManager txManager = mock(TransactionManager.class);
         final QueryPlanCache queryPlanCache = new QueryPlanCache();
-        final AliasTransformer aliasTransformer = mock(AliasTransformer.class);
 
         when(context.createQueryCompiler()).thenReturn(compiler);
         when(context.databaseProvider()).thenReturn(databaseProvider);
         when(context.transactionManager()).thenReturn(txManager);
         when(context.queryPlanCache()).thenReturn(queryPlanCache);
-        when(databaseProvider.aliasTransformer()).thenReturn(aliasTransformer);
 
         final VirtualTable virtualTable = new VirtualTable("vt");
         final Column virtualCol = new Column(virtualTable, "val");

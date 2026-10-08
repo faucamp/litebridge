@@ -2,7 +2,6 @@ package org.litebridge.db.spi.impl;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
@@ -54,13 +53,11 @@ class ContextBuilderTest {
         final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
         final SequenceColumnValueGenerator sequenceColumnValueGenerator = mock(SequenceColumnValueGenerator.class);
         final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
-        final AliasTransformer aliasTransformer = mock(AliasTransformer.class);
         final TypeConverter typeConverter = mock(TypeConverter.class);
         final SqlFunctionRegistryFactory sqlFunctionRegistryFactory = mock(SqlFunctionRegistryFactory.class);
 
         // When
         final DatabaseProviderContext result = ContextBuilder.newContext()
-                .withAliasTransformer(aliasTransformer)
                 .withLabelGenerator(labelGenerator)
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withExecutionEngine(executionEngine)

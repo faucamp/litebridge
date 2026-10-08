@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.engine.compiler.ContextStack;
 
@@ -17,7 +16,6 @@ import java.util.Objects;
  * for tables and columns in a database schema. It maintains internal mappings to ensure alias uniqueness
  * across multiple calls.
  * <p>
- * This class uses an {@link AliasTransformer} to apply specific transformation rules to the base alias strings.
  * The aliases are generated using a combination of base string transformations and integer suffixes for conflicts.
  * <p>
  * Thread-safety: This class is not thread-safe and should be used in single-threaded contexts unless externally synchronized.

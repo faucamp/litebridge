@@ -2,10 +2,8 @@ package org.litebridge.db.oracle;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.oracle.api.LitebridgeOracle;
-import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
-import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.orm.LitebridgeBuilder;
 import org.litebridge.orm.config.LitebridgeConfig;
@@ -17,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class OracleDatabaseProviderTest {
 
@@ -84,7 +81,6 @@ class OracleDatabaseProviderTest {
 
         // When / Then
         assertNotNull(oracleDatabaseProvider.typeConverter());
-        assertNotNull(oracleDatabaseProvider.aliasTransformer());
         assertNotNull(oracleDatabaseProvider.sqlFunctionRegistry());
     }
 }

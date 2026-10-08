@@ -8,11 +8,9 @@ import org.litebridge.db.oracle.sql.OracleLabelGenerator;
 import org.litebridge.db.oracle.sql.OracleMathOperationGenerator;
 import org.litebridge.db.oracle.sql.OracleSqlGenerator;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridge.db.spi.impl.ContextBuilder;
 import org.litebridge.db.spi.impl.DatabaseProviderContext;
-import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
 import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
@@ -47,12 +45,10 @@ public final class OracleDatabaseProvider extends AbstractDatabaseProvider imple
                 .withMathOperationGenerator(mathOperationGenerator);
 
         final SqlGenerator sqlGenerator = new OracleSqlGenerator(contextBuilder.ensureMetaDataEngine(), labelGenerator, mathOperationGenerator);
-        final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
-        final ExecutionEngine executionEngine = new OracleExecutionEngine(contextBuilder.ensureTypeConverter(), aliasTransformer);
+        final ExecutionEngine executionEngine = new OracleExecutionEngine(contextBuilder.ensureTypeConverter());
         final SqlFunctionRegistryFactory sqlFunctionRegistry = new OracleSqlFunctionRegistryFactory(labelGenerator, sqlGenerator.selectSqlGenerator());
 
         return contextBuilder
-                .withAliasTransformer(aliasTransformer)
                 .withExecutionEngine(executionEngine)
                 .withSqlFunctionRegistryFactory(sqlFunctionRegistry)
                 .withSqlGenerator(sqlGenerator)

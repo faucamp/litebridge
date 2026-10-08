@@ -5,9 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -35,8 +33,7 @@ import static org.mockito.Mockito.when;
 class OracleExecutionEngineTest {
 
     private final TypeConverter typeConverter = new DefaultTypeConverter();
-    private final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
-    private final OracleExecutionEngine executionEngine = new OracleExecutionEngine(typeConverter, aliasTransformer);
+    private final OracleExecutionEngine executionEngine = new OracleExecutionEngine(typeConverter);
 
     @Test
     void extractGeneratedKeys_withGeneratedKeys() throws SQLException {

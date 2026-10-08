@@ -8,7 +8,6 @@ import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.BindValue;
@@ -39,14 +38,11 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
     private static final Class<?>[] TYPE_OVERRIDES_EMPTY = new Class<?>[0];
 
     private final TypeConverter typeConverter;
-    private final AliasTransformer aliasTransformer;
     private final DatabaseProviderMetaData.InsertCapability insertCapability;
 
     public AbstractExecutionEngine(final TypeConverter typeConverter,
-                                   final AliasTransformer aliasTransformer,
                                    final DatabaseProviderMetaData.InsertCapability insertCapability) {
         this.typeConverter = typeConverter;
-        this.aliasTransformer = aliasTransformer;
         this.insertCapability = insertCapability;
     }
 
@@ -209,11 +205,6 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
     @Override
     public TypeConverter typeConverter() {
         return typeConverter;
-    }
-
-    @Override
-    public AliasTransformer aliasTransformer() {
-        return aliasTransformer;
     }
 
     /**

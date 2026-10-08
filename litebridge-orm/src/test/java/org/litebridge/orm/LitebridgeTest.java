@@ -6,14 +6,12 @@ import org.litebridge.commons.ObjectUtils;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.ColumnMetaData;
-import org.litebridge.db.spi.ColumnType;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.RowColumn;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.expression.AliasReferenceExpressionFactory;
 import org.litebridge.db.spi.expression.ColumnExpressionFactory;
 import org.litebridge.db.spi.expression.LiteralExpressionFactory;
@@ -293,7 +291,6 @@ class LitebridgeTest {
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn((value, alias) -> new LiteralExpressionImpl(value, alias, labelGenerator));
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final DataSource dataSource = mock(DataSource.class);
         final Litebridge litebridge = new Litebridge(databaseProvider, dataSource);
         final FieldSpec fieldSpec = new FieldSpec("myVar", false);
@@ -827,7 +824,6 @@ class LitebridgeTest {
         when(selectRegistry.column()).thenReturn(new TestColumnExpressionFactory());
         when(selectRegistry.literal()).thenReturn((value, alias) -> new LiteralExpressionImpl(value, alias, labelGenerator));
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
-        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
 
         // When
@@ -880,7 +876,6 @@ class LitebridgeTest {
         when(selectRegistry.bindValue()).thenReturn((index, size, columnType, alias) -> new BindValueExpressionImpl(index, size, columnType, alias, labelGenerator));
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         when(databaseProvider.metaData()).thenReturn(providerMetaData);
         final TableMetaData tableMetaData = mock(TableMetaData.class);
@@ -913,7 +908,6 @@ class LitebridgeTest {
         when(selectRegistry.bindValue()).thenReturn((index, size, columnType, alias) -> new BindValueExpressionImpl(index, size, columnType, alias, labelGenerator));
         when(databaseProvider.sqlFunctionRegistry()).thenReturn(sqlFunctionRegistry);
         when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
-        when(databaseProvider.aliasTransformer()).thenReturn(new DefaultAliasTransformer());
         final DatabaseProviderMetaData providerMetaData = new DatabaseProviderMetaData(true, DatabaseProviderMetaData.MergeCapability.USING_VALUES, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
         when(databaseProvider.metaData()).thenReturn(providerMetaData);
         final DataSource dataSource = mock(DataSource.class);

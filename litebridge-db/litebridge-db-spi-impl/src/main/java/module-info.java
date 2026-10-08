@@ -15,7 +15,6 @@ module litebridge.db.spi.impl {
     requires litebridge.db.spi;
 
     exports org.litebridge.db.spi.impl;
-    exports org.litebridge.db.spi.impl.alias;
     exports org.litebridge.db.spi.impl.expression;
     exports org.litebridge.db.spi.impl.expression.function;
     exports org.litebridge.db.spi.impl.expression.function.aggregate;

@@ -7,7 +7,6 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
@@ -116,11 +115,6 @@ final class PlaceHolderDatabaseProvider implements DatabaseProvider {
 
     @Override
     public SqlFunctionRegistry sqlFunctionRegistry() {
-        throw new UnsupportedOperationException("N/A");
-    }
-
-    @Override
-    public AliasTransformer aliasTransformer() {
         throw new UnsupportedOperationException("N/A");
     }
 }

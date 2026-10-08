@@ -4,9 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.Table;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
-import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,8 +24,7 @@ import static org.mockito.Mockito.when;
 class SQLiteExecutionEngineTest {
 
     private final TypeConverter typeConverter = new DefaultTypeConverter();
-    private final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
-    private final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter, aliasTransformer);
+    private final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter);
 
     @Test
     void extractGeneratedKeys() throws SQLException {

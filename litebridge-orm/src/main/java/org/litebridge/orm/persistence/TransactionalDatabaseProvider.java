@@ -7,7 +7,6 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
@@ -126,11 +125,6 @@ public final class TransactionalDatabaseProvider implements DatabaseProvider {
     @Override
     public TypeConverter typeConverter() {
         return databaseProvider.typeConverter();
-    }
-
-    @Override
-    public AliasTransformer aliasTransformer() {
-        return databaseProvider.aliasTransformer();
     }
 
     private <T> T executeAndCleanupIfNeeded(final SqlOperationSupplier<T> supplier) throws SQLException {

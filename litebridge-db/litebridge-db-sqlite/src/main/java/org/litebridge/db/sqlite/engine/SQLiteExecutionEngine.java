@@ -3,7 +3,6 @@ package org.litebridge.db.sqlite.engine;
 
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.engine.ExecutionEngineReturnedKeysAuto;
 import org.slf4j.Logger;
@@ -20,9 +19,8 @@ public final class SQLiteExecutionEngine extends ExecutionEngineReturnedKeysAuto
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SQLiteExecutionEngine.class);
 
-    public SQLiteExecutionEngine(final TypeConverter typeConverter,
-                                 final AliasTransformer aliasTransformer) {
-        super(typeConverter, aliasTransformer, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+    public SQLiteExecutionEngine(final TypeConverter typeConverter) {
+        super(typeConverter, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
     }
 
     @Override

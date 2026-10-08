@@ -6,8 +6,6 @@ import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.UpdateResult;
 
-import java.util.Collections;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -27,7 +25,6 @@ class PlaceHolderDatabaseProviderTest {
         assertThrows(UnsupportedOperationException.class, () -> provider.toSql(mock(org.litebridge.db.spi.query.Select.class), connectionProvider));
         assertThrows(UnsupportedOperationException.class, provider::typeConverter);
         assertThrows(UnsupportedOperationException.class, provider::sqlFunctionRegistry);
-        assertThrows(UnsupportedOperationException.class, provider::aliasTransformer);
 
         assertNotNull(provider.sequenceColumnValueGenerator("SEQ"));
     }

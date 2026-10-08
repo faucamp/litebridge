@@ -1,6 +1,5 @@
 package org.litebridge.db.spi;
 
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
@@ -123,11 +122,4 @@ public interface DatabaseProvider {
      * @return the {@link SqlFunctionRegistry} instance for managing SQL functions
      */
     SqlFunctionRegistry sqlFunctionRegistry();
-
-    /**
-     * Retrieve the {@link AliasTransformer} instance associated with the database provider.
-     *
-     * @return the {@link AliasTransformer} instance for transforming aliases
-     */
-    AliasTransformer aliasTransformer();
 }

@@ -2,13 +2,11 @@ package org.litebridge.db.sqlite;
 
 import org.litebridge.convert.DefaultTypeConverter;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
 import org.litebridge.db.spi.impl.AbstractDatabaseProvider;
 import org.litebridge.db.spi.impl.ContextBuilder;
 import org.litebridge.db.spi.impl.DatabaseProviderContext;
-import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.db.spi.impl.engine.MetaDataEngine;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
@@ -49,15 +47,13 @@ public final class SQLiteDatabaseProvider extends AbstractDatabaseProvider imple
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
 
         final TypeConverter typeConverter = new DefaultTypeConverter();
-        final AliasTransformer aliasTransformer = new UppercaseAliasTransformer();
-        final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter, aliasTransformer);
+        final SQLiteExecutionEngine executionEngine = new SQLiteExecutionEngine(typeConverter);
         final MetaDataEngine metaDataEngine = new SQLiteMetaDataEngine(databaseProviderMetaData);
         final LabelGenerator labelGenerator = new LabelGenerator();
         final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
         final SQLiteSqlGenerator sqlGenerator = new SQLiteSqlGenerator(metaDataEngine, labelGenerator, mathOperationGenerator);
 
         return ContextBuilder.newContext()
-                .withAliasTransformer(aliasTransformer)
                 .withLabelGenerator(labelGenerator)
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withExecutionEngine(executionEngine)

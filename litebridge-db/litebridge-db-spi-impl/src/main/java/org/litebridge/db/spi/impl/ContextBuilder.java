@@ -3,8 +3,6 @@ package org.litebridge.db.spi.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
-import org.litebridge.db.spi.alias.DefaultAliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
@@ -32,7 +30,6 @@ public final class ContextBuilder {
     private @Nullable ExecutionEngine executionEngine;
     private @Nullable MathOperationGenerator mathOperationGenerator;
     private @Nullable TypeConverter typeConverter;
-    private @Nullable AliasTransformer aliasTransformer;
     private @Nullable SqlFunctionRegistryFactory sqlFunctionRegistryFactory;
     private @Nullable Function<String, SequenceColumnValueGenerator> sequenceColumnValueGeneratorCreator;
 
@@ -70,11 +67,6 @@ public final class ContextBuilder {
 
     public ContextBuilder withTypeConverter(final TypeConverter typeConverter) {
         this.typeConverter = typeConverter;
-        return this;
-    }
-
-    public ContextBuilder withAliasTransformer(final AliasTransformer aliasTransformer) {
-        this.aliasTransformer = aliasTransformer;
         return this;
     }
 
@@ -123,13 +115,8 @@ public final class ContextBuilder {
         return typeConverter;
     }
 
-    public AliasTransformer ensureAliasTransformer() {
-        aliasTransformer = Objects.requireNonNullElseGet(aliasTransformer, DefaultAliasTransformer::new);
-        return aliasTransformer;
-    }
-
     public ExecutionEngine ensureExecutionEngine() {
-        executionEngine = Objects.requireNonNullElseGet(executionEngine, () -> new ExecutionEngineReturnedKeysAuto(ensureTypeConverter(), ensureAliasTransformer(), ensureDatabaseProviderMetaData().insertCapability()));
+        executionEngine = Objects.requireNonNullElseGet(executionEngine, () -> new ExecutionEngineReturnedKeysAuto(ensureTypeConverter(), ensureDatabaseProviderMetaData().insertCapability()));
         return executionEngine;
     }
 

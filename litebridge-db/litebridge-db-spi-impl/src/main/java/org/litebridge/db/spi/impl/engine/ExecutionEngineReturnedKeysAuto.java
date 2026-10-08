@@ -1,7 +1,6 @@
 package org.litebridge.db.spi.impl.engine;
 
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.query.UpdateMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
@@ -18,9 +17,8 @@ public class ExecutionEngineReturnedKeysAuto extends AbstractExecutionEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionEngineReturnedKeysAuto.class);
 
     public ExecutionEngineReturnedKeysAuto(final TypeConverter typeConverter,
-                                           final AliasTransformer aliasTransformer,
                                            final DatabaseProviderMetaData.InsertCapability insertCapability) {
-        super(typeConverter, aliasTransformer, insertCapability);
+        super(typeConverter, insertCapability);
     }
 
     @Override

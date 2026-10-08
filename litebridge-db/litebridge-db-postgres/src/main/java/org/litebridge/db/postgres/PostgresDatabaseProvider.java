@@ -27,7 +27,6 @@ public final class PostgresDatabaseProvider extends AbstractDatabaseProvider {
 
         final ContextBuilder contextBuilder = ContextBuilder.newContext()
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
-                .withAliasTransformer(new PostgresAliasTransformer())
                 .withDatabaseProviderMetaData(databaseProviderMetaData)
                 .withSequenceColumnValueGenerator(PostgresSequenceColumnValueGenerator::new)
                 .withTypeConverter(new DefaultTypeConverter());

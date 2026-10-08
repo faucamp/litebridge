@@ -11,7 +11,6 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
@@ -339,11 +338,6 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
         public SqlFunctionRegistry sqlFunctionRegistry() {
             return delegate.sqlFunctionRegistry();
         }
-
-        @Override
-        public AliasTransformer aliasTransformer() {
-            return delegate.aliasTransformer();
-        }
     }
 
     public static class TestOverrideDatabaseProvider extends TestDatabaseProvider implements LitebridgeOverrideDatabaseProvider<LitebridgeCore> {
@@ -428,11 +422,6 @@ class LitebridgeSpringBoot3AutoConfigurationTest {
 
         @Override
         public SqlFunctionRegistry sqlFunctionRegistry() {
-            return null;
-        }
-
-        @Override
-        public AliasTransformer aliasTransformer() {
             return null;
         }
     }

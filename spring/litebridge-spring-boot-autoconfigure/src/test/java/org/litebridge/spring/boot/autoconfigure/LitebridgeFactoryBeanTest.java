@@ -11,7 +11,6 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.generator.SequenceColumnValueGenerator;
@@ -26,7 +25,6 @@ import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.config.LitebridgeConfig;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.spi.LitebridgeOverrideDatabaseProvider;
-
 import org.litebridge.spring.LitebridgeTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
@@ -317,11 +315,6 @@ class LitebridgeFactoryBeanTest {
         @Override
         public SqlFunctionRegistry sqlFunctionRegistry() {
             return delegate.sqlFunctionRegistry();
-        }
-
-        @Override
-        public AliasTransformer aliasTransformer() {
-            return delegate.aliasTransformer();
         }
     }
 

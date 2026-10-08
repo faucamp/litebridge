@@ -6,7 +6,6 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.impl.engine.ExecutionEngine;
@@ -157,23 +156,6 @@ class AbstractDatabaseProviderTest {
 
         // When
         final TypeConverter result = provider.typeConverter();
-
-        // Then
-        assertSame(expected, result);
-    }
-
-    @Test
-    void aliasTransformer() {
-        // Given
-        final MetaDataEngine metaDataEngine = mock(MetaDataEngine.class);
-        final SqlGenerator sqlGenerator = mock(SqlGenerator.class);
-        final ExecutionEngine executionEngine = mock(ExecutionEngine.class);
-        final AliasTransformer expected = mock(AliasTransformer.class);
-        when(executionEngine.aliasTransformer()).thenReturn(expected);
-        final TestProvider provider = new TestProvider(sqlGenerator, new LabelGenerator(), metaDataEngine, executionEngine);
-
-        // When
-        final AliasTransformer result = provider.aliasTransformer();
 
         // Then
         assertSame(expected, result);

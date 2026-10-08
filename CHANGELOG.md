@@ -108,6 +108,7 @@
       `nativeQuery()`, etc.).
     - `ColumnIdentifierGenerator`; replaced by `LabelGenerator`.
     - Removed `ColumnValue`, `RowValue` etc due to alias handling improvements.
+    - Removed obsolete `AliasTransformer` interface and default implementation (also removed it from Database Provider implementations).
 
 ## [0.4.0] - 2026-08-10
 

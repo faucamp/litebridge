@@ -3,7 +3,6 @@ package org.litebridge.db.oracle.engine;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.ColumnMetaData;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.impl.engine.ExecutionEngineReturnedKeysNamed;
 import org.litebridge.db.spi.sql.BindValue;
@@ -27,8 +26,8 @@ public final class OracleExecutionEngine extends ExecutionEngineReturnedKeysName
     private static final Logger LOGGER = LoggerFactory.getLogger(OracleExecutionEngine.class);
     private static final Map<String, int[]> PARAMETER_PERMUTATIONS = new ConcurrentHashMap<>();
 
-    public OracleExecutionEngine(final TypeConverter typeConverter, final AliasTransformer aliasTransformer) {
-        super(typeConverter, aliasTransformer, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+    public OracleExecutionEngine(final TypeConverter typeConverter) {
+        super(typeConverter, DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
     }
 
     @Override

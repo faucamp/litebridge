@@ -1,7 +1,6 @@
 package org.litebridge.db.spi.impl.engine;
 
 import org.litebridge.db.spi.Row;
-import org.litebridge.db.spi.alias.AliasTransformer;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
@@ -46,6 +45,4 @@ public interface ExecutionEngine {
     List<Row> executeQuery(PreparedSql preparedSql, ConnectionProvider connectionProvider) throws SQLException;
 
     TypeConverter typeConverter();
-
-    AliasTransformer aliasTransformer();
 }

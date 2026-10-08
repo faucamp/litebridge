@@ -7,7 +7,6 @@ import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.tx.TransactionManager;
 import org.litebridge.db.spi.update.InsertResult;
-import org.litebridge.db.spi.impl.alias.UppercaseAliasTransformer;
 import org.litebridge.orm.engine.LitebridgeContext;
 
 import java.lang.invoke.MethodHandles;
@@ -29,7 +28,6 @@ class LitebridgeOracleTest {
                         DatabaseProviderMetaData.MergeCapability.USING_VALUES_SUBQUERY,
                         DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
         final DatabaseProvider databaseProvider = mock(DatabaseProvider.class);
-        when(databaseProvider.aliasTransformer()).thenReturn(new UppercaseAliasTransformer());
         when(databaseProvider.metaData()).thenReturn(metadata);
         final TransactionManager transactionManager = mock(TransactionManager.class);
         final MethodHandles.Lookup lookup = MethodHandles.lookup();
