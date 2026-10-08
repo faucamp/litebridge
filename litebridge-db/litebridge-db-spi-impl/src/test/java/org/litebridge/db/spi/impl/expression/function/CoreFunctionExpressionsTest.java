@@ -5,6 +5,7 @@ import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
+import org.litebridge.db.spi.expression.SelectExpression;
 import org.litebridge.db.spi.expression.SqlFunctionRegistry;
 import org.litebridge.db.spi.impl.expression.SelectColumn;
 import org.litebridge.db.spi.impl.expression.SqlFunctionRegistryFactory;
@@ -60,6 +61,26 @@ class CoreFunctionExpressionsTest {
 
         // Then
         assertEquals("TEST.VAL", sql);
+    }
+
+    @Test
+    void functionExpression_targetAndToSqlWithAlias() {
+        // Given
+        final SelectExpression target = mock(SelectExpression.class);
+        when(target.toSql(select, ClauseType.SELECT, null)).thenReturn("VAL");
+        when(target.toSql(select, ClauseType.WHERE, null)).thenReturn("VAL");
+
+        final FunctionExpression fn = new FunctionExpression(target, "my_fn", labelGenerator) {
+            @Override
+            protected String template() {
+                return "CUSTOM_FN(%s)";
+            }
+        };
+
+        // When / Then
+        assertEquals(target, fn.target());
+        assertEquals("CUSTOM_FN(VAL) AS \"my_fn\"", fn.toSql(select, ClauseType.SELECT, null));
+        assertEquals("CUSTOM_FN(VAL)", fn.toSql(select, ClauseType.WHERE, null));
     }
 
     @Test

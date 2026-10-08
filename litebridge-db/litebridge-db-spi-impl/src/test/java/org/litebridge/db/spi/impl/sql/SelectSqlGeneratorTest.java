@@ -8,6 +8,7 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.VirtualTable;
+import org.litebridge.db.spi.alias.AliasedQuery;
 import org.litebridge.db.spi.alias.AliasedTable;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ColumnExpression;
@@ -22,6 +23,7 @@ import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.db.spi.query.OrderBy;
 import org.litebridge.db.spi.query.Select;
+import org.litebridge.db.spi.query.SelectTarget;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -217,5 +219,103 @@ class SelectSqlGeneratorTest {
 
         // Then
         assertEquals(" JOIN JOIN_TABLE USING (COL1)", result);
+    }
+
+    @Test
+    void generateSql_voidFrom() {
+        // Given
+        final Select select = new Select(
+                new SelectTarget.Void(),
+                List.of(createLiteralExpression(1)),
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = selectSqlGenerator.generateSql(select, mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("SELECT ?", result);
+    }
+
+    @Test
+    void generateSql_subselectAndAliasedQueryFrom() {
+        // Given
+        final Select sub = new Select(
+                new Table("INNER_TABLE"),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        final AliasedQuery aliasedQuery = new AliasedQuery("aq", sub);
+
+        final Select select = new Select(
+                aliasedQuery,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = selectSqlGenerator.generateSql(select, mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("SELECT * FROM (SELECT * FROM INNER_TABLE) AS \"aq\"", result);
+    }
+
+    @Test
+    void generateSql_subselectDirectFrom() {
+        // Given
+        final Select sub = new Select(
+                new Table("INNER_TABLE"),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        final Select select = new Select(
+                sub,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null,
+                Collections.emptyList(),
+                null);
+
+        // When
+        final String result = selectSqlGenerator.generateSql(select, mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("SELECT * FROM (SELECT * FROM INNER_TABLE)", result);
+    }
+
+    @Test
+    void createJoin_voidTarget() {
+        // Given
+        final SelectTarget.Void voidTarget = new SelectTarget.Void();
+        final Column column = new Column(VirtualTable.anonymous(), "COL1");
+        final SelectColumn selectColumn = createSelectColumn(column);
+        final List<LogicCondition> conditions = List.of(new LogicCondition(selectColumn, Operator.EQ, selectColumn));
+        final Join join = new Join(Join.JoinType.INNER, voidTarget, new ConditionGroup(conditions));
+
+        // When
+        final String result = selectSqlGenerator.createJoin(join, mock(Select.class), mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals(" JOIN  ON COL1 = COL1", result);
     }
 }

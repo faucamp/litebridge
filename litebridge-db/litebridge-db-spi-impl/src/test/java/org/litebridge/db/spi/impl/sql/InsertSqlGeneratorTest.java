@@ -56,4 +56,28 @@ class InsertSqlGeneratorTest {
         // Then
         assertEquals("INSERT INTO TEST_SCHEMA.TEST_TABLE (TEST_COLUMN) VALUES (?), (?)", result);
     }
+
+    @Test
+    void generateSql_batchedInsertsCapability_generatesSingleRow() {
+        // Given
+        final LabelGenerator labelGenerator = new LabelGenerator();
+        final MathOperationGenerator mathOperationGenerator = new MathOperationGenerator(labelGenerator);
+        final InsertSqlGenerator batchedGenerator = new InsertSqlGenerator(
+                labelGenerator,
+                mathOperationGenerator,
+                (table, connectionProvider) -> mock(TableMetaData.class),
+                DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+
+        final Insert insert = new Insert(
+                createTestTable(),
+                List.of(new UpdateColumn("COL1"), new UpdateColumn("COL2")),
+                5,
+                false);
+
+        // When
+        final String result = batchedGenerator.generateSql(insert, mock(ConnectionProvider.class));
+
+        // Then
+        assertEquals("INSERT INTO TEST_SCHEMA.TEST_TABLE (COL1, COL2) VALUES (?, ?)", result);
+    }
 }

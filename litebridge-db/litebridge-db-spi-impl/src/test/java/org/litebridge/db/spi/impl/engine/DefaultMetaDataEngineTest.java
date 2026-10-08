@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -144,6 +145,125 @@ class DefaultMetaDataEngineTest {
 
         // Then
         assertEquals("Table not found: " + table, result.getMessage());
+    }
+
+    @Test
+    void ensureTableMetaData_sqlException_wrappedInIllegalStateException() throws Exception {
+        // Given
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
+        final Table table = new Table("CATALOG", "SCHEMA", "TEST_TABLE");
+        final Connection connection = mock(Connection.class);
+        when(connection.getMetaData()).thenThrow(new SQLException("meta error"));
+        final ConnectionProvider provider = mock(ConnectionProvider.class);
+        when(provider.connection()).thenReturn(new ManagedConnection(connection));
+
+        // When
+        final IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> engine.ensureTableMetaData(table, provider));
+
+        // Then
+        assertEquals("Failed to get table metadata for table: " + table, ex.getMessage());
+    }
+
+    @Test
+    void ensureTableMetaData_columnDefaultValueVariationsAndKeyMismatches() throws Exception {
+        // Given
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
+        final Table table = new Table("CATALOG", "SCHEMA", "TEST_TABLE");
+
+        final Connection connection = mock(Connection.class);
+        final java.sql.DatabaseMetaData jdbcMeta = mock(java.sql.DatabaseMetaData.class);
+        final ResultSet schemas = resultSet(true, "TABLE_SCHEM", "SCHEMA");
+        final ResultSet tables = resultSet(true, "TABLE_NAME", "TEST_TABLE");
+        final ResultSet primaryKeys = resultSet(false, "COLUMN_NAME", "");
+
+        final ResultSet columns = mock(ResultSet.class);
+        when(columns.next()).thenReturn(true, true, true, true, true, true, false);
+        when(columns.getString("COLUMN_NAME")).thenReturn("C_CHAR", "C_LONGVAR", "C_INT", "C_SHORT", "C_START_NOQ", "C_END_NOQ");
+        when(columns.getBoolean("IS_NULLABLE")).thenReturn(false, true, true, true, true, true);
+        when(columns.getInt("DATA_TYPE")).thenReturn(Types.CHAR, Types.LONGVARCHAR, Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR);
+        when(columns.getInt("COLUMN_SIZE")).thenReturn(1, 1000, 10, 5, 10, 10);
+        when(columns.getBoolean("IS_AUTOINCREMENT")).thenReturn(false, false, false, false, false, false);
+        when(columns.getInt("DECIMAL_DIGITS")).thenReturn(0, 0, 0, 0, 0, 0);
+        when(columns.getString("COLUMN_DEF")).thenReturn("'X'", "'longtext'", "0", "a", "abc'", "'abc");
+
+        final ResultSet importedKeys = mock(ResultSet.class);
+        when(importedKeys.next()).thenReturn(true, false);
+        when(importedKeys.getString("FK_NAME")).thenReturn("FK_OTHER");
+        when(importedKeys.getString("PKTABLE_NAME")).thenReturn("PARENT");
+        when(importedKeys.getString("PKCOLUMN_NAME")).thenReturn("ID");
+        when(importedKeys.getString("FKTABLE_NAME")).thenReturn("OTHER_TABLE"); // doesn't match table name
+        when(importedKeys.getString("FKCOLUMN_NAME")).thenReturn("ID");
+
+        final ResultSet exportedKeys = mock(ResultSet.class);
+        when(exportedKeys.next()).thenReturn(true, false);
+        when(exportedKeys.getString("FK_NAME")).thenReturn("FK_OTHER");
+        when(exportedKeys.getString("PKTABLE_NAME")).thenReturn("OTHER_TABLE"); // doesn't match table name
+        when(exportedKeys.getString("PKCOLUMN_NAME")).thenReturn("ID");
+        when(exportedKeys.getString("FKTABLE_NAME")).thenReturn("CHILD");
+        when(exportedKeys.getString("FKCOLUMN_NAME")).thenReturn("PARENT_ID");
+
+        when(jdbcMeta.getSchemas(table.catalog(), table.schema())).thenReturn(schemas);
+        when(jdbcMeta.getTables(eq(table.catalog()), eq(table.schema()), eq(table.name()), any(String[].class))).thenReturn(tables);
+        when(jdbcMeta.getPrimaryKeys(table.catalog(), table.schema(), table.name())).thenReturn(primaryKeys);
+        when(jdbcMeta.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columns);
+        when(jdbcMeta.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(importedKeys);
+        when(jdbcMeta.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(exportedKeys);
+        when(connection.getMetaData()).thenReturn(jdbcMeta);
+
+        final ConnectionProvider provider = mock(ConnectionProvider.class);
+        when(provider.connection()).thenReturn(new ManagedConnection(connection));
+
+        // When
+        final TableMetaData meta = engine.ensureTableMetaData(table, provider);
+
+        // Then
+        assertEquals("X", meta.column("C_CHAR").getDefaultValue());
+        assertEquals("longtext", meta.column("C_LONGVAR").getDefaultValue());
+        assertEquals("0", meta.column("C_INT").getDefaultValue());
+        assertEquals("a", meta.column("C_SHORT").getDefaultValue());
+        assertEquals("abc'", meta.column("C_START_NOQ").getDefaultValue());
+        assertEquals("'abc", meta.column("C_END_NOQ").getDefaultValue());
+    }
+
+    @Test
+    void ensureTableMetaData_skipsNonMatchingSchemaAndTableRowsFirst() throws Exception {
+        // Given
+        final DefaultMetaDataEngine engine = new DefaultMetaDataEngine(metadata);
+        final Table table = new Table("CATALOG", "SCHEMA", "TEST_TABLE");
+
+        final Connection connection = mock(Connection.class);
+        final java.sql.DatabaseMetaData jdbcMeta = mock(java.sql.DatabaseMetaData.class);
+
+        final ResultSet schemas = mock(ResultSet.class);
+        when(schemas.next()).thenReturn(true, true, false);
+        when(schemas.getString("TABLE_SCHEM")).thenReturn("OTHER_SCHEMA", "SCHEMA");
+
+        final ResultSet tables = mock(ResultSet.class);
+        when(tables.next()).thenReturn(true, true, false);
+        when(tables.getString("TABLE_NAME")).thenReturn("OTHER_TABLE", "TEST_TABLE");
+
+        final ResultSet primaryKeys = resultSet(false, "COLUMN_NAME", "");
+        final ResultSet columns = resultSet(false, "COLUMN_NAME", "");
+        final ResultSet importedKeys = resultSet(false, "FK_NAME", "");
+        final ResultSet exportedKeys = resultSet(false, "FK_NAME", "");
+
+        when(jdbcMeta.getSchemas(table.catalog(), table.schema())).thenReturn(schemas);
+        when(jdbcMeta.getTables(eq(table.catalog()), eq(table.schema()), eq(table.name()), any(String[].class))).thenReturn(tables);
+        when(jdbcMeta.getPrimaryKeys(table.catalog(), table.schema(), table.name())).thenReturn(primaryKeys);
+        when(jdbcMeta.getColumns(table.catalog(), table.schema(), table.name(), null)).thenReturn(columns);
+        when(jdbcMeta.getImportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(importedKeys);
+        when(jdbcMeta.getExportedKeys(table.catalog(), table.schema(), table.name())).thenReturn(exportedKeys);
+        when(connection.getMetaData()).thenReturn(jdbcMeta);
+
+        final ConnectionProvider provider = mock(ConnectionProvider.class);
+        when(provider.connection()).thenReturn(new ManagedConnection(connection));
+
+        // When
+        final TableMetaData meta = engine.ensureTableMetaData(table, provider);
+
+        // Then
+        assertNotNull(meta);
     }
 
     private static ConnectionProvider configuredProvider(final Table table) throws Exception {

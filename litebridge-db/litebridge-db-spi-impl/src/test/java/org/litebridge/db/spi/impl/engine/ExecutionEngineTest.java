@@ -267,6 +267,205 @@ class ExecutionEngineTest {
         verify(statement, never()).getGeneratedKeys();
     }
 
+    @Test
+    void executeBatch_executesAndReturnsAffectedRows() throws Exception {
+        // Given
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        when(statement.executeBatch()).thenReturn(new int[]{1, 1});
+        final ExecutionEngine engine = engine();
+        final PreparedSql preparedSql = new PreparedSql("update test set val = ?",
+                List.of(new BindValue("a"), new BindValue("b")),
+                null,
+                new UpdateMetaData(false, null, null, 2, 1));
+
+        // When
+        final org.litebridge.db.spi.update.BatchUpdateResult result = engine.executeBatch(preparedSql, provider(connection(statement)));
+
+        // Then
+        assertNotNull(result);
+        assertArrayEquals(new int[]{1, 1}, result.rowsAffected());
+        verify(statement, org.mockito.Mockito.times(2)).addBatch();
+    }
+
+    @Test
+    void executeInsert_batchedInsertsCapability_withGeneratedKeys() throws Exception {
+        // Given
+        final ColumnMetaData key = key("ID");
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        final ResultSet generatedKeys = mock(ResultSet.class);
+        when(statement.executeBatch()).thenReturn(new int[]{1, 1});
+        when(statement.getGeneratedKeys()).thenReturn(generatedKeys);
+        when(generatedKeys.next()).thenReturn(true, true, false);
+        when(generatedKeys.getObject("ID")).thenReturn(101, 102);
+
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+        final PreparedSql preparedSql = new PreparedSql("insert",
+                List.of(new BindValue("v1"), new BindValue("v2")),
+                null,
+                new UpdateMetaData(true, List.of(key), new String[]{"ID"}, 2, 1));
+
+        // When
+        final InsertResult result = engine.executeInsert(preparedSql, provider(connection(statement)));
+
+        // Then
+        assertEquals(2, result.rowsAffected());
+        assertEquals(2, result.generatedKeys().size());
+        assertEquals(102, result.generatedKeys().get(0).get(key));
+        assertEquals(102, result.generatedKeys().get(1).get(key));
+    }
+
+    @Test
+    void executeInsert_batchedInsertsCapability_withoutGeneratedKeys() throws Exception {
+        // Given
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        when(statement.executeBatch()).thenReturn(new int[]{1, 1});
+
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), DatabaseProviderMetaData.InsertCapability.BATCHED_INSERTS);
+        final PreparedSql preparedSql = new PreparedSql("insert",
+                List.of(new BindValue("v1"), new BindValue("v2")),
+                null,
+                new UpdateMetaData(false, null, null, 2, 1));
+
+        // When
+        final InsertResult result = engine.executeInsert(preparedSql, provider(connection(statement)));
+
+        // Then
+        assertEquals(2, result.rowsAffected());
+        assertEquals(0, result.generatedKeys().size());
+        verify(statement, never()).getGeneratedKeys();
+    }
+
+    @Test
+    void executeQuery_withSchemaAndWithoutTable() throws Exception {
+        // Given
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        final ResultSet resultSet = mock(ResultSet.class);
+        final ResultSetMetaData metadata = mock(ResultSetMetaData.class);
+        when(statement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.getMetaData()).thenReturn(metadata);
+        when(resultSet.next()).thenReturn(true, false);
+        when(metadata.getColumnCount()).thenReturn(2);
+
+        // Column 1 with schema and table
+        when(metadata.getColumnLabel(1)).thenReturn("id");
+        when(metadata.getSchemaName(1)).thenReturn("public");
+        when(metadata.getTableName(1)).thenReturn("users");
+        when(metadata.getColumnName(1)).thenReturn("id");
+        when(metadata.getColumnType(1)).thenReturn(Types.INTEGER);
+        when(resultSet.getObject(1)).thenReturn(1);
+
+        // Column 2 without table
+        when(metadata.getColumnLabel(2)).thenReturn("calc");
+        when(metadata.getSchemaName(2)).thenReturn("");
+        when(metadata.getTableName(2)).thenReturn("");
+        when(metadata.getColumnName(2)).thenReturn("calc");
+        when(metadata.getColumnType(2)).thenReturn(Types.INTEGER);
+        when(resultSet.getObject(2)).thenReturn(10);
+
+        final TypeConverter typeConverter = mock(TypeConverter.class);
+        when(typeConverter.convert(1, Types.INTEGER)).thenReturn(1);
+        when(typeConverter.convert(10, Types.INTEGER)).thenReturn(10);
+
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(typeConverter, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+
+        // When
+        final List<Row> rows = engine.executeQuery(new PreparedSql("select public.users.id, 10 as calc from public.users"), provider(connection(statement)));
+
+        // Then
+        assertEquals(1, rows.size());
+        assertEquals(2, rows.getFirst().size());
+        assertEquals("users", rows.getFirst().column(0).column().table().name());
+        assertEquals("public", rows.getFirst().column(0).column().table().schema());
+        assertEquals("calc", rows.getFirst().column(1).column().name());
+    }
+
+    @Test
+    void executeUpdate_withNullBindValues() throws Exception {
+        // Given
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        when(statement.executeUpdate()).thenReturn(1);
+        final ExecutionEngine engine = engine();
+
+        final List<BindValue> binds = Arrays.asList(null, new BindValue(null, Types.VARCHAR));
+        final PreparedSql preparedSql = new PreparedSql("update test set a = ?, b = ?", binds, null, null);
+
+        // When
+        final UpdateResult result = engine.executeUpdate(preparedSql, provider(connection(statement)));
+
+        // Then
+        assertEquals(1, result.rowsAffected());
+        verify(statement).setString(1, null);
+        verify(statement).setNull(2, Types.VARCHAR);
+    }
+
+    @Test
+    void executeUpdate_withBlobByteArray() throws Exception {
+        // Given
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        when(statement.executeUpdate()).thenReturn(1);
+        final ExecutionEngine engine = engine();
+
+        final byte[] blobBytes = new byte[]{1, 2, 3};
+        final PreparedSql preparedSql = new PreparedSql("update test set b = ?",
+                List.of(new BindValue(blobBytes, Types.BLOB)), null, null);
+
+        // When
+        final UpdateResult result = engine.executeUpdate(preparedSql, provider(connection(statement)));
+
+        // Then
+        assertEquals(1, result.rowsAffected());
+        verify(statement).setBinaryStream(eq(1), any(java.io.InputStream.class));
+    }
+
+    @Test
+    void executeQuery_withTypeConversionMetaDataAndTableAliases() throws Exception {
+        // Given
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        final ResultSet resultSet = mock(ResultSet.class);
+        final ResultSetMetaData metadata = mock(ResultSetMetaData.class);
+        when(statement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.getMetaData()).thenReturn(metadata);
+        when(resultSet.next()).thenReturn(true, false);
+        when(metadata.getColumnCount()).thenReturn(1);
+
+        when(metadata.getColumnLabel(1)).thenReturn("user_id");
+        when(metadata.getSchemaName(1)).thenReturn("public");
+        when(metadata.getTableName(1)).thenReturn("users");
+        when(metadata.getColumnName(1)).thenReturn("id");
+        when(metadata.getColumnType(1)).thenReturn(Types.INTEGER);
+        when(resultSet.getObject(1)).thenReturn(42);
+
+        final TypeConverter typeConverter = mock(TypeConverter.class);
+        when(typeConverter.convert(42, Integer.class)).thenReturn(42);
+
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(typeConverter, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+
+        final ColumnMetaData colMeta = new ColumnMetaData(new Table(null, "public", "users"), "id", false, Types.INTEGER, 10, 0, false, null, null);
+        final TypeConversionMetaData typeConversionMetaData =
+                new TypeConversionMetaData(
+                        Map.of("user_id", colMeta),
+                        Map.of("user_id", "u"),
+                        new Class<?>[]{Integer.class});
+
+        final PreparedSql preparedSql = new PreparedSql("select u.id as user_id from public.users u",
+                List.of(), typeConversionMetaData, null);
+
+        // When
+        final List<Row> rows = engine.executeQuery(preparedSql, provider(connection(statement)));
+
+        // Then
+        assertEquals(1, rows.size());
+        assertEquals(42, rows.getFirst().column(0).value());
+        assertEquals("u", rows.getFirst().column(0).tableAlias());
+    }
+
+    @Test
+    void typeConverter_returnsConfiguredConverter() {
+        final TypeConverter tc = mock(TypeConverter.class);
+        final ExecutionEngine engine = new ExecutionEngineReturnedKeysAuto(tc, DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
+        assertEquals(tc, engine.typeConverter());
+    }
+
     private static ExecutionEngine engine() {
         return new ExecutionEngineReturnedKeysAuto(mock(TypeConverter.class), DatabaseProviderMetaData.InsertCapability.NATIVE_MULTIROW);
     }

@@ -19,6 +19,7 @@ import org.litebridge.db.spi.update.UpdateColumn;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createLiteralExpression;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestColumn;
 import static org.litebridge.db.spi.impl.sql.TestUtil.createTestTable;
@@ -55,5 +56,6 @@ class DefaultSqlGeneratorTest {
         assertEquals("UPDATE TEST_SCHEMA.TEST_TABLE SET TEST_COLUMN = ? WHERE TEST_TABLE.TEST_COLUMN = ?", sqlGenerator.generateSql(update, connectionProvider));
         assertEquals("DELETE FROM TEST_SCHEMA.TEST_TABLE WHERE TEST_TABLE.TEST_COLUMN = ?", sqlGenerator.generateSql(delete, connectionProvider));
         assertEquals("MERGE INTO TEST_SCHEMA.TEST_TABLE USING SOURCE_TABLE ON (TEST_TABLE.TEST_COLUMN = ?) WHEN MATCHED AND TEST_TABLE.TEST_COLUMN = ? THEN UPDATE SET TEST_COLUMN = ?", sqlGenerator.generateSql(merge, connectionProvider));
+        assertNotNull(sqlGenerator.selectSqlGenerator());
     }
 }

@@ -78,4 +78,17 @@ class ContextBuilderTest {
         assertNull(result.sqlFunctionRegistry()); // null because of mock
         assertEquals(sqlGenerator, result.sqlGenerator());
     }
+
+    @Test
+    void ensureMethods_initializeDefaults() {
+        // Given
+        final ContextBuilder builder = ContextBuilder.newContext();
+
+        // When / Then
+        assertNotNull(builder.ensureDatabaseProviderMetaData());
+        assertNotNull(builder.ensureLabelGenerator());
+        assertNotNull(builder.ensureMathOperationGenerator());
+        assertNotNull(builder.ensureMetaDataEngine());
+        assertNotNull(builder.ensureSqlGenerator());
+    }
 }
