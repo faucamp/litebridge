@@ -354,7 +354,7 @@ public class LitebridgeCore implements SelectApi {
      * @param dtos a collection of objects to save in the database; must not be null.
      * @throws IllegalStateException if an error occurs during the save operation.
      */
-    public void saveAll(final Collection<?> dtos) {
+    public void saveAll(final Iterable<?> dtos) {
         try {
             persistenceFacade.save(dtos);
         } catch (SQLException ex) {

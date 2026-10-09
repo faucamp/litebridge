@@ -2,7 +2,7 @@ package org.litebridge.example.spring.service;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.litebridge.example.common.entity.Person;
-import org.litebridge.example.spring.db.DatabaseFacade;
+import org.litebridge.example.spring.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,10 +14,10 @@ import java.util.Random;
 @Service
 public class ExampleService {
 
-    private final DatabaseFacade databaseFacade;
+    private final PersonRepository personRepository;
 
-    public ExampleService(final DatabaseFacade databaseFacade) {
-        this.databaseFacade = databaseFacade;
+    public ExampleService(final PersonRepository personRepository) {
+        this.personRepository = personRepository;
     }
 
     public List<Person> createAndStoreRandomPersons(final int number) {
@@ -31,20 +31,19 @@ public class ExampleService {
             persons.add(person);
         }
 
-        return databaseFacade.createAll(persons);
+        return personRepository.saveAll(persons);
     }
 
     public Person createPerson(final Person person) {
-        databaseFacade.create(person);
-        return person;
+        return personRepository.save(person);
     }
 
     public List<Person> getAllPersons() {
-        return databaseFacade.getAll();
+        return personRepository.findAll();
     }
 
     public Optional<Person> getPersonById(final Long personId) {
-        return databaseFacade.findPersonWithId(personId);
+        return personRepository.findById(personId);
     }
 
     public Person updatePerson(final Person person) {
@@ -52,7 +51,7 @@ public class ExampleService {
             throw new IllegalArgumentException("Person ID cannot be null");
         }
 
-        return databaseFacade.update(person);
+        return personRepository.save(person);
     }
 
     @Transactional
@@ -61,8 +60,8 @@ public class ExampleService {
             throw new IllegalArgumentException("Age must be between 0 and 120");
         }
 
-        final Person person = databaseFacade.findPersonWithId(personId).orElseThrow();
+        final Person person = personRepository.findById(personId).orElseThrow();
         person.setAge(age);
-        return databaseFacade.update(person);
+        return personRepository.save(person);
     }
 }

@@ -2,8 +2,10 @@ package org.litebridge.orm.api.delete;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.update.UpdateStepBase;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionWithIdNode;
 import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
@@ -55,5 +57,21 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
 
     QueryNode node() {
         return deleteNode;
+    }
+
+    public DeleteTerminal withId(final Object id) {
+        final WhereNode whereNode = new WhereNode(deleteNode, new ConditionWithIdNode(null, LogicOperator.NOOP, Operator.EQ, id));
+        return new DtoDeleteWhereConditionClauseTerminalImpl<>(whereNode, litebridgeContext);
+    }
+
+    public DeleteTerminal withIds(final Iterable<?> ids) {
+        ConditionWithIdNode conditionWithIdNode = null;
+
+        for (Object id : ids) {
+            conditionWithIdNode = new ConditionWithIdNode(conditionWithIdNode, LogicOperator.NOOP, Operator.EQ, id);
+        }
+
+        final WhereNode whereNode = new WhereNode(deleteNode, conditionWithIdNode);
+        return new DtoDeleteWhereConditionClauseTerminalImpl<>(whereNode, litebridgeContext);
     }
 }

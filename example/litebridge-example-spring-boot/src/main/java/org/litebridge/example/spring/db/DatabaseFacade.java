@@ -3,6 +3,7 @@ package org.litebridge.example.spring.db;
 import jakarta.annotation.PostConstruct;
 import org.litebridge.example.common.entity.Person;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.orm.LitebridgeCore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -15,9 +16,9 @@ import java.util.Optional;
 public class DatabaseFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseFacade.class);
-    private final Litebridge litebridge;
+    private final LitebridgeCore litebridge;
 
-    public DatabaseFacade(final Litebridge litebridge) {
+    public DatabaseFacade(final LitebridgeCore litebridge) {
         this.litebridge = litebridge;
     }
 

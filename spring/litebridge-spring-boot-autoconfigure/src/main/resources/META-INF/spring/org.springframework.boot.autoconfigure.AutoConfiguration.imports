@@ -1,1 +1,2 @@
 org.litebridge.spring.boot.autoconfigure.LitebridgeAutoConfiguration
+org.litebridge.spring.boot.autoconfigure.LitebridgeRepositoriesAutoConfiguration
