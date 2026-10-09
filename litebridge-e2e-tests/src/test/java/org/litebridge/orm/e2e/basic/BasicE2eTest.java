@@ -3,6 +3,8 @@ package org.litebridge.orm.e2e.basic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.RowColumn;
+import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
@@ -19,7 +21,9 @@ import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.persistence.DtoEntityMapping;
+import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.EntityDtoMapper;
+import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.tx.Transaction;
 
 import java.math.BigInteger;
@@ -1281,13 +1285,6 @@ public class BasicE2eTest extends AbstractE2eTest {
     void merge_upsertIfNotTracked(final DbEnvDtoTableMapper tableMapper) throws Exception {
         assumeTrue(litebridge instanceof Litebridge);
         final Litebridge litebridge = (Litebridge) this.litebridge;
-        final String personTableName = tableMapper.qualifyName("PERSON");
-        final String personId = tableMapper.transformColumnName("PERSON_ID");
-        final String firstName = tableMapper.transformColumnName("FIRST_NAME");
-        final String surname = tableMapper.transformColumnName("SURNAME");
-        final String age = tableMapper.transformColumnName("AGE");
-        final String eyeColour = tableMapper.transformColumnName("EYE_COLOUR");
-
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
 
@@ -1356,6 +1353,30 @@ public class BasicE2eTest extends AbstractE2eTest {
                     .findFirst().orElseThrow();
             assertEquals("Account 2 (auto-generated ID)", resultAccount2.getName());
         }
+    }
+
+    @TestTemplate
+    @DisplayName("DTO mapper test")
+    void dtoMapper(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Register DTO-table mappings
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+        final OrmTable personOrmTable = LitebridgeInspector.getTableRegistry(litebridge).getOrmTable(Person.class);
+        final List<RowColumn> rowColumns = List.of(
+                new RowColumn("ppi", 1, personOrmTable.columnMetaDataForField("id").column(), "p"),
+                new RowColumn("pfn", "Alice", personOrmTable.columnMetaDataForField("name").column(), "p"),
+                new RowColumn("ps", "Smith", personOrmTable.columnMetaDataForField("surname").column(), "p"),
+                new RowColumn("pa", 24, personOrmTable.columnMetaDataForField("age").column(), "p"),
+                new RowColumn("pec", null, personOrmTable.columnMetaDataForField("eyeColour").column(), "p"));
+        final Row row = new Row(rowColumns);
+
+        // Map the result to a Person DTO
+        final Person person = litebridge.toDto(row, Person.class);
+
+        assertEquals(1, person.getId());
+        assertEquals("Alice", person.getName());
+        assertEquals("Smith", person.getSurname());
+        assertEquals(24, person.getAge());
+        assertNull(person.getEyeColour());
     }
 
     private void registerAddressTableMapping(final DbEnvDtoTableMapper tableMapper) {

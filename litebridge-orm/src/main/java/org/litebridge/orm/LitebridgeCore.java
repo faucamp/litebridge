@@ -634,6 +634,15 @@ public class LitebridgeCore implements SelectApi {
     }
 
     /**
+     * Provides access to the ORM table registry.
+     *
+     * @return The {@link TableRegistry} instance associated with this Litebridge instances
+     */
+    TableRegistry tableRegistry() {
+        return tableRegistry;
+    }
+
+    /**
      * Creates a new DTO-mode {@link LitebridgeContext}.
      *
      * @return a new DTO-mode Litebridge context
