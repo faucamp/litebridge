@@ -37,7 +37,7 @@ The autoconfiguration can be customised using the following properties in `appli
 | `litebridge.database-provider.scan-base-package` | Base package(s) to scan for `DatabaseProvider` implementations if `class` is not set.                                                                                | `org.litebridge.db` |
 | `litebridge.scan-base-package`               | One or more base packages to scan for Litebridge entities (annotated with `@Table`) and `TypeSafeDtoTableMapping` implementations.                                       | (None)              |
 | `litebridge.related-dto-strategy`            | How related DTOs should be handled when not included as a JOIN in a query. See [Related DTO Strategy](../persistence/configuration.md#related-dto-strategy) for details. | `NULL_IF_NO_JOIN`   |
-| `spring.data.litebridge.repositories.enabled`| Controls whether Litebridge Spring Data repositories are automatically registered.                                                                                       | `true`              |
+| `litebridge.repositories.enabled`| Controls whether Litebridge Spring Data repositories are automatically registered.                                                                                       | `true`              |
 
 ### Example
 
@@ -136,5 +136,5 @@ Explicit `@EnableLitebridgeRepositories` annotations take precedence over reposi
 To completely disable repository auto-configuration:
 
 ```properties
-spring.data.litebridge.repositories.enabled=false
+litebridge.repositories.enabled=false
 ```

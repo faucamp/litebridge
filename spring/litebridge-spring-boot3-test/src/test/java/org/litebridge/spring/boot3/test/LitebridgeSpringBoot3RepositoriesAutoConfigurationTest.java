@@ -35,7 +35,7 @@ class LitebridgeSpringBoot3RepositoriesAutoConfigurationTest {
     void autoConfiguration_disabledViaProperty() {
         // Given / When / Then
         this.contextRunner
-                .withPropertyValues("spring.data.litebridge.repositories.enabled=false")
+                .withPropertyValues("litebridge.repositories.enabled=false")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(SpringBoot3PersonRepository.class);

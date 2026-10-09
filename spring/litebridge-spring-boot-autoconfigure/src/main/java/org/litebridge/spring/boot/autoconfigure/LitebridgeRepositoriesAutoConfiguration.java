@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnBean(LitebridgeCore.class)
 @ConditionalOnClass(LitebridgeRepository.class)
 @ConditionalOnMissingBean({LitebridgeRepositoryFactoryBean.class, LitebridgeRepositoryConfigurationExtension.class})
-@ConditionalOnProperty(prefix = "spring.data.litebridge.repositories", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "litebridge.repositories", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Import(LitebridgeRepositoriesAutoConfigureRegistrar.class)
 public class LitebridgeRepositoriesAutoConfiguration {
 
