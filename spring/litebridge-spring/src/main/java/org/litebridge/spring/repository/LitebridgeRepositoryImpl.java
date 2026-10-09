@@ -1,9 +1,17 @@
 package org.litebridge.spring.repository;
 
 import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.api.select.OrderByClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
+import org.litebridge.orm.api.select.dto.DtoOrderByClauseChain;
 import org.litebridge.orm.expression.Fn;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -84,5 +92,55 @@ public class LitebridgeRepositoryImpl<T, ID> implements LitebridgeRepository<T, 
     @Override
     public void deleteAll() {
         litebridge.delete(entityClass);
+    }
+
+    @Override
+    public List<T> findAll(final Sort sort) {
+        final DtoFromClauseTerminal<T> query = litebridge.select(entityClass);
+        final DtoOrderByClauseChain<T> orderByClauseChain = addOrderByClauseFromSort(sort, query);
+        return orderByClauseChain.list();
+    }
+
+    @Override
+    public Page<T> findAll(final Pageable pageable) {
+        final DtoFromClauseTerminal<T> query = litebridge.select(entityClass);
+        OrderByClauseTerminal<T> orderByClauseTerminal = query;
+
+        if (pageable.getSort().isSorted()) {
+            orderByClauseTerminal = addOrderByClauseFromSort(pageable.getSort(), query);
+        }
+
+        final List<T> records = orderByClauseTerminal
+                .limit(pageable.getPageSize())
+                .offset((int) pageable.getOffset())
+                .list();
+
+        return new PageImpl<>(records, pageable, count());
+    }
+
+    private static <T> DtoOrderByClauseChain<T> addOrderByClauseFromSort(final Sort sort,
+                                                                         final DtoFromClauseTerminal<T> query) {
+        DtoOrderByClauseChain<T> orderByClauseChain = null;
+
+        for (final Sort.Order order : sort) {
+            final String property = order.getProperty();
+            final Sort.Direction direction = order.getDirection();
+
+            if (orderByClauseChain == null) {
+                if (direction.isAscending()) {
+                    orderByClauseChain = query.orderBy(property).asc();
+                } else {
+                    orderByClauseChain = query.orderBy(property).desc();
+                }
+            } else {
+                if (direction.isAscending()) {
+                    orderByClauseChain = orderByClauseChain.then(property).asc();
+                } else {
+                    orderByClauseChain = orderByClauseChain.then(property).desc();
+                }
+            }
+        }
+
+        return Objects.requireNonNull(orderByClauseChain);
     }
 }
