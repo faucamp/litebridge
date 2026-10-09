@@ -4,7 +4,6 @@ import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.example.common.mapping.CommonDtoRegistration;
 import org.litebridge.orm.Litebridge;
-import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.spring.LitebridgeEntityScanner;
 import org.litebridge.spring.LitebridgeTransactionManager;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
@@ -23,9 +22,10 @@ public class LitebridgeConfig {
 
     @Bean
     @DependsOnDatabaseInitialization
-    public SelectApi litebridge(final LitebridgeTransactionManager transactionManager) {
-        final DatabaseProvider databaseProvider = new H2DatabaseProvider();
-        final Litebridge litebridge = new Litebridge(databaseProvider, transactionManager);
+    public Litebridge litebridge(final LitebridgeTransactionManager transactionManager) {
+        final Litebridge litebridge = Litebridge.withDatabase(new H2DatabaseProvider())
+                .withTransactionManager(transactionManager)
+                .build();
 
         // Register DTO-table mappings
         try {

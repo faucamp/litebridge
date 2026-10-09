@@ -131,6 +131,7 @@ public class DtoMapper {
     private MappingPlan compileMappingPlan(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass, final Row firstRow) {
         final TableMetaData dtoClassTableMetaData;
         final OrmTable rootOrmTable;
+        final Table dtoClassTable;
 
         if (contextDtoClass != null) {
             rootOrmTable = tableRegistry.getOrmTableInContextOrThrow(dtoClass, contextDtoClass);
@@ -139,6 +140,7 @@ public class DtoMapper {
         }
 
         dtoClassTableMetaData = rootOrmTable.getMetaData();
+        dtoClassTable = dtoClassTableMetaData.table();
 
         final Map<String, MappingData> mappingDataMap = new LinkedHashMap<>();
         MappingData rootMappingData = null;
@@ -159,7 +161,15 @@ public class DtoMapper {
             }
 
             final Table table = column.table();
-            final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, table, contextDtoClass, rowColumn);
+            final OrmTable mappingOrmTable;
+
+            if (table.equals(dtoClassTable)) {
+                mappingOrmTable = rootOrmTable;
+            } else {
+                mappingOrmTable = tableRegistry.getOrmTableOrThrow(table);
+            }
+
+            final MappingData mappingData = createMappingDataIfAbsent(mappingDataMap, mappingOrmTable, contextDtoClass, rowColumn);
 
             if (rootMappingData == null && mappingData.ormTable().equals(rootOrmTable)) {
                 rootMappingData = mappingData;
@@ -367,8 +377,10 @@ public class DtoMapper {
         fieldMapping.columnLabels().addAll(Arrays.asList(sortedColumnLabels));
     }
 
-    private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap, final Table table, final @Nullable Class<?> contextDtoClass, final RowColumn rowColumn) {
-        final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
+    private MappingData createMappingDataIfAbsent(final Map<String, MappingData> mappingDataMap,
+                                                  final OrmTable ormTable,
+                                                  final @Nullable Class<?> contextDtoClass,
+                                                  final RowColumn rowColumn) {
         final Table canonicalTable = ormTable.getMetaData().table();
         final String key = rowColumn.tableAlias() != null ? rowColumn.tableAlias() : canonicalTable.qualifiedName();
         return mappingDataMap.computeIfAbsent(key, alias -> {

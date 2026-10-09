@@ -129,6 +129,17 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
         return createWithIdClause(id).oneOrThrow(exceptionSupplier);
     }
 
+    public DtoWhereConditionClauseTerminal<DTO> withIds(final Iterable<?> ids) {
+        ConditionWithIdNode conditionWithIdNode = null;
+
+        for (Object id : ids) {
+            conditionWithIdNode = new ConditionWithIdNode(conditionWithIdNode, LogicOperator.NOOP, Operator.EQ, id);
+        }
+
+        final WhereNode whereNode = new WhereNode(this.node, conditionWithIdNode);
+        return new DtoWhereConditionClauseTerminal<>(whereNode, selectEngineTerminal, litebridgeContext);
+    }
+
     @Override
     public DtoJoinClause<DTO> join(final Class<?> dtoClass) {
         return new DtoJoinClause<>(litebridgeContext, conditionNode -> {

@@ -1,6 +1,7 @@
 package org.litebridge.orm;
 
 import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.persistence.TableRegistry;
 
 /**
  * Inspector for {@link LitebridgeCore} instances, providing access to internal components.
@@ -18,5 +19,9 @@ public final class LitebridgeInspector {
      */
     public static QueryPlanCache getQueryPlanCache(final LitebridgeCore litebridge) {
         return litebridge.queryPlanCache();
+    }
+
+    public static TableRegistry getTableRegistry(final LitebridgeCore litebridge) {
+        return litebridge.tableRegistry();
     }
 }
