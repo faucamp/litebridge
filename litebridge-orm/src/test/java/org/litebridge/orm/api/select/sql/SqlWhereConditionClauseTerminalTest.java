@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -108,7 +108,7 @@ class SqlWhereConditionClauseTerminalTest {
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
         final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
+        final SqlQueryConditionBuilder builder = q -> q.where("age").gt(21);
 
         // When
         final SqlWhereConditionClauseTerminal result = terminal.and(builder);
@@ -129,7 +129,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
+        final SqlQueryConditionBuilder builder = q -> q.where("age").gt(21);
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> terminal.and(builder));
@@ -181,7 +181,7 @@ class SqlWhereConditionClauseTerminalTest {
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
         final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
+        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
 
         // When
         final SqlWhereConditionClauseTerminal result = terminal.or(builder);
@@ -202,7 +202,7 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
+        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> terminal.or(builder));

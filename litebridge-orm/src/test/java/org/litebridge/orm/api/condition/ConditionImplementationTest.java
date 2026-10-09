@@ -32,18 +32,18 @@ class ConditionImplementationTest {
         when(ormTable.columnMetaDataForField("otherField")).thenReturn(columnMetaData);
 
         final DtoConditionClauseStart<Object> start = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClause<Object> clause = start.where("field");
+        final CbDtoConditionClause<Object> clause = start.where("field");
 
         assertNotNull(clause);
         assertInstanceOf(CbDtoConditionClause.class, clause);
 
-        final AbstractCbConditionClauseTerminal<Object> terminal = clause.eq("val");
+        final CbDtoConditionClauseTerminal<Object> terminal = clause.eq("val");
         assertNotNull(terminal);
         assertInstanceOf(ConditionNode.class, terminal.node());
         assertEquals(Operator.EQ, ((ConditionNode) terminal.node()).operator());
         assertEquals("val", ((ConditionNode) terminal.node()).rhs());
 
-        final AbstractCbConditionClause<Object> nextClause = terminal.and("otherField");
+        final CbDtoConditionClause<Object> nextClause = terminal.and("otherField");
         assertNotNull(nextClause);
         assertEquals(LogicOperator.AND, ((ConditionNode) nextClause.eq("x").node()).logicOperator());
     }
@@ -55,16 +55,16 @@ class ConditionImplementationTest {
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
 
         final SqlConditionClauseStart start = new SqlConditionClauseStart(table, null, litebridgeContext);
-        final AbstractCbConditionClause<Row> clause = start.where("COL");
+        final CbSqlConditionClause clause = start.where("COL");
 
         assertNotNull(clause);
         assertInstanceOf(CbSqlConditionClause.class, clause);
 
-        final AbstractCbConditionClauseTerminal<Row> terminal = clause.eq("val");
+        final CbSqlConditionClauseTerminal terminal = clause.eq("val");
         assertNotNull(terminal);
         assertInstanceOf(ConditionNode.class, terminal.node());
 
-        final AbstractCbConditionClause<Row> nextClause = terminal.or("OTHER_COL");
+        final CbSqlConditionClause nextClause = terminal.or("OTHER_COL");
         assertNotNull(nextClause);
         assertEquals(LogicOperator.OR, ((ConditionNode) nextClause.eq("x").node()).logicOperator());
     }
@@ -79,10 +79,10 @@ class ConditionImplementationTest {
         when(ormTable.columnMetaDataForField("field")).thenReturn(columnMetaData);
 
         final DtoConditionClauseStart<Object> start = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClause<Object> clause = start.where("field");
-        final AbstractCbConditionClauseTerminal<Object> terminal = clause.eq("val");
+        final CbDtoConditionClause<Object> clause = start.where("field");
+        final CbDtoConditionClauseTerminal<Object> terminal = clause.eq("val");
 
-        final AbstractCbConditionClauseTerminal<Object> nestedTerminal = terminal.and(q -> q.where("field").eq("innerVal"));
+        final CbDtoConditionClauseTerminal<Object> nestedTerminal = terminal.and(q -> q.where("field").eq("innerVal"));
 
         assertInstanceOf(ConditionGroupNode.class, nestedTerminal.node());
         final ConditionGroupNode groupNode = (ConditionGroupNode) nestedTerminal.node();

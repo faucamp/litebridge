@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -137,7 +137,7 @@ class SqlHavingConditionClauseTerminalTest {
     void and_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
         final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
+        final SqlQueryConditionBuilder builder = q -> q.where("age").gt(21);
 
         // When
         final SqlHavingConditionClauseTerminal nextTerminal = terminal.and(builder);
@@ -163,7 +163,7 @@ class SqlHavingConditionClauseTerminalTest {
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
         final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("name").isNotNull();
+        final SqlQueryConditionBuilder builder = q -> q.where("name").isNotNull();
 
         // When
         final SqlHavingConditionClauseTerminal nextTerminal = terminal.and(builder);
@@ -266,7 +266,7 @@ class SqlHavingConditionClauseTerminalTest {
     void or_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
         final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
+        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
 
         // When
         final SqlHavingConditionClauseTerminal nextTerminal = terminal.or(builder);
@@ -285,7 +285,7 @@ class SqlHavingConditionClauseTerminalTest {
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
         final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
+        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
 
         // When
         final SqlHavingConditionClauseTerminal nextTerminal = terminal.or(builder);

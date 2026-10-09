@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -110,7 +110,7 @@ class DtoHavingConditionClauseTerminalTest {
     void and_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
         final DtoHavingConditionClauseTerminal<SelectTestDto> terminal = new DtoHavingConditionClauseTerminal<>(groupByNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gt(21);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gt(21);
 
         // When
         final DtoHavingConditionClauseTerminal<SelectTestDto> nextTerminal = terminal.and(builder);
@@ -136,7 +136,7 @@ class DtoHavingConditionClauseTerminalTest {
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
         final DtoHavingConditionClauseTerminal<SelectTestDto> terminal = new DtoHavingConditionClauseTerminal<>(existingHavingNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("name").isNotNull();
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("name").isNotNull();
 
         // When
         final DtoHavingConditionClauseTerminal<SelectTestDto> nextTerminal = terminal.and(builder);
@@ -194,7 +194,7 @@ class DtoHavingConditionClauseTerminalTest {
     void or_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
         final DtoHavingConditionClauseTerminal<SelectTestDto> terminal = new DtoHavingConditionClauseTerminal<>(groupByNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
 
         // When
         final DtoHavingConditionClauseTerminal<SelectTestDto> nextTerminal = terminal.or(builder);
@@ -213,7 +213,7 @@ class DtoHavingConditionClauseTerminalTest {
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
         final DtoHavingConditionClauseTerminal<SelectTestDto> terminal = new DtoHavingConditionClauseTerminal<>(existingHavingNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
 
         // When
         final DtoHavingConditionClauseTerminal<SelectTestDto> nextTerminal = terminal.or(builder);

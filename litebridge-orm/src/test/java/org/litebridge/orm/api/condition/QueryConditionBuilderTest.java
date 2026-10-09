@@ -9,14 +9,15 @@ import static org.mockito.Mockito.mock;
 class QueryConditionBuilderTest {
 
     @Test
+    @SuppressWarnings("unchecked")
     void functionalInterfaceUsage() {
         // Given
-        final AbstractConditionClauseStart<String> start = mock(DtoConditionClauseStart.class);
-        final AbstractCbConditionClauseTerminal<String> terminal = mock(CbDtoConditionClauseTerminal.class);
-        final QueryConditionBuilder<String> builder = s -> terminal;
+        final DtoConditionClauseStart<String> start = mock(DtoConditionClauseStart.class);
+        final CbDtoConditionClauseTerminal<String> terminal = mock(CbDtoConditionClauseTerminal.class);
+        final DtoQueryConditionBuilder<String> builder = s -> terminal;
 
         // When
-        final AbstractCbConditionClauseTerminal<String> result = builder.apply(start);
+        final CbDtoConditionClauseTerminal<String> result = builder.apply(start);
 
         // Then
         assertNotNull(result);

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionJoinUsingNode;
@@ -94,7 +94,7 @@ class DtoJoinClauseTest {
     @Test
     void on_withQueryConditionBuilder() {
         // Given
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").eq(20);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").eq(20);
 
         // When
         final DtoJoinConditionClauseTerminal<SelectTestDto> terminal = joinClause.on(builder);

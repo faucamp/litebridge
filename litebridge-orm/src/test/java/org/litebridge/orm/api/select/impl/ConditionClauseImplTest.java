@@ -5,12 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.db.spi.query.Select;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
+import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.sql.SqlWhereConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -20,14 +19,13 @@ import org.litebridge.orm.expression.select.SelectColumnSpec;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 class ConditionClauseImplTest {
 
-    private ConditionClauseImpl<Object, TestConditionClause, TestConditionClauseTerminal> clause;
+    private ConditionClauseImpl<Object, TestConditionClause, TestConditionClauseTerminal, TestQueryConditionBuilder> clause;
     private final QueryNode[] capturedNode = new QueryNode[1];
     private SelectNode selectNode;
 
@@ -113,6 +111,22 @@ class ConditionClauseImplTest {
     }
 
     @Test
+    void like() {
+        clause.like("%val%");
+        final ConditionNode node = (ConditionNode) capturedNode[0];
+        assertEquals(Operator.LIKE, node.operator());
+        assertEquals("%val%", node.rhs());
+    }
+
+    @Test
+    void notLike() {
+        clause.notLike("%val%");
+        final ConditionNode node = (ConditionNode) capturedNode[0];
+        assertEquals(Operator.NOT_LIKE, node.operator());
+        assertEquals("%val%", node.rhs());
+    }
+
+    @Test
     void isNull() {
         clause.isNull();
         ConditionNode node = (ConditionNode) capturedNode[0];
@@ -166,7 +180,7 @@ class ConditionClauseImplTest {
     private void assertSubselectCondition(final SubselectConditionInvoker invoker, final Operator expectedOperator) {
         final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(
                 selectNode,
-                null,
+                selectNode,
                 mock(SelectEngineTerminal.class),
                 mock(LitebridgeContext.class));
 
@@ -174,20 +188,27 @@ class ConditionClauseImplTest {
 
         ConditionNode node = (ConditionNode) capturedNode[0];
         assertEquals(expectedOperator, node.operator());
-        Function<SelectEngine, SelectTerminal<?>> rhs = (Function<SelectEngine, SelectTerminal<?>>) node.rhs();
-        final SelectTerminal<?> selectTerminal = rhs.apply(mock(SelectEngine.class));
-        assertNotNull(selectTerminal);
+        assertEquals(selectNode, node.rhs());
     }
 
     @FunctionalInterface
     private interface SubselectConditionInvoker {
-        void apply(Function<SelectEngine, SelectTerminal<?>> subselect);
+        void apply(Function<SelectApi, SelectTerminal<?>> subselect);
     }
 
-    private interface TestConditionClause extends org.litebridge.orm.api.select.ConditionClause<Object, TestConditionClause, TestConditionClauseTerminal> {
+    private interface TestConditionClause extends org.litebridge.orm.api.select.ConditionClause<Object, TestConditionClause, TestConditionClauseTerminal, TestQueryConditionBuilder> {
     }
 
-    private interface TestConditionClauseTerminal extends ConditionClauseTerminal<Object, TestConditionClause, TestConditionClauseTerminal> {
+    private interface TestConditionClauseTerminal extends ConditionClauseTerminal<Object, TestConditionClause, TestConditionClauseTerminal, TestQueryConditionBuilder> {
     }
 
+    private static abstract class TestConditionClauseStart extends org.litebridge.orm.api.condition.AbstractConditionClauseStart<Object, TestConditionClause, TestConditionClauseTerminal, TestQueryConditionBuilder> {
+        protected TestConditionClauseStart(QueryNode node, LogicOperator logicOperator, LitebridgeContext litebridgeContext) {
+            super(node, logicOperator, litebridgeContext);
+        }
+    }
+
+    @FunctionalInterface
+    private interface TestQueryConditionBuilder extends org.litebridge.orm.api.condition.QueryConditionBuilder<Object, TestConditionClauseStart, TestConditionClause, TestConditionClauseTerminal, TestQueryConditionBuilder> {
+    }
 }

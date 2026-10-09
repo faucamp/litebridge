@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -80,7 +80,7 @@ class DtoJoinConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "status", null, Operator.EQ, "ACTIVE");
         joinNode.setCondition(initialCondition);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gte(21);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gte(21);
 
         // When
         final DtoJoinConditionClauseTerminal<SelectTestDto> nextTerminal = terminal.and(builder);
@@ -134,7 +134,7 @@ class DtoJoinConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "status", null, Operator.EQ, "INACTIVE");
         joinNode.setCondition(initialCondition);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").isNull();
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").isNull();
 
         // When
         final DtoJoinConditionClauseTerminal<SelectTestDto> nextTerminal = terminal.or(builder);
