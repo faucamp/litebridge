@@ -2,12 +2,8 @@ package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
-import org.litebridge.orm.api.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.Aliasable;
@@ -21,14 +17,19 @@ import org.litebridge.orm.expression.select.ValuesSpec;
  * @param <MUS> operation mode-specific {@code WHEN MATCHED} update step
  * @param <MIS> operation mode-specific {@code WHEN NOT MATCHED} insert step
  */
-public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends MergeInsertStep>
+public abstract sealed class MergeOnStep<DTO,
+        MCCT extends MergeOnConditionClauseTerminal<DTO, MCCT, MUS, MIS, QCB>,
+        MUS extends MergeUpdateStep,
+        MIS extends MergeInsertStep,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
+
         extends MergeStepBase
-        permits DtoMergeOnStep {
+        permits DtoMergeOnStep, SqlMergeOnStep {
 
     protected final @Nullable String usingAlias;
 
     /**
-     * Creates a new {@code MergeOnStep} instance.
+     * Creates a new {@code MergeOnStep} instance for SQL mode.
      *
      * @param usingTable        the merge using table
      * @param mergeNode         the root merge node
@@ -42,6 +43,13 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
         this.usingAlias = usingAlias;
     }
 
+    /**
+     * Creates a new {@code MergeOnStep} instance.
+     *
+     * @param subselectNode     Subquery to merge on.
+     * @param mergeNode         the root merge node
+     * @param litebridgeContext the Litebridge context
+     */
     public MergeOnStep(final QueryNode subselectNode,
                        final @Nullable String usingAlias,
                        final MergeNode mergeNode,
@@ -66,7 +74,7 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
     }
 
     /**
-     * Creates a new {@code MergeOnStep} instance for DTO mode.
+     * Creates a new {@code MergeOnStep} instance.
      *
      * @param valuesSpec        Values from target specification
      * @param mergeNode         the root merge node
@@ -85,7 +93,7 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
      * @param column the LHS column of the {@code ON} condition
      * @return the next step in the update operation: setting the value of the target column
      */
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> on(final String column) {
+    public MergeConditionClause<DTO, MUS, MCCT, QCB> on(final String column) {
         return onImpl(column, null);
     }
 
@@ -95,7 +103,7 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
      * @param expression expression specifying the target LHS column of the {@code ON} condition
      * @return the next step in the update operation: setting the value of the target column
      */
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> on(final ExpressionSpec expression) {
+    public MergeConditionClause<DTO, MUS, MCCT, QCB> on(final ExpressionSpec expression) {
         return onImpl(null, expression);
     }
 
@@ -105,14 +113,11 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
      * @param query the query condition builder
      * @return the condition clause terminal
      */
-    public MergeOnConditionClauseTerminal<DTO, MUS, MIS> on(final QueryConditionBuilder<DTO> query) {
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        final ConditionGroupNode onConditionNode = new ConditionGroupNode(null, LogicOperator.NOOP, CbConditionClauseTerminalInspector.getNode(terminal));
-        return new MergeOnConditionClauseTerminal<>(usingTable, usingDtoClass, usingQueryNode, usingValues, usingAlias, onConditionNode, mergeNode, litebridgeContext);
-    }
+    public abstract MCCT on(final QCB query);
 
-    private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
+    protected abstract MCCT createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final String alias);
+
+    private MergeConditionClause<DTO, MUS, MCCT, QCB> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         final String alias;
 
         if (expression instanceof Aliasable aliasable && aliasable.getAlias() != null) {
@@ -126,6 +131,6 @@ public sealed class MergeOnStep<DTO, MUS extends MergeUpdateStep, MIS extends Me
                 column,
                 expression,
                 null,
-                conditionNode -> new MergeOnConditionClauseTerminal<>(usingTable, usingDtoClass, usingQueryNode, usingValues, alias, conditionNode, mergeNode, litebridgeContext));
+                conditionNode -> createMergeOnConditionClauseTerminal(conditionNode, alias));
     }
 }

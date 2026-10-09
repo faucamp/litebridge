@@ -12,7 +12,7 @@ public final class CbConditionClauseTerminalInspector {
      *
      * @return the query node
      */
-    public static QueryNode getNode(final AbstractCbConditionClauseTerminal<?> terminal) {
+    public static QueryNode getNode(final AbstractCbConditionClauseTerminal<?, ?, ?, ?> terminal) {
         return terminal.node();
     }
 }

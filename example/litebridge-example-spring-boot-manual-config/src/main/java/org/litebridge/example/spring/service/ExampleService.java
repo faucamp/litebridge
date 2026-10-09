@@ -47,6 +47,18 @@ public class ExampleService {
         return databaseFacade.findPersonWithId(personId);
     }
 
+    public List<Person> getPersonsByNameAndSurname(final String name, final String surname) {
+        return databaseFacade.getPersonsByNameAndSurname(name, surname);
+    }
+
+    public List<Person> getPersonsByNameOrSurname(final String name) {
+        return databaseFacade.getPersonsByNameOrSurname(name);
+    }
+
+    public int countPersonsNameStartingWith(final String namePrefix) {
+        return databaseFacade.countPersonsNameStartingWith(namePrefix);
+    }
+
     public Person updatePerson(final Person person) {
         if (person.getId() == null) {
             throw new IllegalArgumentException("Person ID cannot be null");

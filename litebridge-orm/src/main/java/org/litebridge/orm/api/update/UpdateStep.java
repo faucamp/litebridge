@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.update;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
@@ -11,12 +12,13 @@ import org.litebridge.orm.expression.select.ExistsExpressionSpec;
  * @param <WCCT> the WHERE condition clause terminal type
  */
 public sealed interface UpdateStep<DTO,
-        SELF extends UpdateStep<DTO, SELF, USS, WCC, WCCT>,
-        USS extends UpdateSetStep<DTO, SELF, USS, WCC, WCCT>,
-        WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT>,
-        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>>
+        SELF extends UpdateStep<DTO, SELF, USS, WCC, WCCT, QCB>,
+        USS extends UpdateSetStep<DTO, SELF, USS, WCC, WCCT, QCB>,
+        WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT, QCB>,
+        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
-        extends UpdateStart<DTO, SELF, USS, WCC, WCCT>, UpdateQuery
+        extends UpdateStart<DTO, SELF, USS, WCC, WCCT, QCB>, UpdateQuery
         permits DtoUpdateStep, SqlUpdateStep {
 
     /**
@@ -25,7 +27,7 @@ public sealed interface UpdateStep<DTO,
      * @param column the column or field name
      * @return step to specify the condition operator and value
      */
-    UpdateWhereConditionClause<DTO, WCC, WCCT> where(final String column);
+    WCC where(final String column);
 
     /**
      * Starts a WHERE clause with an expression.
@@ -33,7 +35,7 @@ public sealed interface UpdateStep<DTO,
      * @param expression the expression specification
      * @return step to specify the condition operator and value
      */
-    UpdateWhereConditionClause<DTO, WCC, WCCT> where(final ExpressionSpec expression);
+    WCC where(final ExpressionSpec expression);
 
     /**
      * Starts a WHERE clause with an EXISTS expression.

@@ -1,8 +1,11 @@
 package org.litebridge.orm.api.condition;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.select.ConditionClause;
+import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -10,12 +13,16 @@ import org.litebridge.orm.expression.ExpressionSpec;
  *
  * @param <DTO> The type of the DTO being queried.
  */
-public abstract class AbstractConditionClauseStart<DTO> {
+public abstract class AbstractConditionClauseStart<DTO,
+        CC extends ConditionClause<DTO, CC, CCT, QCB>,
+        CCT extends ConditionClauseTerminal<DTO, CC, CCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, CC, CCT, QCB>> {
 
     /**
      * The current query node.
      */
     protected final @Nullable QueryNode node;
+    protected final LogicOperator logicOperator;
     /**
      * The Litebridge context.
      */
@@ -27,8 +34,9 @@ public abstract class AbstractConditionClauseStart<DTO> {
      * @param node              the current query node
      * @param litebridgeContext the Litebridge context
      */
-    public AbstractConditionClauseStart(@Nullable final QueryNode node, final LitebridgeContext litebridgeContext) {
+    public AbstractConditionClauseStart(@Nullable final QueryNode node, final LogicOperator logicOperator, final LitebridgeContext litebridgeContext) {
         this.node = node;
+        this.logicOperator = logicOperator;
         this.litebridgeContext = litebridgeContext;
     }
 
@@ -38,7 +46,7 @@ public abstract class AbstractConditionClauseStart<DTO> {
      * @param column The column name.
      * @return A new {@link AbstractCbConditionClause} instance.
      */
-    public abstract AbstractCbConditionClause<DTO> where(final String column);
+    public abstract CC where(final String column);
 
     /**
      * Starts a WHERE clause with an expression.
@@ -46,5 +54,5 @@ public abstract class AbstractConditionClauseStart<DTO> {
      * @param expression The expression specification.
      * @return A new {@link AbstractCbConditionClause} instance.
      */
-    public abstract AbstractCbConditionClause<DTO> where(final ExpressionSpec expression);
+    public abstract CC where(final ExpressionSpec expression);
 }

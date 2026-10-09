@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select.impl;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinClause;
 import org.litebridge.orm.api.select.JoinConditionClause;
 import org.litebridge.orm.api.select.JoinConditionClauseTerminal;
@@ -13,10 +14,11 @@ import org.litebridge.orm.engine.LitebridgeContext;
  * @param <JCCT> the join condition clause terminal type
  */
 public abstract class AbstractJoinClause<DTO,
-        JCC extends JoinConditionClause<DTO, JCC, JCCT>,
-        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT>>
+        JCC extends JoinConditionClause<DTO, JCC, JCCT, QCB>,
+        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
-        implements JoinClause<DTO, JCC, JCCT> {
+        implements JoinClause<DTO, JCC, JCCT, QCB> {
 
     /**
      * The Litebridge context.

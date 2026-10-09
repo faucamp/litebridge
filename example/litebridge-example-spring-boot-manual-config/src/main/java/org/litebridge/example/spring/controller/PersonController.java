@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -63,5 +64,24 @@ public class PersonController {
     @Operation(summary = "Get all Person records")
     public List<Person> getAllPersons() {
         return exampleService.getAllPersons();
+    }
+
+    @GetMapping(path = "/name-and-surname")
+    @Operation(summary = "Get all Person records matching the specified name and surname")
+    public List<Person> getPersonsByNameAndSurname(@Parameter(description = "First name") @RequestParam final String name,
+                                                   @Parameter(description = "Surname") @RequestParam final String surname) {
+        return exampleService.getPersonsByNameAndSurname(name, surname);
+    }
+
+    @GetMapping(path = "/name-or-surname")
+    @Operation(summary = "Get all Person records matching the specified name or surname")
+    public List<Person> getPersonsByNameAndSurname(@Parameter(description = "Name to search for") @RequestParam final String name) {
+        return exampleService.getPersonsByNameOrSurname(name);
+    }
+
+    @GetMapping(path = "/count-name-startswith")
+    @Operation(summary = "Count all Person records with names starting with the specified prefix")
+    public int countPersonsNameStartingWith(@Parameter(description = "Name prefix") @RequestParam final String namePrefix) {
+        return exampleService.countPersonsNameStartingWith(namePrefix);
     }
 }

@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * A condition clause for a {@code HAVING} clause in a SQL query.
  *
@@ -10,11 +12,12 @@ package org.litebridge.orm.api.select;
  * @param <OBCC> The OrderByClauseChain type.
  */
 public interface HavingConditionClause<DTO,
-        SELF extends HavingConditionClause<DTO, SELF, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, SELF, HCCT, OBC, OBCC>,
+        SELF extends HavingConditionClause<DTO, SELF, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, SELF, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-        extends ConditionClause<DTO, SELF, HCCT> {
+        extends ConditionClause<DTO, SELF, HCCT, QCB> {
 
 }

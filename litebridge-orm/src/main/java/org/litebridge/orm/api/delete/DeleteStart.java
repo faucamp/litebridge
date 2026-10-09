@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.delete;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -10,8 +11,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param <WCCT> the WHERE condition clause terminal type
  */
 public sealed interface DeleteStart<DTO,
-        WCC extends DeleteWhereConditionClause<DTO, WCC, WCCT>,
-        WCCT extends DeleteWhereConditionClauseTerminal<DTO, WCC, WCCT>>
+        WCC extends DeleteWhereConditionClause<DTO, WCC, WCCT, QCB>,
+        WCCT extends DeleteWhereConditionClauseTerminal<DTO, WCC, WCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
         permits DtoDeleteStart, SqlDeleteStart {
 
@@ -21,7 +23,7 @@ public sealed interface DeleteStart<DTO,
      * @param column the column or field name
      * @return step to specify the condition operator and value
      */
-    DeleteWhereConditionClause<DTO, WCC, WCCT> where(final String column);
+    WCC where(final String column);
 
     /**
      * Starts a WHERE clause with an expression.
@@ -29,6 +31,6 @@ public sealed interface DeleteStart<DTO,
      * @param expression the expression specification
      * @return step to specify the condition operator and value
      */
-    DeleteWhereConditionClause<DTO, WCC, WCCT> where(final ExpressionSpec expression);
+    WCC where(final ExpressionSpec expression);
 
 }

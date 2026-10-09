@@ -3,6 +3,7 @@ package org.litebridge.orm.api.update;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
@@ -23,7 +24,8 @@ public final class DtoUpdateStep<DTO> extends UpdateStepBase
         DtoUpdateStep<DTO>,
         DtoUpdateSetStep<DTO>,
         DtoUpdateWhereConditionClause<DTO>,
-        DtoUpdateWhereConditionClauseTerminal<DTO>> {
+        DtoUpdateWhereConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>> {
 
     private QueryNode node;
 

@@ -2,10 +2,10 @@ package org.litebridge.orm.api.update;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
+import org.litebridge.orm.api.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -48,7 +48,7 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
     }
 
     @Override
-    public DtoUpdateWhereConditionClauseTerminal<DTO> and(final QueryConditionBuilder<DTO> query) {
+    public DtoUpdateWhereConditionClauseTerminal<DTO> and(final DtoQueryConditionBuilder<DTO> query) {
         return whereImpl(LogicOperator.AND, query);
     }
 
@@ -63,7 +63,7 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
     }
 
     @Override
-    public DtoUpdateWhereConditionClauseTerminal<DTO> or(final QueryConditionBuilder<DTO> query) {
+    public DtoUpdateWhereConditionClauseTerminal<DTO> or(final DtoQueryConditionBuilder<DTO> query) {
         return whereImpl(LogicOperator.OR, query);
     }
 
@@ -76,9 +76,9 @@ public final class DtoUpdateWhereConditionClauseTerminalImpl<DTO>
         return new DtoUpdateWhereConditionClause<>(litebridgeContext, logicOperator, field, expression, recreator);
     }
 
-    private DtoUpdateWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+    private DtoUpdateWhereConditionClauseTerminalImpl<DTO> whereImpl(final LogicOperator logicOperator, final DtoQueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final CbDtoConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
         this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;
     }

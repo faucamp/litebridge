@@ -3,10 +3,10 @@ package org.litebridge.orm.api.select.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.CbSqlConditionClauseTerminal;
 import org.litebridge.orm.api.condition.SqlConditionClauseStart;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractWhereClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -25,6 +25,7 @@ public final class SqlWhereConditionClauseTerminal
         SqlGroupByClauseTerminal,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
+        SqlQueryConditionBuilder,
         SqlOrderByClause,
         SqlOrderByClauseChain>
 
@@ -34,6 +35,7 @@ public final class SqlWhereConditionClauseTerminal
         SqlGroupByClauseTerminal,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
+        SqlQueryConditionBuilder,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 
@@ -66,7 +68,7 @@ public final class SqlWhereConditionClauseTerminal
     }
 
     @Override
-    public SqlWhereConditionClauseTerminal and(final QueryConditionBuilder<Row> query) {
+    public SqlWhereConditionClauseTerminal and(final SqlQueryConditionBuilder query) {
         return whereImpl(LogicOperator.AND, query);
     }
 
@@ -81,7 +83,7 @@ public final class SqlWhereConditionClauseTerminal
     }
 
     @Override
-    public SqlWhereConditionClauseTerminal or(final QueryConditionBuilder<Row> query) {
+    public SqlWhereConditionClauseTerminal or(final SqlQueryConditionBuilder query) {
         return whereImpl(LogicOperator.OR, query);
     }
 
@@ -123,13 +125,13 @@ public final class SqlWhereConditionClauseTerminal
                 conditionNode -> new SqlWhereConditionClauseTerminal(selectNode, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
-    private SqlWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
+    private SqlWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
         if (!(node instanceof WhereNode whereNode)) {
             throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + node);
         }
 
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
 
         whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;

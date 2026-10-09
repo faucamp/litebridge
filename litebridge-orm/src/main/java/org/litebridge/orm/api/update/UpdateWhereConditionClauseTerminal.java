@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.update;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 
 /**
@@ -10,11 +11,12 @@ import org.litebridge.orm.api.select.ConditionClauseTerminal;
  * @param <SELF> the self-referencing terminal type
  */
 public sealed interface UpdateWhereConditionClauseTerminal<DTO,
-        WCC extends UpdateWhereConditionClause<DTO, WCC, SELF>,
-        SELF extends UpdateWhereConditionClauseTerminal<DTO, WCC, SELF>>
+        WCC extends UpdateWhereConditionClause<DTO, WCC, SELF, QCB>,
+        SELF extends UpdateWhereConditionClauseTerminal<DTO, WCC, SELF, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
         extends
-        ConditionClauseTerminal<DTO, WCC, SELF>,
+        ConditionClauseTerminal<DTO, WCC, SELF, QCB>,
         UpdateQuery
 
         permits DtoUpdateWhereConditionClauseTerminal, SqlUpdateWhereConditionClauseTerminal {

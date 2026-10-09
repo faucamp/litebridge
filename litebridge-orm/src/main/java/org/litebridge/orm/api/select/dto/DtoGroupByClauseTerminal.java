@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -17,6 +18,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 public final class DtoGroupByClauseTerminal<DTO> extends AbstractGroupByClauseTerminal<DTO,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 

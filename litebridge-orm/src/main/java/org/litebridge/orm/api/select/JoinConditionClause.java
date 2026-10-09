@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * Generic join condition clause for constructing SQL-like join conditions in a type-safe
  * and fluent manner.
@@ -12,10 +14,11 @@ package org.litebridge.orm.api.select;
  * @param <JCCT> the type of the terminal join condition clause used for finalizing join conditions
  */
 public interface JoinConditionClause<DTO,
-        SELF extends JoinConditionClause<DTO, SELF, JCCT>,
-        JCCT extends JoinConditionClauseTerminal<DTO, SELF, JCCT>>
+        SELF extends JoinConditionClause<DTO, SELF, JCCT, QCB>,
+        JCCT extends JoinConditionClauseTerminal<DTO, SELF, JCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
-        extends ConditionClause<DTO, SELF, JCCT> {
+        extends ConditionClause<DTO, SELF, JCCT, QCB> {
 
     /**
      * Join using a specific column.

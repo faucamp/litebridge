@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * Terminal state of a join condition clause.
  * <p>
@@ -19,9 +21,10 @@ package org.litebridge.orm.api.select;
  * @param <SELF> the type of the implementing subclass for fluent query construction
  */
 public interface JoinConditionClauseTerminal<DTO,
-        JCC extends JoinConditionClause<DTO, JCC, SELF>,
-        SELF extends JoinConditionClauseTerminal<DTO, JCC, SELF>>
+        JCC extends JoinConditionClause<DTO, JCC, SELF, QCB>,
+        SELF extends JoinConditionClauseTerminal<DTO, JCC, SELF, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
-        extends ConditionClauseTerminal<DTO, JCC, SELF> {
+        extends ConditionClauseTerminal<DTO, JCC, SELF, QCB> {
 
 }

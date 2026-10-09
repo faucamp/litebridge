@@ -46,6 +46,18 @@ public class ExampleService {
         return personRepository.findById(personId);
     }
 
+    public List<Person> getPersonsByNameAndSurname(final String name, final String surname) {
+        return personRepository.findAllByNameAndSurname(name, surname);
+    }
+
+    public List<Person> getPersonsByNameOrSurname(final String name) {
+        return personRepository.findAllByNameOrSurname(name, name);
+    }
+
+    public int countPersonsNameStartingWith(final String namePrefix) {
+        return personRepository.countAllByNameStartsWith(namePrefix);
+    }
+
     public Person updatePerson(final Person person) {
         if (person.getId() == null) {
             throw new IllegalArgumentException("Person ID cannot be null");

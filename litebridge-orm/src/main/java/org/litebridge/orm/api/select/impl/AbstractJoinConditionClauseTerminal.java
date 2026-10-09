@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select.impl;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.GroupByClauseTerminal;
 import org.litebridge.orm.api.select.HavingConditionClause;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
@@ -24,16 +25,17 @@ import org.litebridge.orm.engine.SelectEngineTerminal;
  * @param <OBCC> the order by clause chain type
  */
 public abstract class AbstractJoinConditionClauseTerminal<DTO,
-        JCC extends JoinConditionClause<DTO, JCC, SELF>,
-        SELF extends JoinConditionClauseTerminal<DTO, JCC, SELF>,
-        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
-        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        JCC extends JoinConditionClause<DTO, JCC, SELF, QCB>,
+        SELF extends JoinConditionClauseTerminal<DTO, JCC, SELF, QCB>,
+        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-        extends AbstractWhereClauseTerminal<DTO, GBCT, HCC, HCCT, OBC, OBCC>
-        implements JoinConditionClauseTerminal<DTO, JCC, SELF> {
+        extends AbstractWhereClauseTerminal<DTO, GBCT, HCC, HCCT, QCB, OBC, OBCC>
+        implements JoinConditionClauseTerminal<DTO, JCC, SELF, QCB> {
 
     /**
      * The join AST query node.

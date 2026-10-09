@@ -11,7 +11,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
  *
  * @param <DTO> The type of the DTO being queried.
  */
-public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
+public class CbDtoConditionClause<DTO>
+        extends AbstractCbConditionClause<DTO, CbDtoConditionClause<DTO>, CbDtoConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>>
+        implements DtoConditionClause<DTO, CbDtoConditionClause<DTO>, CbDtoConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>> {
 
     /**
      * Constructs a new {@code CbDtoConditionClause}.
@@ -31,7 +33,7 @@ public class CbDtoConditionClause<DTO> extends AbstractCbConditionClause<DTO> {
     }
 
     @Override
-    protected AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode) {
+    protected CbDtoConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode) {
         return new CbDtoConditionClauseTerminal<>(conditionNode, litebridgeContext);
     }
 }

@@ -2,6 +2,7 @@ package org.litebridge.orm.api.update;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.math.MathOperator;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -17,10 +18,11 @@ import java.util.function.Function;
  * @param <WCCT> the where condition clause terminal type
  */
 public abstract sealed class UpdateSetStep<DTO,
-        US extends UpdateStep<DTO, US, SELF, WCC, WCCT>,
-        SELF extends UpdateSetStep<DTO, US, SELF, WCC, WCCT>,
-        WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT>,
-        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>>
+        US extends UpdateStep<DTO, US, SELF, WCC, WCCT, QCB>,
+        SELF extends UpdateSetStep<DTO, US, SELF, WCC, WCCT, QCB>,
+        WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT, QCB>,
+        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
         permits DtoUpdateSetStep, SqlUpdateSetStep {
 

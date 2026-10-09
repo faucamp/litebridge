@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -12,8 +13,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param <OBCC> the type of the ORDER BY clause chain for chaining multiple sorting expressions
  */
 public interface GroupByClauseTerminal<DTO,
-        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 

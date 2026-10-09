@@ -1145,7 +1145,7 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
-    @DisplayName("Select LIKE")
+    @DisplayName("Select LIKE and NOT LIKE")
     void select_like(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Register DTO-table mappings
         tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
@@ -1161,13 +1161,27 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         litebridge.saveAll(persons);
 
-        // Using variable paratemeters/array
-        final Optional<Person> results = litebridge.select()
-                .from(Person.class)
-                .where(Fn.f("name")).like("%me1")
-                .one();
+        // LIKE
+        {
+            final Optional<Person> result = litebridge.select()
+                    .from(Person.class)
+                    .where(Fn.f("name")).like("%me1")
+                    .one();
 
-        assertTrue(results.isPresent());
+            assertTrue(result.isPresent());
+            final Person person = result.orElseThrow();
+            assertEquals(2, person.getId());
+        }
+
+        // NOT LIKE
+        {
+            final List<Person> result = litebridge.select()
+                    .from(Person.class)
+                    .where(Fn.f("name")).notLike("%me1")
+                    .list();
+
+            assertEquals(2, result.size());
+        }
     }
 
     @TestTemplate

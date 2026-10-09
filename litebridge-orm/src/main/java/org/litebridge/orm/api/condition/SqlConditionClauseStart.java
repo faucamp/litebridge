@@ -11,7 +11,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * Start of a SQL-based condition clause.
  */
-public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
+public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row, CbSqlConditionClause, CbSqlConditionClauseTerminal, SqlQueryConditionBuilder> {
 
     private final SelectNode selectNode;
 
@@ -27,7 +27,7 @@ public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
     public SqlConditionClauseStart(final String table,
                                    final @Nullable QueryNode node,
                                    final LitebridgeContext litebridgeContext) {
-        super(node, litebridgeContext);
+        super(node, LogicOperator.NOOP, litebridgeContext);
         // Not a real select node, just a placeholder
         this.selectNode = new SelectNode(table, null, null, null, null, null, null, null);
     }
@@ -42,18 +42,18 @@ public class SqlConditionClauseStart extends AbstractConditionClauseStart<Row> {
     public SqlConditionClauseStart(final SelectNode selectNode,
                                    final @Nullable QueryNode node,
                                    final LitebridgeContext litebridgeContext) {
-        super(node, litebridgeContext);
+        super(node, LogicOperator.NOOP, litebridgeContext);
         this.selectNode = selectNode;
     }
 
     @Override
     public CbSqlConditionClause where(final String column) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, LogicOperator.NOOP, column, null, node);
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, column, null, node);
     }
 
 
     @Override
-    public AbstractCbConditionClause<Row> where(final ExpressionSpec expression) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, LogicOperator.NOOP, null, expression, node);
+    public CbSqlConditionClause where(final ExpressionSpec expression) {
+        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, null, expression, node);
     }
 }

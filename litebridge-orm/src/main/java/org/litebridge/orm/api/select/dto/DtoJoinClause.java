@@ -1,10 +1,10 @@
 package org.litebridge.orm.api.select.dto;
 
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
+import org.litebridge.orm.api.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
@@ -24,7 +24,8 @@ import java.util.function.Function;
  */
 public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
         DtoJoinConditionClause<DTO>,
-        DtoJoinConditionClauseTerminal<DTO>> {
+        DtoJoinConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>> {
 
     private final Function<QueryNode, DtoJoinConditionClauseTerminal<DTO>> terminalCreator;
 
@@ -72,9 +73,9 @@ public final class DtoJoinClause<DTO> extends AbstractJoinClause<DTO,
      * @param builder the builder for the join condition
      * @return an instance of the join condition clause to allow further configuration
      */
-    public DtoJoinConditionClauseTerminal<DTO> on(final QueryConditionBuilder<DTO> builder) {
+    public DtoJoinConditionClauseTerminal<DTO> on(final DtoQueryConditionBuilder<DTO> builder) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = builder.apply(conditionClauseStart);
+        final CbDtoConditionClauseTerminal<DTO> terminal = builder.apply(conditionClauseStart);
         final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
         final ConditionGroupNode groupNode = new ConditionGroupNode(null, LogicOperator.NOOP, conditionNode);
         return terminalCreator.apply(groupNode);

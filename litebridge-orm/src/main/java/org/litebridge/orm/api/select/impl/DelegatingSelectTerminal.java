@@ -107,12 +107,16 @@ public abstract class DelegatingSelectTerminal<DTO> implements SelectTerminal<DT
     }
 
     @SuppressWarnings("ConstantConditions")
-    private LitebridgeContext litebridgeContext() {
+    protected LitebridgeContext litebridgeContext() {
         if (litebridgeContext == null) {
             return Objects.requireNonNull(litebridgeContextSupplier).get();
         }
 
         return litebridgeContext;
+    }
+
+    SelectEngineTerminal selectEngineTerminal() {
+        return selectEngineTerminal;
     }
 
     protected QueryNode node() {

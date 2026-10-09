@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * Terminal clause for constructing SQL WHERE conditions, allowing transitions
  * to GROUP BY or ORDER BY stages in a fluent and type-safe query-building process.
@@ -12,9 +14,10 @@ package org.litebridge.orm.api.select;
  * @param <OBCC> the type of the order by clause chain for chaining multiple ordering expressions
  */
 public interface WhereClauseTerminal<DTO,
-        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
-        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 

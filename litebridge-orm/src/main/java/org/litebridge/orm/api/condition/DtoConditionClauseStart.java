@@ -11,7 +11,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
  *
  * @param <DTO> the type of the DTO
  */
-public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<DTO> {
+public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<DTO, CbDtoConditionClause<DTO>, CbDtoConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>> {
 
     /**
      * Creates a new DTO condition clause start.
@@ -21,7 +21,20 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
      */
     public DtoConditionClauseStart(final @Nullable QueryNode node,
                                    final LitebridgeContext litebridgeContext) {
-        super(node, litebridgeContext);
+        super(node, LogicOperator.NOOP, litebridgeContext);
+    }
+
+    /**
+     * Creates a new DTO condition clause start.
+     *
+     * @param node              the current query node
+     * @param logicOperator     the logic operator to group this query with the previous node
+     * @param litebridgeContext the litebridge context
+     */
+    public DtoConditionClauseStart(final @Nullable QueryNode node,
+                                   final LogicOperator logicOperator,
+                                   final LitebridgeContext litebridgeContext) {
+        super(node, logicOperator, litebridgeContext);
     }
 
     @Override
@@ -30,13 +43,13 @@ public class DtoConditionClauseStart<DTO> extends AbstractConditionClauseStart<D
     }
 
     @Override
-    public AbstractCbConditionClause<DTO> where(final ExpressionSpec expression) {
+    public CbDtoConditionClause<DTO> where(final ExpressionSpec expression) {
         return whereImpl(null, expression);
     }
 
     private CbDtoConditionClause<DTO> whereImpl(final @Nullable String field, final @Nullable ExpressionSpec expression) {
         return new CbDtoConditionClause<>(litebridgeContext,
-                LogicOperator.NOOP,
+                logicOperator,
                 field,
                 expression,
                 node);

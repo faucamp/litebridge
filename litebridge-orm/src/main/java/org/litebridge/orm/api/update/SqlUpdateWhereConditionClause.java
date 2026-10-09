@@ -3,9 +3,10 @@ package org.litebridge.orm.api.update;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -17,11 +18,13 @@ public final class SqlUpdateWhereConditionClause
 
         extends ConditionClauseImpl<Row,
         SqlUpdateWhereConditionClause,
-        SqlUpdateWhereConditionClauseTerminal>
+        SqlUpdateWhereConditionClauseTerminal,
+        SqlQueryConditionBuilder>
 
         implements UpdateWhereConditionClause<Row,
         SqlUpdateWhereConditionClause,
-        SqlUpdateWhereConditionClauseTerminal> {
+        SqlUpdateWhereConditionClauseTerminal,
+        SqlQueryConditionBuilder> {
 
     /**
      * Creates a new {@code SqlUpdateWhereConditionClause} instance.

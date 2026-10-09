@@ -2,13 +2,9 @@ package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
-import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
-import org.litebridge.orm.api.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
-import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.UsingNode;
@@ -22,29 +18,39 @@ import org.litebridge.orm.expression.select.ValuesSpec;
  * @param <MUS> the merge update step type
  * @param <MIS> the merge insert step type
  */
-public final class MergeOnConditionClauseTerminal<DTO,
+public abstract sealed class MergeOnConditionClauseTerminal<DTO,
+        SELF extends MergeOnConditionClauseTerminal<DTO, SELF, MUS, MIS, QCB>,
         MUS extends MergeUpdateStep,
-        MIS extends MergeInsertStep>
+        MIS extends MergeInsertStep,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
         extends MergeWhenMatchedStep<DTO, MUS, MIS>
 
         implements ConditionClauseTerminal<DTO,
-        MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>>,
-        MergeOnConditionClauseTerminal<DTO, MUS, MIS>> {
+        MergeConditionClause<DTO, MUS, SELF, QCB>,
+        SELF,
+        QCB>
 
-    private final @Nullable String usingTable;
-    private final @Nullable Class<?> usingDtoClass;
-    private final @Nullable QueryNode usingQueryNode;
-    private final @Nullable ValuesSpec usingValues;
+        permits DtoMergeOnConditionClauseTerminal, SqlMergeOnConditionClauseTerminal {
+
+    protected final @Nullable String usingTable;
+    protected final @Nullable Class<?> usingDtoClass;
+    protected final @Nullable QueryNode usingQueryNode;
+    protected final @Nullable ValuesSpec usingValues;
     private final @Nullable String usingAlias;
     private @Nullable UsingNode usingNode;
 
     /**
      * Creates a new {@code MergeOnConditionClauseTerminal} instance.
      *
-     * @param mergeNode         the root merge query node
-     * @param on                the using on condition clause query node
-     * @param litebridgeContext the Litebridge context
+     * @param usingTable        Table to use as the merge source.
+     * @param usingDtoClass     DTO class to use as the merge source.
+     * @param usingQueryNode    Subquery to merge on.
+     * @param usingValues       Values to merge on.
+     * @param usingAlias        Alias to use for the merge source.
+     * @param on                The using on condition clause query node.
+     * @param mergeNode         The root merge query node.
+     * @param litebridgeContext Current Litebridge context.
      */
     public MergeOnConditionClauseTerminal(final @Nullable String usingTable,
                                           final @Nullable Class<?> usingDtoClass,
@@ -69,7 +75,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      * @return the condition clause
      */
     @Override
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> and(final String column) {
+    public MergeConditionClause<DTO, MUS, SELF, QCB> and(final String column) {
         return onImpl(LogicOperator.AND, column, null);
     }
 
@@ -80,7 +86,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      * @return the condition clause
      */
     @Override
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> and(final ExpressionSpec expression) {
+    public MergeConditionClause<DTO, MUS, SELF, QCB> and(final ExpressionSpec expression) {
         return onImpl(LogicOperator.AND, null, expression);
     }
 
@@ -91,7 +97,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      * @return the condition clause terminal
      */
     @Override
-    public MergeOnConditionClauseTerminal<DTO, MUS, MIS> and(final QueryConditionBuilder<DTO> query) {
+    public SELF and(final QCB query) {
         return onImpl(LogicOperator.AND, query);
     }
 
@@ -102,7 +108,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      * @return the condition clause
      */
     @Override
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> or(final String column) {
+    public MergeConditionClause<DTO, MUS, SELF, QCB> or(final String column) {
         return onImpl(LogicOperator.OR, column, null);
     }
 
@@ -113,7 +119,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      * @return the condition clause
      */
     @Override
-    public MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> or(final ExpressionSpec expression) {
+    public MergeConditionClause<DTO, MUS, SELF, QCB> or(final ExpressionSpec expression) {
         return onImpl(LogicOperator.OR, null, expression);
     }
 
@@ -124,7 +130,7 @@ public final class MergeOnConditionClauseTerminal<DTO,
      * @return the condition clause terminal
      */
     @Override
-    public MergeOnConditionClauseTerminal<DTO, MUS, MIS> or(final QueryConditionBuilder<DTO> query) {
+    public SELF or(final QCB query) {
         return onImpl(LogicOperator.OR, query);
     }
 
@@ -138,7 +144,8 @@ public final class MergeOnConditionClauseTerminal<DTO,
         }
     }
 
-    private MergeConditionClause<DTO, MUS, MergeOnConditionClauseTerminal<DTO, MUS, MIS>> onImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
+    @SuppressWarnings("unchecked")
+    protected MergeConditionClause<DTO, MUS, SELF, QCB> onImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
         return new MergeConditionClause<>(litebridgeContext,
                 logicOperator,
                 column,
@@ -146,14 +153,9 @@ public final class MergeOnConditionClauseTerminal<DTO,
                 node,
                 conditionNode -> {
                     node = conditionNode;
-                    return this;
+                    return (SELF) this;
                 });
     }
 
-    private MergeOnConditionClauseTerminal<DTO, MUS, MIS> onImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
-        node = new ConditionGroupNode(node, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal));
-        return this;
-    }
+    protected abstract SELF onImpl(final LogicOperator logicOperator, final QCB query);
 }

@@ -25,7 +25,12 @@ import java.util.stream.Stream;
  *
  * @param <DTO> The type of the DTO being queried.
  */
-public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<DTO, AbstractCbConditionClause<DTO>, AbstractCbConditionClauseTerminal<DTO>> {
+public abstract class AbstractCbConditionClause<DTO,
+        SELF extends AbstractCbConditionClause<DTO, SELF, CCT, QCB>,
+        CCT extends AbstractCbConditionClauseTerminal<DTO, SELF, CCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, SELF, CCT, QCB>>
+
+        implements ConditionClause<DTO, SELF, CCT, QCB> {
 
     private final LogicOperator logicOperator;
     private final @Nullable String lhsColumn;
@@ -63,7 +68,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> eq(final @Nullable Object value) {
+    public CCT eq(final @Nullable Object value) {
         return condition(Operator.EQ, value);
     }
 
@@ -73,7 +78,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> eq(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT eq(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.EQ, subselect, true);
     }
 
@@ -83,7 +88,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> neq(final @Nullable Object value) {
+    public CCT neq(final @Nullable Object value) {
         return condition(Operator.NEQ, value);
     }
 
@@ -93,7 +98,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> neq(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT neq(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NEQ, subselect, true);
     }
 
@@ -103,7 +108,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lt(final Object value) {
+    public CCT lt(final Object value) {
         return condition(Operator.LT, Objects.requireNonNull(value, "Operator LT requires a non-NULL RHS value"));
     }
 
@@ -113,7 +118,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lt(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT lt(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LT, subselect, false);
     }
 
@@ -123,7 +128,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lte(final Object value) {
+    public CCT lte(final Object value) {
         return condition(Operator.LTE, value);
     }
 
@@ -133,7 +138,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> lte(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT lte(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.LTE, subselect, false);
     }
 
@@ -143,7 +148,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gt(final Object value) {
+    public CCT gt(final Object value) {
         return condition(Operator.GT, value);
     }
 
@@ -153,7 +158,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gt(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT gt(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GT, subselect, false);
     }
 
@@ -163,7 +168,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gte(final Object value) {
+    public CCT gte(final Object value) {
         return condition(Operator.GTE, value);
     }
 
@@ -173,23 +178,22 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param subselect Function that builds a sub-select query
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> gte(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT gte(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
-    /**
-     * Like
-     *
-     * @param value The operand for the like expression.
-     * @return A {@link ConditionClauseTerminal} instance for further chaining.
-     */
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> like(final String value) {
+    public CCT like(final String value) {
         return condition(Operator.LIKE, value);
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> in(final Object value, final Object... otherValues) {
+    public CCT notLike(final String value) {
+        return condition(Operator.NOT_LIKE, value);
+    }
+
+    @Override
+    public CCT in(final Object value, final Object... otherValues) {
         if (value instanceof Collection<?> collection && otherValues.length == 0) {
             return in(collection);
         }
@@ -198,17 +202,17 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> in(final Collection<?> values) {
+    public CCT in(final Iterable<?> values) {
         return condition(Operator.IN, values);
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> in(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT in(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.IN, subselect, false);
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> notIn(final Object value, final Object... otherValues) {
+    public CCT notIn(final Object value, final Object... otherValues) {
         if (value instanceof Collection<?> collection && otherValues.length == 0) {
             return notIn(collection);
         }
@@ -217,12 +221,12 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> notIn(final Collection<?> values) {
+    public CCT notIn(final Collection<?> values) {
         return condition(Operator.NOT_IN, values);
     }
 
     @Override
-    public AbstractCbConditionClauseTerminal<DTO> notIn(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public CCT notIn(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.NOT_IN, subselect, false);
     }
 
@@ -233,7 +237,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      *
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> isNull() {
+    public CCT isNull() {
         return condition(Operator.IS_NULL, null);
     }
 
@@ -244,13 +248,13 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      *
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    public AbstractCbConditionClauseTerminal<DTO> isNotNull() {
+    public CCT isNotNull() {
         return condition(Operator.IS_NOT_NULL, null);
     }
 
-    private AbstractCbConditionClauseTerminal<DTO> subselectImpl(final Operator operator,
-                                                                 final @Nullable Function<SelectApi, SelectTerminal<?>> subselect,
-                                                                 final boolean allowNull) {
+    private CCT subselectImpl(final Operator operator,
+                              final @Nullable Function<SelectApi, SelectTerminal<?>> subselect,
+                              final boolean allowNull) {
         if (subselect == null) {
             if (allowNull) {
                 return condition(operator, null);
@@ -271,7 +275,7 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param value    The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    private AbstractCbConditionClauseTerminal<DTO> condition(final Operator operator, @Nullable final Object value) {
+    private CCT condition(final Operator operator, @Nullable final Object value) {
         final Operator translatedOperator;
 
         if (value == null) {
@@ -297,5 +301,5 @@ public abstract class AbstractCbConditionClause<DTO> implements ConditionClause<
      * @param conditionNode the condition node to wrap in a terminal clause
      * @return A new {@link AbstractCbConditionClauseTerminal} instance.
      */
-    protected abstract AbstractCbConditionClauseTerminal<DTO> createCbConditionClauseTerminal(final QueryNode conditionNode);
+    protected abstract CCT createCbConditionClauseTerminal(final QueryNode conditionNode);
 }

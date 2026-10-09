@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -17,6 +18,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
+        SqlQueryConditionBuilder,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 

@@ -2,6 +2,7 @@ package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -19,9 +20,10 @@ import java.util.function.Function;
  */
 public class MergeConditionClause<DTO,
         MUS extends MergeUpdateStep,
-        MCCT extends ConditionClauseTerminal<DTO, MergeConditionClause<DTO, MUS, MCCT>, MCCT>>
+        MCCT extends ConditionClauseTerminal<DTO, MergeConditionClause<DTO, MUS, MCCT, QCB>, MCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
-        extends ConditionClauseImpl<DTO, MergeConditionClause<DTO, MUS, MCCT>, MCCT> {
+        extends ConditionClauseImpl<DTO, MergeConditionClause<DTO, MUS, MCCT, QCB>, MCCT, QCB> {
 
     /**
      * Creates a new {@code MergeConditionClause} instance.

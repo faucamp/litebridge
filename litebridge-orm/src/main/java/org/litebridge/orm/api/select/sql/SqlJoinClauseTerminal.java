@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.sql;
 
 import org.litebridge.db.spi.Row;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 
 /**
@@ -15,6 +16,7 @@ public sealed interface SqlJoinClauseTerminal extends JoinClauseTerminal<Row,
         SqlGroupByClauseTerminal,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
+        SqlQueryConditionBuilder,
         SqlOrderByClause,
         SqlOrderByClauseChain>
 

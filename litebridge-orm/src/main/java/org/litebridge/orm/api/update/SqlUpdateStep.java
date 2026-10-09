@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.SelectApiImpl;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
@@ -22,7 +23,8 @@ public final class SqlUpdateStep extends UpdateStepBase
         SqlUpdateStep,
         SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
-        SqlUpdateWhereConditionClauseTerminal> {
+        SqlUpdateWhereConditionClauseTerminal,
+        SqlQueryConditionBuilder> {
 
     private final String tableName;
     private QueryNode node;

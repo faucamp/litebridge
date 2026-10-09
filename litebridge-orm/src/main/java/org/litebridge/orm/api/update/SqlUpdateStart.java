@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.update;
 
 import org.litebridge.db.spi.Row;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -14,7 +15,8 @@ public final class SqlUpdateStart extends UpdateStepBase
         SqlUpdateStep,
         SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
-        SqlUpdateWhereConditionClauseTerminal> {
+        SqlUpdateWhereConditionClauseTerminal,
+        SqlQueryConditionBuilder> {
 
     private final UpdateNode updateNode;
     private final String tableName;

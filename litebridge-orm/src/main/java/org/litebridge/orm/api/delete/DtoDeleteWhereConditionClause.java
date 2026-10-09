@@ -2,9 +2,10 @@ package org.litebridge.orm.api.delete;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.engine.ast.QueryNode;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -18,11 +19,13 @@ public final class DtoDeleteWhereConditionClause<DTO>
 
         extends ConditionClauseImpl<DTO,
         DtoDeleteWhereConditionClause<DTO>,
-        DtoDeleteWhereConditionClauseTerminal<DTO>>
+        DtoDeleteWhereConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>>
 
         implements DeleteWhereConditionClause<DTO,
         DtoDeleteWhereConditionClause<DTO>,
-        DtoDeleteWhereConditionClauseTerminal<DTO>> {
+        DtoDeleteWhereConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>> {
 
     /**
      * Creates a new {@code DtoDeleteWhereConditionClause} instance.

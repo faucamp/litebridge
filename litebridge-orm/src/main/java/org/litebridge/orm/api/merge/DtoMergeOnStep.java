@@ -2,7 +2,13 @@ package org.litebridge.orm.api.merge;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
+import org.litebridge.orm.api.condition.CbDtoConditionClauseTerminal;
+import org.litebridge.orm.api.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
@@ -15,7 +21,11 @@ import java.util.Objects;
  *
  * @param <DTO> the type of the DTO
  */
-public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateStep<DTO>, DtoMergeInsertStep> {
+public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO,
+        DtoMergeOnConditionClauseTerminal<DTO>,
+        DtoMergeUpdateStep<DTO>,
+        DtoMergeInsertStep,
+        DtoQueryConditionBuilder<DTO>> {
 
     /**
      * Creates a new {@code DtoMergeOnStep} instance using an entity/mapped DTO class.
@@ -66,8 +76,23 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO, DtoMergeUpdateSt
      * @return the next step in the update operation: setting the value of the target field
      */
     @Override
-    public MergeConditionClause<DTO, DtoMergeUpdateStep<DTO>, MergeOnConditionClauseTerminal<DTO, DtoMergeUpdateStep<DTO>, DtoMergeInsertStep>> on(final String field) {
+    public MergeConditionClause<DTO, DtoMergeUpdateStep<DTO>, DtoMergeOnConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>> on(final String field) {
         final Column column = litebridgeContext.tableRegistry().getOrmTableOrThrow(Objects.requireNonNull(usingDtoClass)).columnMetaDataForField(field).column();
         return on(new SelectColumnSpec(column));
+    }
+
+    @Override
+    @SuppressWarnings("ConstantConditions")
+    public DtoMergeOnConditionClauseTerminal<DTO> on(final DtoQueryConditionBuilder<DTO> query) {
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
+        final CbDtoConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final ConditionGroupNode onConditionNode = new ConditionGroupNode(null, LogicOperator.NOOP, CbConditionClauseTerminalInspector.getNode(terminal));
+        return new DtoMergeOnConditionClauseTerminal<>(usingDtoClass, usingQueryNode, usingValues, usingAlias, onConditionNode, mergeNode, litebridgeContext);
+    }
+
+    @Override
+    @SuppressWarnings("ConstantConditions")
+    protected DtoMergeOnConditionClauseTerminal<DTO> createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final String alias) {
+        return new DtoMergeOnConditionClauseTerminal<>(usingDtoClass, usingQueryNode, usingValues, alias, conditionNode, mergeNode, litebridgeContext);
     }
 }

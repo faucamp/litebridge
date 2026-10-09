@@ -4,10 +4,10 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.CbSqlConditionClauseTerminal;
 import org.litebridge.orm.api.condition.SqlConditionClauseStart;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -27,6 +27,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
         SqlGroupByClauseTerminal,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
+        SqlQueryConditionBuilder,
         SqlOrderByClause,
         SqlOrderByClauseChain>
 
@@ -61,7 +62,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
-    public SqlJoinConditionClauseTerminal and(final QueryConditionBuilder<Row> query) {
+    public SqlJoinConditionClauseTerminal and(final SqlQueryConditionBuilder query) {
         return joinImpl(LogicOperator.AND, query);
     }
 
@@ -76,7 +77,7 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
     }
 
     @Override
-    public SqlJoinConditionClauseTerminal or(final QueryConditionBuilder<Row> query) {
+    public SqlJoinConditionClauseTerminal or(final SqlQueryConditionBuilder query) {
         return joinImpl(LogicOperator.OR, query);
     }
 
@@ -140,9 +141,9 @@ public final class SqlJoinConditionClauseTerminal extends AbstractJoinConditionC
                 });
     }
 
-    private SqlJoinConditionClauseTerminal joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
+    private SqlJoinConditionClauseTerminal joinImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
         final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 
         final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);

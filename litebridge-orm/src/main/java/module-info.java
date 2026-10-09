@@ -24,6 +24,7 @@ module litebridge.orm {
     exports org.litebridge.orm.api.register;
     exports org.litebridge.orm.api.select;
     exports org.litebridge.orm.engine.ast;
+    exports org.litebridge.orm.api.select.impl;
     exports org.litebridge.orm.api.select.model;
     exports org.litebridge.orm.api.spec;
     exports org.litebridge.orm.api.select.sql;

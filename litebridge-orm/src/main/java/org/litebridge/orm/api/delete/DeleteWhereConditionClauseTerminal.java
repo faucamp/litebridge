@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.delete;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 
 /**
@@ -10,11 +11,12 @@ import org.litebridge.orm.api.select.ConditionClauseTerminal;
  * @param <SELF> the type of the terminal condition clause itself
  */
 public sealed interface DeleteWhereConditionClauseTerminal<DTO,
-        WCC extends DeleteWhereConditionClause<DTO, WCC, SELF>,
-        SELF extends DeleteWhereConditionClauseTerminal<DTO, WCC, SELF>>
+        WCC extends DeleteWhereConditionClause<DTO, WCC, SELF, QCB>,
+        SELF extends DeleteWhereConditionClauseTerminal<DTO, WCC, SELF, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
         extends
-        ConditionClauseTerminal<DTO, WCC, SELF>,
+        ConditionClauseTerminal<DTO, WCC, SELF, QCB>,
         DeleteTerminal
 
         permits

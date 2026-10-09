@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * Terminal interface for a WHERE condition clause in SQL query construction.
  * <p>
@@ -22,14 +24,15 @@ package org.litebridge.orm.api.select;
  * @param <OBCC> the type of the ORDER BY clause chain for chaining multiple ordering instructions
  */
 public interface WhereConditionClauseTerminal<DTO,
-        WCC extends WhereConditionClause<DTO, WCC, SELF, GBCT, HCC, HCCT, OBC, OBCC>,
-        SELF extends WhereConditionClauseTerminal<DTO, WCC, SELF, GBCT, HCC, HCCT, OBC, OBCC>,
-        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
-        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        WCC extends WhereConditionClause<DTO, WCC, SELF, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        SELF extends WhereConditionClauseTerminal<DTO, WCC, SELF, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-        extends ConditionClauseTerminal<DTO, WCC, SELF>,
-        WhereClauseTerminal<DTO, GBCT, HCC, HCCT, OBC, OBCC> {
+        extends ConditionClauseTerminal<DTO, WCC, SELF, QCB>,
+        WhereClauseTerminal<DTO, GBCT, HCC, HCCT, QCB, OBC, OBCC> {
 }

@@ -35,8 +35,8 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
      * @param usingTableName name of the table to use for the {@code USING} clause
      * @return step to specify the {@code ON} condition
      */
-    public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final String usingTableName) {
-        return new MergeOnStep<>(usingTableName, null, mergeNode, litebridgeContext);
+    public SqlMergeOnStep using(final String usingTableName) {
+        return new SqlMergeOnStep(usingTableName, null, mergeNode, litebridgeContext);
     }
 
     /**
@@ -45,19 +45,19 @@ public final class SqlMergeUsingStep extends MergeUsingStep<Row, SqlMergeUpdateS
      * @param subselect function building the subquery
      * @return the merge ON condition clause terminal
      */
-    public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final Function<SelectApi, SelectTerminal<?>> subselect) {
+    public SqlMergeOnStep using(final Function<SelectApi, SelectTerminal<?>> subselect) {
         final SelectTerminal<?> selectTerminal = subselect.apply(new SelectApiImpl(litebridgeContext));
         final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
-        return new MergeOnStep<>(subselectNode, null, mergeNode, litebridgeContext);
+        return new SqlMergeOnStep(subselectNode, null, mergeNode, litebridgeContext);
     }
 
-    public MergeOnStep<Row, SqlMergeUpdateStep, MergeInsertStep> using(final FromTargetSpec fromTargetSpec) {
+    public SqlMergeOnStep using(final FromTargetSpec fromTargetSpec) {
         if (fromTargetSpec instanceof QueryAliasSpec(Function<SelectApi, SelectTerminal<?>> query, String alias)) {
             final SelectTerminal<?> selectTerminal = query.apply(new SelectApiImpl(litebridgeContext));
             final QueryNode subselectNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
-            return new MergeOnStep<>(subselectNode, alias, mergeNode, litebridgeContext);
+            return new SqlMergeOnStep(subselectNode, alias, mergeNode, litebridgeContext);
         } else if (fromTargetSpec instanceof ValuesSpec valuesSpec) {
-            return new MergeOnStep<>(valuesSpec, mergeNode, litebridgeContext);
+            return new SqlMergeOnStep(valuesSpec, mergeNode, litebridgeContext);
         } else {
             throw new UnsupportedOperationException("Unsupported from target spec: " + fromTargetSpec);
         }

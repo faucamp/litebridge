@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select.impl;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.ConditionClause;
 import org.litebridge.orm.api.select.ConditionClauseTerminal;
 import org.litebridge.orm.api.select.SelectApi;
@@ -15,6 +16,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -27,10 +29,11 @@ import java.util.stream.Stream;
  * @param <CCT>  the condition clause terminal type
  */
 public class ConditionClauseImpl<DTO,
-        SELF extends ConditionClause<DTO, SELF, CCT>,
-        CCT extends ConditionClauseTerminal<DTO, SELF, CCT>>
+        SELF extends ConditionClause<DTO, SELF, CCT, QCB>,
+        CCT extends ConditionClauseTerminal<DTO, SELF, CCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
-        implements ConditionClause<DTO, SELF, CCT> {
+        implements ConditionClause<DTO, SELF, CCT, QCB> {
 
     private final LitebridgeContext litebridgeContext;
     private final Function<QueryNode, CCT> terminalCreator;
@@ -188,15 +191,14 @@ public class ConditionClauseImpl<DTO,
         return subselectImpl(Operator.GTE, subselect, false);
     }
 
-    /**
-     * Like
-     *
-     * @param value The operand for the like expression.
-     * @return A {@link ConditionClauseTerminal} instance for further chaining.
-     */
     @Override
     public CCT like(final String value) {
         return condition(Operator.LIKE, value);
+    }
+
+    @Override
+    public CCT notLike(final String value) {
+        return condition(Operator.NOT_LIKE, value);
     }
 
     @Override
@@ -209,7 +211,7 @@ public class ConditionClauseImpl<DTO,
     }
 
     @Override
-    public CCT in(final Collection<?> values) {
+    public CCT in(final Iterable<?> values) {
         return condition(Operator.IN, values);
     }
 

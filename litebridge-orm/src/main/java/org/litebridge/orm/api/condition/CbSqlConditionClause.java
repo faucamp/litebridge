@@ -11,7 +11,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * Implementation of a condition clause for SQL-based queries.
  */
-public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
+public class CbSqlConditionClause extends AbstractCbConditionClause<Row, CbSqlConditionClause, CbSqlConditionClauseTerminal, SqlQueryConditionBuilder> {
 
     private final SelectNode selectNode;
 
@@ -36,7 +36,7 @@ public class CbSqlConditionClause extends AbstractCbConditionClause<Row> {
     }
 
     @Override
-    protected AbstractCbConditionClauseTerminal<Row> createCbConditionClauseTerminal(final QueryNode conditionNode) {
+    protected CbSqlConditionClauseTerminal createCbConditionClauseTerminal(final QueryNode conditionNode) {
         return new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext);
     }
 }

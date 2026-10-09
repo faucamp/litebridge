@@ -2,10 +2,12 @@ package org.litebridge.orm.api.select.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.DtoConditionClause;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.WhereConditionClause;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -16,18 +18,19 @@ import java.util.function.Function;
  * @param <DTO> the DTO type.
  */
 public final class DtoWhereConditionClause<DTO>
-        extends ConditionClauseImpl<DTO,
-        DtoWhereConditionClause<DTO>,
-        DtoWhereConditionClauseTerminal<DTO>>
+        extends ConditionClauseImpl<DTO, DtoWhereConditionClause<DTO>, DtoWhereConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>>
 
-        implements WhereConditionClause<DTO,
-        DtoWhereConditionClause<DTO>,
-        DtoWhereConditionClauseTerminal<DTO>,
-        DtoGroupByClauseTerminal<DTO>,
-        DtoHavingConditionClause<DTO>,
-        DtoHavingConditionClauseTerminal<DTO>,
-        DtoOrderByClause<DTO>,
-        DtoOrderByClauseChain<DTO>> {
+        implements DtoConditionClause<DTO, DtoWhereConditionClause<DTO>, DtoWhereConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>>,
+
+        WhereConditionClause<DTO,
+                DtoWhereConditionClause<DTO>,
+                DtoWhereConditionClauseTerminal<DTO>,
+                DtoGroupByClauseTerminal<DTO>,
+                DtoHavingConditionClause<DTO>,
+                DtoHavingConditionClauseTerminal<DTO>,
+                DtoQueryConditionBuilder<DTO>,
+                DtoOrderByClause<DTO>,
+                DtoOrderByClauseChain<DTO>> {
 
     /**
      * Creates a new {@code DtoWhereConditionClause} instance.

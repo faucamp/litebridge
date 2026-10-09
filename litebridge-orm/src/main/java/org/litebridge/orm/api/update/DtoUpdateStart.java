@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.update;
 
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.UpdateNode;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -15,7 +16,8 @@ public final class DtoUpdateStart<DTO> extends UpdateStepBase
         DtoUpdateStep<DTO>,
         DtoUpdateSetStep<DTO>,
         DtoUpdateWhereConditionClause<DTO>,
-        DtoUpdateWhereConditionClauseTerminal<DTO>> {
+        DtoUpdateWhereConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>> {
 
     private final UpdateNode updateNode;
 

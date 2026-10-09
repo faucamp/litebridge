@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.update;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 /**
@@ -11,10 +12,11 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param <WCCT> the WHERE condition clause terminal type
  */
 public sealed interface UpdateStart<DTO,
-        US extends UpdateStep<DTO, US, USS, WCC, WCCT>,
-        USS extends UpdateSetStep<DTO, US, USS, WCC, WCCT>,
-        WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT>,
-        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT>>
+        US extends UpdateStep<DTO, US, USS, WCC, WCCT, QCB>,
+        USS extends UpdateSetStep<DTO, US, USS, WCC, WCCT, QCB>,
+        WCC extends UpdateWhereConditionClause<DTO, WCC, WCCT, QCB>,
+        WCCT extends UpdateWhereConditionClauseTerminal<DTO, WCC, WCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>>
 
         permits DtoUpdateStart, SqlUpdateStart, UpdateStep {
 

@@ -36,7 +36,10 @@ public abstract class ContextStack<T> {
     }
 
     public T push(final LogicOperator logicOperator) {
-        final T subgroup = newSubInstance(logicOperator);
+        return push(logicOperator, newSubInstance(logicOperator));
+    }
+
+    public T push(final LogicOperator logicOperator, final T subgroup) {
         all.add(subgroup);
         stack.push(subgroup);
         return subgroup;

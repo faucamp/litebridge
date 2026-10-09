@@ -2,11 +2,9 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.api.merge.DtoMergeInsertStep;
+import org.litebridge.orm.api.merge.DtoMergeOnConditionClauseTerminal;
 import org.litebridge.orm.api.merge.DtoMergeOnStep;
-import org.litebridge.orm.api.merge.DtoMergeUpdateStep;
 import org.litebridge.orm.api.merge.DtoMergeUsingStep;
-import org.litebridge.orm.api.merge.MergeOnConditionClauseTerminal;
 import org.litebridge.orm.api.merge.MergeTerminal;
 import org.litebridge.orm.api.merge.MergeTerminalInspector;
 import org.litebridge.orm.api.update.DtoUpdateStep;
@@ -50,8 +48,8 @@ final class MergeBuilder extends InsertBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> QueryNode createMerge(final LinkedHashMap<String, @Nullable Object> row) {
-        final Class<T> dtoClass = (Class<T>) ormTable.dtoClass();
+    private <DTO> QueryNode createMerge(final LinkedHashMap<String, @Nullable Object> row) {
+        final Class<DTO> dtoClass = (Class<DTO>) ormTable.dtoClass();
         final String tableAlias = "upsert" + dtoClass.getSimpleName();
         final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
         final LinkedHashMap<String, @Nullable Object> pkValues = new LinkedHashMap<>(pkFields.size());
@@ -78,11 +76,11 @@ final class MergeBuilder extends InsertBuilder {
             }
         }
 
-        final DtoMergeOnStep<T> mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
+        final DtoMergeOnStep<DTO> mergeOnStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext)
                 .using(Fn.values(tableAlias, pkValues));
 
         final Set<String> pkFieldNames = new HashSet<>(pkFields.size());
-        MergeOnConditionClauseTerminal<T, DtoMergeUpdateStep<T>, DtoMergeInsertStep> mergeOnConditionClauseTerminal = null;
+        DtoMergeOnConditionClauseTerminal<DTO> mergeOnConditionClauseTerminal = null;
 
         for (FieldAccessor pkField : pkFields) {
             final String fieldName = pkField.name();
@@ -115,7 +113,7 @@ final class MergeBuilder extends InsertBuilder {
         if (!nonPkFields.isEmpty()) {
             mergeTerminal = mergeOnConditionClauseTerminal
                     .whenMatched(m -> m.update(u -> {
-                        DtoUpdateStep<T> dtoUpdateStep = null;
+                        DtoUpdateStep<DTO> dtoUpdateStep = null;
 
                         for (Map.Entry<String, @Nullable Object> entry : nonPkFields.sequencedEntrySet()) {
                             if (dtoUpdateStep == null) {

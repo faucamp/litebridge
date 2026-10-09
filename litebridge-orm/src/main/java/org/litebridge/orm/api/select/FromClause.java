@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * Starting point for constructing a SQL query by specifying the source table and schema.
  * <p>
@@ -20,15 +22,16 @@ package org.litebridge.orm.api.select;
  * @param <OBCC> the type of order by clause chain for chaining multiple orderings
  */
 public interface FromClause<DTO,
-        FCT extends FromClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
-        JC extends JoinClause<DTO, JCC, JCCT>,
-        JCC extends JoinConditionClause<DTO, JCC, JCCT>,
-        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT>,
-        WCC extends WhereConditionClause<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
-        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
-        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
-        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        FCT extends FromClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        JC extends JoinClause<DTO, JCC, JCCT, QCB>,
+        JCC extends JoinConditionClause<DTO, JCC, JCCT, QCB>,
+        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT, QCB>,
+        WCC extends WhereConditionClause<DTO, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>> {
 

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
@@ -107,7 +107,7 @@ class DtoWhereConditionClauseTerminalTest {
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
         final DtoWhereConditionClauseTerminal<SelectTestDto> terminal = new DtoWhereConditionClauseTerminal<>(whereNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gt(21);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gt(21);
 
         // When
         final DtoWhereConditionClauseTerminal<SelectTestDto> result = terminal.and(builder);
@@ -127,7 +127,7 @@ class DtoWhereConditionClauseTerminalTest {
     void and_withQueryConditionBuilder_throwsExceptionWhenNodeNotWhereNode() {
         // Given
         final DtoWhereConditionClauseTerminal<SelectTestDto> terminal = new DtoWhereConditionClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gt(21);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").gt(21);
 
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> terminal.and(builder));
@@ -178,7 +178,7 @@ class DtoWhereConditionClauseTerminalTest {
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
         final DtoWhereConditionClauseTerminal<SelectTestDto> terminal = new DtoWhereConditionClauseTerminal<>(whereNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
 
         // When
         final DtoWhereConditionClauseTerminal<SelectTestDto> result = terminal.or(builder);
@@ -198,7 +198,7 @@ class DtoWhereConditionClauseTerminalTest {
     void or_withQueryConditionBuilder_throwsExceptionWhenNodeNotWhereNode() {
         // Given
         final DtoWhereConditionClauseTerminal<SelectTestDto> terminal = new DtoWhereConditionClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
-        final QueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
+        final DtoQueryConditionBuilder<SelectTestDto> builder = q -> q.where("age").lt(10);
 
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> terminal.or(builder));

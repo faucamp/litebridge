@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -17,8 +18,9 @@ import java.util.function.Function;
  * @param <CCT>  the type of the terminal condition clause returned for further chaining
  */
 public interface ConditionClause<DTO,
-        SELF extends ConditionClause<DTO, SELF, CCT>,
-        CCT extends ConditionClauseTerminal<DTO, SELF, CCT>> {
+        SELF extends ConditionClause<DTO, SELF, CCT, QCB>,
+        CCT extends ConditionClauseTerminal<DTO, SELF, CCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>> {
 
     /**
      * Equals
@@ -69,12 +71,20 @@ public interface ConditionClause<DTO,
     CCT gte(final Object value);
 
     /**
-     * Creates a condition terminal for LIKE comparison with the specified value.
+     * Creates a condition terminal for a LIKE comparison with the specified value.
      *
      * @param value The pattern to match.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
     CCT like(final String value);
+
+    /**
+     * Creates a condition terminal for a NOT LIKE comparison with the specified value.
+     *
+     * @param value The pattern to match.
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT notLike(final String value);
 
     /**
      * Null comparison.
@@ -106,10 +116,10 @@ public interface ConditionClause<DTO,
     /**
      * Inclusion in a set.
      *
-     * @param values Collection of values that are part of the set
+     * @param values Collection/iterable of values that are part of the set
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
-    CCT in(final Collection<?> values);
+    CCT in(final Iterable<?> values);
 
     /**
      * Inclusion in the result set from the specified sub-select.

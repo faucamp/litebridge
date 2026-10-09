@@ -1,12 +1,11 @@
 package org.litebridge.orm.api.update;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.CbSqlConditionClauseTerminal;
 import org.litebridge.orm.api.condition.SqlConditionClauseStart;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -50,7 +49,7 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
     }
 
     @Override
-    public SqlUpdateWhereConditionClauseTerminal and(final QueryConditionBuilder<Row> query) {
+    public SqlUpdateWhereConditionClauseTerminal and(final SqlQueryConditionBuilder query) {
         return whereImpl(LogicOperator.AND, query);
     }
 
@@ -65,7 +64,7 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
     }
 
     @Override
-    public SqlUpdateWhereConditionClauseTerminal or(final QueryConditionBuilder<Row> query) {
+    public SqlUpdateWhereConditionClauseTerminal or(final SqlQueryConditionBuilder query) {
         return whereImpl(LogicOperator.OR, query);
     }
 
@@ -78,9 +77,9 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
         return new SqlUpdateWhereConditionClause(litebridgeContext, logicOperator, column, expression, recreator);
     }
 
-    private SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
+    private SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(tableName, node, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
         this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;
     }

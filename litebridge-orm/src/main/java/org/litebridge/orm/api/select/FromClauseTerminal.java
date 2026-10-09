@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * Terminal stage of the FROM clause in a fluent API for constructing SQL queries.
  * <p>
@@ -22,17 +24,18 @@ package org.litebridge.orm.api.select;
  * @param <OBCC> the type of the ORDER BY clause chain for chaining multiple sorting expressions
  */
 public interface FromClauseTerminal<DTO,
-        JC extends JoinClause<DTO, JCC, JCCT>,
-        JCC extends JoinConditionClause<DTO, JCC, JCCT>,
-        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT>,
-        WCC extends WhereConditionClause<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
-        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
-        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
-        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        JC extends JoinClause<DTO, JCC, JCCT, QCB>,
+        JCC extends JoinConditionClause<DTO, JCC, JCCT, QCB>,
+        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT, QCB>,
+        WCC extends WhereConditionClause<DTO, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-        extends JoinClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC> {
+        extends JoinClauseTerminal<DTO, JC, JCC, JCCT, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC> {
 
 }

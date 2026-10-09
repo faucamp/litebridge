@@ -1,12 +1,11 @@
 package org.litebridge.orm.api.delete;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.CbSqlConditionClauseTerminal;
 import org.litebridge.orm.api.condition.SqlConditionClauseStart;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -54,7 +53,7 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
     }
 
     @Override
-    public SqlDeleteWhereConditionClauseTerminal and(final QueryConditionBuilder<Row> query) {
+    public SqlDeleteWhereConditionClauseTerminal and(final SqlQueryConditionBuilder query) {
         return whereImpl(LogicOperator.AND, query);
     }
 
@@ -69,7 +68,7 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
     }
 
     @Override
-    public SqlDeleteWhereConditionClauseTerminal or(final QueryConditionBuilder<Row> query) {
+    public SqlDeleteWhereConditionClauseTerminal or(final SqlQueryConditionBuilder query) {
         return whereImpl(LogicOperator.OR, query);
     }
 
@@ -86,9 +85,9 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
         return new SqlDeleteWhereConditionClause(litebridgeContext, logicOperator, column, expression, recreator);
     }
 
-    private SqlDeleteWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
+    private SqlDeleteWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(tableName, node, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
         this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;
     }

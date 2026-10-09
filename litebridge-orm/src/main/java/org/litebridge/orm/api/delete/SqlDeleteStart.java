@@ -3,6 +3,7 @@ package org.litebridge.orm.api.delete;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
@@ -17,7 +18,8 @@ public final class SqlDeleteStart extends UpdateStepBase
 
         implements DeleteStart<Row,
         SqlDeleteWhereConditionClause,
-        SqlDeleteWhereConditionClauseTerminal>,
+        SqlDeleteWhereConditionClauseTerminal,
+        SqlQueryConditionBuilder>,
         DeleteTerminal {
 
     private final String tableName;

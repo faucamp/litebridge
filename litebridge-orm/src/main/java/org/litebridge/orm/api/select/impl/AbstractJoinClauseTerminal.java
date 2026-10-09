@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.impl;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
 import org.litebridge.orm.api.select.GroupByClauseTerminal;
 import org.litebridge.orm.api.select.HavingConditionClause;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
@@ -12,9 +13,9 @@ import org.litebridge.orm.api.select.OrderByClause;
 import org.litebridge.orm.api.select.OrderByClauseChain;
 import org.litebridge.orm.api.select.WhereConditionClause;
 import org.litebridge.orm.api.select.WhereConditionClauseTerminal;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.QueryNode;
 
 /**
  * Abstract base class for JOIN clause terminals.
@@ -32,19 +33,20 @@ import org.litebridge.orm.engine.SelectEngineTerminal;
  * @param <OBCC> the order by clause chain type
  */
 public abstract class AbstractJoinClauseTerminal<DTO,
-        JC extends JoinClause<DTO, JCC, SELF>,
-        JCC extends JoinConditionClause<DTO, JCC, SELF>,
-        SELF extends JoinConditionClauseTerminal<DTO, JCC, SELF>,
-        WCC extends WhereConditionClause<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
-        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC>,
-        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
-        HCC extends HavingConditionClause<DTO, HCC, HCCT, OBC, OBCC>,
-        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, OBC, OBCC>,
+        JC extends JoinClause<DTO, JCC, SELF, QCB>,
+        JCC extends JoinConditionClause<DTO, JCC, SELF, QCB>,
+        SELF extends JoinConditionClauseTerminal<DTO, JCC, SELF, QCB>,
+        WCC extends WhereConditionClause<DTO, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        WCCT extends WhereConditionClauseTerminal<DTO, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC>,
+        GBCT extends GroupByClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCC extends HavingConditionClause<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        HCCT extends HavingConditionClauseTerminal<DTO, HCC, HCCT, QCB, OBC, OBCC>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>,
         OBC extends OrderByClause<DTO, OBC, OBCC>,
         OBCC extends OrderByClauseChain<DTO, OBC, OBCC>>
 
-        extends AbstractWhereClauseTerminal<DTO, GBCT, HCC, HCCT, OBC, OBCC>
-        implements JoinClauseTerminal<DTO, JC, JCC, SELF, WCC, WCCT, GBCT, HCC, HCCT, OBC, OBCC> {
+        extends AbstractWhereClauseTerminal<DTO, GBCT, HCC, HCCT, QCB, OBC, OBCC>
+        implements JoinClauseTerminal<DTO, JC, JCC, SELF, WCC, WCCT, GBCT, HCC, HCCT, QCB, OBC, OBCC> {
 
     /**
      * Creates a new {@code AbstractJoinClauseTerminal} instance.

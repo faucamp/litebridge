@@ -4,10 +4,10 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
+import org.litebridge.orm.api.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -35,6 +35,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoGroupByClauseTerminal<DTO>,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>>
 
@@ -47,6 +48,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
         DtoGroupByClauseTerminal<DTO>,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>>,
 
@@ -76,7 +78,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoJoinConditionClauseTerminal<DTO> and(final QueryConditionBuilder<DTO> query) {
+    public DtoJoinConditionClauseTerminal<DTO> and(final DtoQueryConditionBuilder<DTO> query) {
         return joinImpl(LogicOperator.AND, query);
     }
 
@@ -91,7 +93,7 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoJoinConditionClauseTerminal<DTO> or(final QueryConditionBuilder<DTO> query) {
+    public DtoJoinConditionClauseTerminal<DTO> or(final DtoQueryConditionBuilder<DTO> query) {
         return joinImpl(LogicOperator.OR, query);
     }
 
@@ -199,9 +201,9 @@ public final class DtoJoinConditionClauseTerminal<DTO>
                 });
     }
 
-    private DtoJoinConditionClauseTerminal<DTO> joinImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+    private DtoJoinConditionClauseTerminal<DTO> joinImpl(final LogicOperator logicOperator, final DtoQueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final CbDtoConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
         final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 
         final ConditionGroupNode groupNode = new ConditionGroupNode(joinNode.condition(), logicOperator, conditionNode);

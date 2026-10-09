@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClause;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
@@ -18,11 +19,13 @@ import java.util.function.Function;
 public final class DtoHavingConditionClause<DTO>
         extends ConditionClauseImpl<DTO,
         DtoHavingConditionClause<DTO>,
-        DtoHavingConditionClauseTerminal<DTO>>
+        DtoHavingConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>>
 
         implements HavingConditionClause<DTO,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 

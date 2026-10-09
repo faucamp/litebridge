@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.update;
 
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -16,7 +17,8 @@ public final class DtoUpdateSetStep<DTO>
         DtoUpdateStep<DTO>,
         DtoUpdateSetStep<DTO>,
         DtoUpdateWhereConditionClause<DTO>,
-        DtoUpdateWhereConditionClauseTerminal<DTO>> {
+        DtoUpdateWhereConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>> {
 
     /**
      * Creates a new {@code DtoUpdateSetStep} instance with a field name.

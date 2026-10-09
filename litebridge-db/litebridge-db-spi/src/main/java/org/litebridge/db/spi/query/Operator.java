@@ -53,6 +53,10 @@ public enum Operator {
      */
     LIKE,
     /**
+     * Negated like
+     */
+    NOT_LIKE,
+    /**
      * Inclusion in a set
      */
     IN,

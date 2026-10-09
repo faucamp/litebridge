@@ -17,8 +17,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
  * @param <SELF> the type of the implementing subclass to enable type-safe fluent APIs
  */
 public interface ConditionClauseTerminal<DTO,
-        CC extends ConditionClause<DTO, CC, SELF>,
-        SELF extends ConditionClauseTerminal<DTO, CC, SELF>> {
+        CC extends ConditionClause<DTO, CC, SELF, QCB>,
+        SELF extends ConditionClauseTerminal<DTO, CC, SELF, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>> {
 
     /**
      * Adds an "AND" condition to the current condition clause using the specified column.
@@ -48,7 +49,7 @@ public interface ConditionClauseTerminal<DTO,
      * @param query Function that builds the nested condition clause
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
-    SELF and(QueryConditionBuilder<DTO> query);
+    SELF and(QCB query);
 
     /**
      * Adds an "OR" condition to the current condition clause using the specified column.
@@ -78,5 +79,5 @@ public interface ConditionClauseTerminal<DTO,
      * @param query Function that builds the nested condition clause
      * @return the parent condition clause interface, allowing further chaining of conditions
      */
-    SELF or(QueryConditionBuilder<DTO> query);
+    SELF or(QCB query);
 }

@@ -1,14 +1,19 @@
 package org.litebridge.spring.repository;
 
+import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.LitebridgeCore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
+import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 public class LitebridgeRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
         extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
@@ -45,6 +50,16 @@ public class LitebridgeRepositoryFactoryBean<T extends Repository<S, ID>, S, ID 
         @Override
         protected Class<?> getRepositoryBaseClass(final RepositoryMetadata metadata) {
             return LitebridgeRepositoryImpl.class;
+        }
+
+        @Override
+        public <T> T getRepository(Class<T> repositoryInterface, RepositoryComposition.RepositoryFragments fragments) {
+            return super.getRepository(repositoryInterface, fragments);
+        }
+
+        @Override
+        protected Optional<QueryLookupStrategy> getQueryLookupStrategy(QueryLookupStrategy.@Nullable Key key, ValueExpressionDelegate valueExpressionDelegate) {
+            return Optional.of(new LitebridgeQueryLookupStrategy(litebridge));
         }
     }
 }

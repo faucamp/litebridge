@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.update;
 
 import org.litebridge.db.spi.Row;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
@@ -15,7 +16,8 @@ public final class SqlUpdateSetStep
         SqlUpdateStep,
         SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
-        SqlUpdateWhereConditionClauseTerminal> {
+        SqlUpdateWhereConditionClauseTerminal,
+        SqlQueryConditionBuilder> {
 
     /**
      * Creates a new {@code SqlUpdateSetStep} instance with a column name.

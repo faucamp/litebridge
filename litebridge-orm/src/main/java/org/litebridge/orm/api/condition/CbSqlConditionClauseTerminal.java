@@ -11,7 +11,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * Implementation of a terminal condition clause for SQL-based queries.
  */
-public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClauseTerminal<Row> {
+public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClauseTerminal<Row, CbSqlConditionClause, CbSqlConditionClauseTerminal, SqlQueryConditionBuilder> {
 
     private final SelectNode selectNode;
 
@@ -40,9 +40,9 @@ public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClaus
     }
 
     @Override
-    protected AbstractCbConditionClauseTerminal<Row> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<Row> query) {
+    protected CbSqlConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
         final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
+        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
         return new CbSqlConditionClauseTerminal(selectNode,
                 new ConditionGroupNode(node, logicOperator, terminal.node()),
                 litebridgeContext);

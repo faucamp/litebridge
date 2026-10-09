@@ -12,7 +12,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
  *
  * @param <DTO> The type of the DTO being queried.
  */
-public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbConditionClauseTerminal<DTO> {
+public final class CbDtoConditionClauseTerminal<DTO>
+        extends AbstractCbConditionClauseTerminal<DTO, CbDtoConditionClause<DTO>, CbDtoConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>>
+        implements DtoConditionClauseTerminal<DTO, CbDtoConditionClause<DTO>, CbDtoConditionClauseTerminal<DTO>, DtoQueryConditionBuilder<DTO>> {
 
     /**
      * Constructs a new {@code CbDtoConditionClauseTerminal}.
@@ -36,9 +38,9 @@ public final class CbDtoConditionClauseTerminal<DTO> extends AbstractCbCondition
     }
 
     @Override
-    protected AbstractCbConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+    protected CbDtoConditionClauseTerminal<DTO> whereImpl(final LogicOperator logicOperator, final DtoQueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final CbDtoConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
         return new CbDtoConditionClauseTerminal<>(new ConditionGroupNode(node, logicOperator, terminal.node()), litebridgeContext);
     }
 

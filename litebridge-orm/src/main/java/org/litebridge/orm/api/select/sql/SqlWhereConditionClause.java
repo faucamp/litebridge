@@ -3,10 +3,11 @@ package org.litebridge.orm.api.select.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.WhereConditionClause;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -17,7 +18,8 @@ import java.util.function.Function;
 public final class SqlWhereConditionClause
         extends ConditionClauseImpl<Row,
         SqlWhereConditionClause,
-        SqlWhereConditionClauseTerminal>
+        SqlWhereConditionClauseTerminal,
+        SqlQueryConditionBuilder>
 
         implements WhereConditionClause<Row,
         SqlWhereConditionClause,
@@ -25,6 +27,7 @@ public final class SqlWhereConditionClause
         SqlGroupByClauseTerminal,
         SqlHavingConditionClause,
         SqlHavingConditionClauseTerminal,
+        SqlQueryConditionBuilder,
         SqlOrderByClause,
         SqlOrderByClauseChain> {
 

@@ -2,10 +2,10 @@ package org.litebridge.orm.api.select.dto;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.api.condition.AbstractCbConditionClauseTerminal;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
-import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
+import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClauseTerminal;
 import org.litebridge.orm.api.select.impl.AbstractHavingClauseTerminal;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -28,6 +28,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
         implements HavingConditionClauseTerminal<DTO,
         DtoHavingConditionClause<DTO>,
         DtoHavingConditionClauseTerminal<DTO>,
+        DtoQueryConditionBuilder<DTO>,
         DtoOrderByClause<DTO>,
         DtoOrderByClauseChain<DTO>> {
 
@@ -60,7 +61,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoHavingConditionClauseTerminal<DTO> and(final QueryConditionBuilder<DTO> query) {
+    public DtoHavingConditionClauseTerminal<DTO> and(final DtoQueryConditionBuilder<DTO> query) {
         return havingImpl(LogicOperator.AND, query);
     }
 
@@ -75,7 +76,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     @Override
-    public DtoHavingConditionClauseTerminal<DTO> or(final QueryConditionBuilder<DTO> query) {
+    public DtoHavingConditionClauseTerminal<DTO> or(final DtoQueryConditionBuilder<DTO> query) {
         return havingImpl(LogicOperator.OR, query);
     }
 
@@ -107,9 +108,9 @@ public final class DtoHavingConditionClauseTerminal<DTO>
                 conditionNode -> new DtoHavingConditionClauseTerminal<>(new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
-    private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final QueryConditionBuilder<DTO> query) {
+    private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final DtoQueryConditionBuilder<DTO> query) {
         final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(node, litebridgeContext);
-        final AbstractCbConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
+        final CbDtoConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
         final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 
         if (node instanceof HavingNode havingNode) {

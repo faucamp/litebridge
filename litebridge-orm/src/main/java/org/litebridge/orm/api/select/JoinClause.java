@@ -1,5 +1,7 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.orm.api.condition.QueryConditionBuilder;
+
 /**
  * Represents a join clause in a SQL query, allowing the definition of join operations
  * between tables.
@@ -11,7 +13,8 @@ package org.litebridge.orm.api.select;
  * @param <JCCT> the terminal type of the join condition clause, marking the end of the join conditions
  */
 public interface JoinClause<DTO,
-        JCC extends JoinConditionClause<DTO, JCC, JCCT>,
-        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT>> {
+        JCC extends JoinConditionClause<DTO, JCC, JCCT, QCB>,
+        JCCT extends JoinConditionClauseTerminal<DTO, JCC, JCCT, QCB>,
+        QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>> {
 
 }

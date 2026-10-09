@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -14,9 +15,7 @@ import java.util.function.Function;
 /**
  * Represents a JOIN clause in a SQL-based query.
  */
-public final class SqlJoinClause extends AbstractJoinClause<Row,
-        SqlJoinConditionClause,
-        SqlJoinConditionClauseTerminal> {
+public final class SqlJoinClause extends AbstractJoinClause<Row, SqlJoinConditionClause, SqlJoinConditionClauseTerminal, SqlQueryConditionBuilder> {
 
     private final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
 
