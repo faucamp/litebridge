@@ -39,6 +39,11 @@
                         --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.mapping=spring.beans
                         --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.mapping=litebridge.orm
                         --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.entity=litebridge.orm
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.repository=spring.beans
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.repository=spring.core
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.repository=spring.context
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.repository=litebridge.orm
+                        --add-opens litebridge.spring.boot.autoconfigure/org.litebridge.spring.boot.autoconfigure.test.repository=litebridge.spring
                         --add-opens litebridge.orm/org.litebridge.orm=litebridge.spring.boot.autoconfigure
                     </argLine>
                 </configuration>

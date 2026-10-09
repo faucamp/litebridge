@@ -24,18 +24,20 @@ When the starter is on the classpath, Litebridge will automatically:
 1.  **Detect a `DatabaseProvider`**: It scans the classpath for implementations of `DatabaseProvider`. If exactly one is found, it's used.
 2.  **Configure `LitebridgeTransactionManager`**: It creates a transaction manager that uses the application's `DataSource`.
 3.  **Create the `Litebridge` bean**: It instantiates the main `Litebridge` engine, ready for injection.
-4.  **Scan packages for entities**: It optionally scans a set of packages for entity classes and automatially registers them with Litebridge.
+4.  **Auto-configure Repositories**: It automatically discovers and registers interfaces extending `LitebridgeRepository` found in the application's package hierarchy.
+5.  **Scan packages for entities**: It optionally scans a set of packages for entity classes and automatically registers them with Litebridge.
 
 ## Configuration Properties
 
 The autoconfiguration can be customised using the following properties in `application.properties` or `application.yml`:
 
-| Property                                         | Description                                                                                                                                                              | Default               |
-|:-------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------|
-| `litebridge.database-provider.class`             | Fully qualified class name of the `DatabaseProvider` to use.                                                                                                             | (Auto-detected)       |
-| `litebridge.database-provider.scan-base-package` | Base package(s) to scan for `DatabaseProvider` implementations if `class` is not set.                                                                                    | `org.litebridge.db` |
-| `litebridge.scan-base-package`                   | One or more base packages to scan for Litebridge entities (annotated with `@Table`) and `TypeSafeDtoTableMapping` implementations.                                       | (None)                |
-| `litebridge.related-dto-strategy`                | How related DTOs should be handled when not included as a JOIN in a query. See [Related DTO Strategy](../persistence/configuration.md#related-dto-strategy) for details. | `NULL_IF_NO_JOIN`     |
+| Property                                     | Description                                                                                                                                                              | Default             |
+|:---------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------|
+| `litebridge.database-provider.class`         | Fully qualified class name of the `DatabaseProvider` to use.                                                                                                             | (Auto-detected)     |
+| `litebridge.database-provider.scan-base-package` | Base package(s) to scan for `DatabaseProvider` implementations if `class` is not set.                                                                                | `org.litebridge.db` |
+| `litebridge.scan-base-package`               | One or more base packages to scan for Litebridge entities (annotated with `@Table`) and `TypeSafeDtoTableMapping` implementations.                                       | (None)              |
+| `litebridge.related-dto-strategy`            | How related DTOs should be handled when not included as a JOIN in a query. See [Related DTO Strategy](../persistence/configuration.md#related-dto-strategy) for details. | `NULL_IF_NO_JOIN`   |
+| `spring.data.litebridge.repositories.enabled`| Controls whether Litebridge Spring Data repositories are automatically registered.                                                                                       | `true`              |
 
 ### Example
 
@@ -79,7 +81,9 @@ public class MyLitebridgeConfig {
 
 ## Usage
 
-Once configured, `Litebridge` can be injected into services and used alongside Spring's `@Transactional`.
+Once configured, `Litebridge` and repository beans can be injected into services and used alongside Spring's `@Transactional`.
+
+### Using Litebridge Directly
 
 ```java
 @Service
@@ -96,4 +100,41 @@ public class UserService {
         litebridge.save(user);
     }
 }
+```
+
+### Spring Data Repositories
+
+Any interface extending `LitebridgeRepository` located within the application's base package (or packages registered with `@AutoConfigurationPackage`) is automatically registered as a Spring bean:
+
+```java
+public interface UserRepository extends LitebridgeRepository<User, Long> {
+}
+```
+
+The repository can be directly injected into services:
+
+```java
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+}
+```
+
+### Custom Repository Configuration
+
+Explicit `@EnableLitebridgeRepositories` annotations take precedence over repository auto-configuration. When `@EnableLitebridgeRepositories` is declared, the auto-configuration backs off.
+
+To completely disable repository auto-configuration:
+
+```properties
+spring.data.litebridge.repositories.enabled=false
 ```
