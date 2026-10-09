@@ -96,6 +96,10 @@ public class LitebridgeRepositoryImpl<T, ID> implements LitebridgeRepository<T, 
 
     @Override
     public List<T> findAll(final Sort sort) {
+        if (sort.isUnsorted()) {
+            return findAll();
+        }
+
         final DtoFromClauseTerminal<T> query = litebridge.select(entityClass);
         final DtoOrderByClauseChain<T> orderByClauseChain = addOrderByClauseFromSort(sort, query);
         return orderByClauseChain.list();
@@ -103,6 +107,11 @@ public class LitebridgeRepositoryImpl<T, ID> implements LitebridgeRepository<T, 
 
     @Override
     public Page<T> findAll(final Pageable pageable) {
+        if (pageable.isUnpaged()) {
+            final List<T> records = findAll(pageable.getSort());
+            return new PageImpl<>(records, pageable, records.size());
+        }
+
         final DtoFromClauseTerminal<T> query = litebridge.select(entityClass);
         OrderByClauseTerminal<T> orderByClauseTerminal = query;
 

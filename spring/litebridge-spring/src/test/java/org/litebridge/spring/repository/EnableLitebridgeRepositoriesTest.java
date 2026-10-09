@@ -39,4 +39,26 @@ class EnableLitebridgeRepositoriesTest {
             }
         });
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void enableLitebridgeRepositories_repositoryProxySupportsPagingAndSorting() {
+        // Given
+        try (final AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+            context.register(TestConfig.class);
+            context.refresh();
+            final SampleRepository repository = context.getBean(SampleRepository.class);
+            final LitebridgeCore litebridgeCore = context.getBean(LitebridgeCore.class);
+            final org.litebridge.orm.api.select.dto.DtoFromClauseTerminal<Object> dtoSelectTerminal =
+                    Mockito.mock(org.litebridge.orm.api.select.dto.DtoFromClauseTerminal.class);
+            Mockito.when(litebridgeCore.select(Object.class)).thenReturn(dtoSelectTerminal);
+            Mockito.when(dtoSelectTerminal.list()).thenReturn(java.util.Collections.emptyList());
+
+            // When / Then
+            assertDoesNotThrow(() -> {
+                repository.findAll(org.springframework.data.domain.Sort.unsorted());
+                repository.findAll(org.springframework.data.domain.Pageable.unpaged());
+            });
+        }
+    }
 }
