@@ -1,0 +1,468 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {ArrowLeft, ArrowRight, Database, Leaf, Settings, Package, Zap, Layers, CheckCircle2} from '@lucide/astro';
+import CodeExample from '../components/CodeExample.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+
+const title = "Spring Boot integration";
+const description = "Configure and use Litebridge with Spring Boot, autoconfiguration, and Spring Data repositories";
+
+const starterDependencyCode = `<!-- pom.xml -->
+<dependency>
+    <groupId>org.litebridge</groupId>
+    <artifactId>litebridge-spring-boot-starter</artifactId>
+    <version>0.4.0</version> <!-- Use latest version -->
+</dependency>`;
+
+const configPropertiesExamples = [
+    {
+        id: 'yamlConfig',
+        title: 'application.yml',
+        filename: 'application.yml',
+        lang: 'yaml',
+        animate: false,
+        description: `Configure Litebridge settings using YAML format in <code>application.yml</code>.`,
+        code: `litebridge:
+  # Explicit DatabaseProvider class (auto-detected if omitted)
+  database-provider:
+    class: org.litebridge.db.h2.H2DatabaseProvider
+    scan-base-package: org.litebridge.db
+  # Package(s) to scan for @Table entities and TypeSafeDtoTableMapping classes
+  scan-base-package:
+    - com.example.app.entity
+    - com.example.app.dto
+  # Strategy when related DTOs are not joined: NULL_IF_NO_JOIN or PARTIAL_OBJECT_IF_NO_JOIN
+  related-dto-strategy: PARTIAL_OBJECT_IF_NO_JOIN
+  # Enable or disable repository autoconfiguration (default: true)
+  repositories:
+    enabled: true`
+    },
+    {
+        id: 'propertiesConfig',
+        title: 'application.properties',
+        filename: 'application.properties',
+        lang: 'properties',
+        animate: false,
+        description: `Configure Litebridge settings using standard Java properties format in <code>application.properties</code>.`,
+        code: `# Explicit DatabaseProvider class (auto-detected if omitted)
+litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider
+litebridge.database-provider.scan-base-package=org.litebridge.db
+
+# Package(s) to scan for @Table entities and TypeSafeDtoTableMapping classes
+litebridge.scan-base-package=com.example.app.entity,com.example.app.dto
+
+# Strategy when related DTOs are not joined: NULL_IF_NO_JOIN or PARTIAL_OBJECT_IF_NO_JOIN
+litebridge.related-dto-strategy=PARTIAL_OBJECT_IF_NO_JOIN
+
+# Enable or disable repository autoconfiguration (default: true)
+litebridge.repositories.enabled=true`
+    }
+];
+
+const registrationExamples = [
+    {
+        id: 'autoScan',
+        title: 'Automatic scanning',
+        filename: 'application.yml',
+        lang: 'yaml',
+        animate: false,
+        description: `When <code>litebridge.scan-base-package</code> is configured, Litebridge automatically scans for 
+<code>@Table</code> annotated classes and <code>TypeSafeDtoTableMapping</code> implementations upon application startup.`,
+        code: `# application.yml
+litebridge:
+  scan-base-package:
+    - com.example.app.entity
+    - com.example.app.mapping
+
+# Entities with @Table annotations and DTO mappings in these packages
+# are registered automatically with the Litebridge bean.`
+    },
+    {
+        id: 'manualConfig',
+        title: 'Manual configuration',
+        filename: 'LitebridgeConfig.java',
+        lang: 'java',
+        animate: false,
+        description: `For full programmatic control, register mappings manually using a Spring <code>@Configuration</code> class.`,
+        code: `import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.litebridge.orm.Litebridge;
+import org.litebridge.spring.boot.autoconfigure.LitebridgeConfigurer;
+
+import com.example.app.dto.User;
+import com.example.app.entity.Account;
+
+@Configuration
+public class LitebridgeConfig extends LitebridgeConfigurer {
+
+    @Override
+    public void configure(Litebridge litebridge) {
+        // Register annotated entity class
+        litebridge.register(Account.class);
+
+        // Programmatically register unannotated DTO
+        litebridge.register(User.class, rc -> rc.mapToTable("LB.USER")
+                .with(spec -> spec.mapField("id").toColumn("USER_ID"))
+                .with(spec -> spec.mapField("username").toColumn("USERNAME"))
+                .with(spec -> spec.mapField("email").toColumn("EMAIL"));
+    }
+}`
+    }
+];
+
+const directUsageCode = `package com.example.app.service;
+
+import org.litebridge.orm.Litebridge;
+import com.example.app.entity.User;
+import com.example.app.entity.meta.UserMeta;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class UserService {
+
+    private final Litebridge litebridge;
+
+    public UserService(Litebridge litebridge) {
+        this.litebridge = litebridge;
+    }
+
+    @Transactional
+    public User createUser(User user) {
+        return litebridge.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> findActiveUsers() {
+        return litebridge.select(User.class)
+            .from(User.class)
+            .where(UserMeta.active.isTrue())
+            .list();
+    }
+}`;
+
+const repositoryExamples = [
+    {
+        id: 'repoInterface',
+        title: 'Repository interface',
+        filename: 'UserRepository.java',
+        lang: 'java',
+        animate: false,
+        description: `Define a repository by extending <code>LitebridgeRepository&lt;T, ID&gt;</code>. 
+It is automatically detected and registered as a Spring bean.`,
+        code: `package com.example.app.repository;
+
+import org.litebridge.spring.repository.LitebridgeRepository;
+import com.example.app.entity.User;
+
+public interface UserRepository extends LitebridgeRepository<User, Long> {
+    // Inherits standard CRUD methods:
+    // - findAll(), findById(id), existsById(id), count()
+    // - save(entity), saveAll(entities)
+    // - delete(entity), deleteById(id), deleteAll()
+}`
+    },
+    {
+        id: 'repoService',
+        title: 'Service injection',
+        filename: 'UserAccountService.java',
+        lang: 'java',
+        animate: false,
+        description: `Inject the repository directly into your service layer with Spring's <code>@Transactional</code> support.`,
+        code: `package com.example.app.service;
+
+import com.example.app.entity.User;
+import com.example.app.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class UserAccountService {
+
+    private final UserRepository userRepository;
+
+    public UserAccountService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<User> getUserById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Transactional
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+}`
+    },
+    {
+        id: 'customRepoConfig',
+        title: 'Custom configuration',
+        filename: 'RepositoryConfig.java',
+        lang: 'java',
+        animate: false,
+        description: `Use <code>@EnableLitebridgeRepositories</code> for explicit base package scanning or custom repository setup.`,
+        code: `package com.example.app.config;
+
+import org.litebridge.spring.repository.EnableLitebridgeRepositories;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+// Explicit configuration overrides default repository autoconfiguration
+@EnableLitebridgeRepositories(basePackages = "com.example.app.repository")
+public class RepositoryConfig {
+}
+
+/*
+# To completely disable repository autoconfiguration, set in application.properties:
+# litebridge.repositories.enabled=false
+*/`
+    }
+];
+---
+
+<Layout title={title} description={description}>
+    <div class="pt-32 pb-20 lg:pt-48 lg:pb-32">
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="mb-12 reveal">
+                <a
+                        href="/examples"
+                        class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-accent dark:text-gray-400 dark:hover:text-accent transition-colors mb-6"
+                >
+                    <ArrowLeft class="h-4 w-4"/>
+                    Back to Examples
+                </a>
+                <h1 class="text-4xl font-extrabold tracking-tight text-primary dark:text-white sm:text-6xl mb-6">
+                    Spring Boot integration
+                </h1>
+                <p class="text-xl text-gray-500 dark:text-gray-400">
+                    Seamlessly integrate Litebridge into Spring Boot applications with autoconfiguration, transaction
+                    management, and Spring Data repositories.
+                </p>
+            </div>
+
+            <div class="space-y-16">
+                <!-- Starter Dependency & Autoconfiguration -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Package class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Starter dependency</h2>
+                    </div>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">
+                        Add the <code>litebridge-spring-boot-starter</code> dependency to your project's
+                        <code>pom.xml</code>:
+                    </p>
+                    <CodeBlock filename="pom.xml" lang="xml" code={starterDependencyCode} hints={{}}/>
+
+                    <div class="mt-8 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-dark-bg">
+                        <h3 class="text-lg font-bold text-primary dark:text-white mb-4 flex items-center gap-2">
+                            <Leaf class="h-5 w-5 text-accent"/>
+                            What does autoconfiguration do?
+                        </h3>
+                        <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                            <li class="flex items-start gap-3">
+                                <CheckCircle2 class="h-5 w-5 text-accent flex-shrink-0 mt-0.5"/>
+                                <span><strong>DatabaseProvider detection</strong>: Scans the classpath for database providers (e.g. H2, PostgreSQL, Oracle) and selects the available implementation.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <CheckCircle2 class="h-5 w-5 text-accent flex-shrink-0 mt-0.5"/>
+                                <span><strong>Transaction management</strong>: Configures a <code>LitebridgeTransactionManager</code> backed by the application's <code>DataSource</code>, fully integrated with Spring's <code>@Transactional</code>.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <CheckCircle2 class="h-5 w-5 text-accent flex-shrink-0 mt-0.5"/>
+                                <span><strong>Litebridge bean creation</strong>: Instantiates the central <code>Litebridge</code> instance and exposes it as an injectable Spring bean.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <CheckCircle2 class="h-5 w-5 text-accent flex-shrink-0 mt-0.5"/>
+                                <span><strong>Repository autoconfiguration</strong>: Automatically registers any interface extending <code>LitebridgeRepository&lt;T, ID&gt;</code> located in the application's package hierarchy.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <CheckCircle2 class="h-5 w-5 text-accent flex-shrink-0 mt-0.5"/>
+                                <span><strong>Entity &amp; DTO scanning</strong>: Discovers annotated <code>@Table</code> entities and <code>TypeSafeDtoTableMapping</code> classes in packages specified by <code>litebridge.scan-base-package</code>.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Configuration Properties -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Settings class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Configuration properties</h2>
+                    </div>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">
+                        Customize autoconfiguration behavior using YAML or standard Java properties:
+                    </p>
+                    <CodeExample examples={configPropertiesExamples}/>
+
+                    <div class="mt-6 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+                        <table class="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-gray-800">
+                            <thead class="bg-gray-50 dark:bg-gray-800/50">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold text-primary dark:text-white">Property</th>
+                                <th class="px-4 py-3 font-semibold text-primary dark:text-white">Description</th>
+                                <th class="px-4 py-3 font-semibold text-primary dark:text-white">Default</th>
+                            </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-800 text-gray-600 dark:text-gray-400">
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-xs text-primary dark:text-white">
+                                    litebridge.database-provider.class
+                                </td>
+                                <td class="px-4 py-3">Fully qualified class name of the <code>DatabaseProvider</code> to
+                                    use.
+                                </td>
+                                <td class="px-4 py-3 font-mono text-xs">(Auto-detected)</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-xs text-primary dark:text-white">
+                                    litebridge.database-provider.scan-base-package
+                                </td>
+                                <td class="px-4 py-3">Base package(s) to scan for <code>DatabaseProvider</code>
+                                    implementations.
+                                </td>
+                                <td class="px-4 py-3 font-mono text-xs">org.litebridge.db</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-xs text-primary dark:text-white">
+                                    litebridge.scan-base-package
+                                </td>
+                                <td class="px-4 py-3">Package(s) to scan for <code>@Table</code> entities and <code>TypeSafeDtoTableMapping</code>
+                                    classes.
+                                </td>
+                                <td class="px-4 py-3 font-mono text-xs">(None)</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-xs text-primary dark:text-white">
+                                    litebridge.related-dto-strategy
+                                </td>
+                                <td class="px-4 py-3">Handling of unjoined related DTOs (<code>NULL_IF_NO_JOIN</code> or
+                                    <code>PARTIAL_OBJECT_IF_NO_JOIN</code>).
+                                </td>
+                                <td class="px-4 py-3 font-mono text-xs">NULL_IF_NO_JOIN</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-xs text-primary dark:text-white">
+                                    litebridge.repositories.enabled
+                                </td>
+                                <td class="px-4 py-3">Controls whether Litebridge Spring Data repositories are
+                                    automatically registered.
+                                </td>
+                                <td class="px-4 py-3 font-mono text-xs">true</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Entity & Mapping Registration -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Layers class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Entity &amp; mapping
+                            registration</h2>
+                    </div>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">
+                        Entities and DTO mappings can be discovered automatically via package scanning or explicitly
+                        registered using a Spring configuration class:
+                    </p>
+                    <CodeExample examples={registrationExamples}/>
+
+                    <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                        <a
+                                href="/mapping-entities"
+                                class="flex-1 rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-accent hover:shadow-md dark:border-gray-800 dark:bg-dark-bg group flex items-center justify-between"
+                        >
+                            <div>
+                                <h4 class="font-bold text-primary dark:text-white group-hover:text-accent transition-colors">
+                                    Annotated entities</h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Explore <code>@Table</code>,
+                                    <code>@Column</code>, and relation annotations</p>
+                            </div>
+                            <ArrowRight class="h-4 w-4 text-accent transition-transform group-hover:translate-x-1"/>
+                        </a>
+                        <a
+                                href="/mapping-dtos"
+                                class="flex-1 rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-accent hover:shadow-md dark:border-gray-800 dark:bg-dark-bg group flex items-center justify-between"
+                        >
+                            <div>
+                                <h4 class="font-bold text-primary dark:text-white group-hover:text-accent transition-colors">
+                                    Plain DTO mappings</h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Explore <code>TypeSafeDtoTableMapping</code>
+                                    and <code>TableSpec</code></p>
+                            </div>
+                            <ArrowRight class="h-4 w-4 text-accent transition-transform group-hover:translate-x-1"/>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Direct Litebridge Usage -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Zap class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Direct Litebridge usage</h2>
+                    </div>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">
+                        Inject the <code>Litebridge</code> bean directly into Spring services. Operations seamlessly
+                        participate in Spring's <code>@Transactional</code> transaction context:
+                    </p>
+                    <CodeBlock filename="UserService.java" lang="java" code={directUsageCode} hints={{}}/>
+                </section>
+
+                <!-- Spring Data Repositories -->
+                <section class="reveal" style="transition-delay: 100ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <Database class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Spring Data repositories</h2>
+                    </div>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">
+                        Declare interfaces extending <code>LitebridgeRepository&lt;T, ID&gt;</code> for boilerplate-free
+                        CRUD operations and Spring Data integration:
+                    </p>
+                    <CodeExample examples={repositoryExamples}/>
+                </section>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.8s ease-out;
+    }
+
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>

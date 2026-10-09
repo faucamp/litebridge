@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import {Search, PenTool, GitMerge, Layers, Settings, ArrowRight, Rocket, Wrench, DatabaseX} from '@lucide/astro';
+import {Search, PenTool, GitMerge, Layers, Settings, ArrowRight, Rocket, Wrench, DatabaseX, Leaf} from '@lucide/astro';
 import CodeBlock from "../components/CodeBlock.astro";
 
 const title = "Code Examples";
@@ -54,6 +54,12 @@ const exampleCategories = [
       description: 'Map database tables to Java records, plain DTOs, or annotated entities.',
       href: '/mapping',
       icon: Layers,
+    },
+    {
+      title: 'Spring integration',
+      description: 'Configure Spring Boot starter, autoconfiguration, transactions, and Spring Data repositories.',
+      href: '/spring-boot',
+      icon: Leaf,
     },
 ];
 ---
@@ -161,7 +167,7 @@ const exampleCategories = [
                     <p class="mb-4 text-gray-600 dark:text-gray-400">
                         The examples in this documentation use common imports and initialisation code:
                     </p>
-                    <CodeBlock filename="ExampleBase.java" code={commonExampleCode} hints={}/>
+                    <CodeBlock filename="ExampleBase.java" code={commonExampleCode} hints={{}}/>
                 </section>
             </div>
         </div>

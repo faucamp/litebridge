@@ -16,7 +16,7 @@ Since the ORM itself is compiled against Java 21, the earliest supported Spring 
 
 There are two primary ways to integrate Litebridge with Spring:
 
-1.  **[Spring Boot Starter](spring-boot-starter.md)**: The recommended approach for Spring Boot applications. It provides autoconfiguration for `Litebridge` and `LitebridgeTransactionManager` beans.
+1.  **[Spring Boot Starter](spring-boot-starter.md)**: The recommended approach for Spring Boot applications. It provides autoconfiguration for `Litebridge` and `LitebridgeTransactionManager` beans, and Spring Data repositories.
 2.  **[Manual Configuration](manual-configuration.md)**: For non-Boot Spring applications or when full control over bean instantiation is required.
 
 ## Core Components
