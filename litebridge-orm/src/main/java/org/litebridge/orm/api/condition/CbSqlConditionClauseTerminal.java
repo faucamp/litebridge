@@ -41,7 +41,7 @@ public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClaus
 
     @Override
     protected CbSqlConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
         final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
         return new CbSqlConditionClauseTerminal(selectNode,
                 new ConditionGroupNode(node, logicOperator, terminal.node()),

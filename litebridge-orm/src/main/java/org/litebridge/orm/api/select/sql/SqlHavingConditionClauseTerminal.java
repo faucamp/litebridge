@@ -109,7 +109,7 @@ public final class SqlHavingConditionClauseTerminal
     }
 
     private SqlHavingConditionClauseTerminal havingImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
         final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
         final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 

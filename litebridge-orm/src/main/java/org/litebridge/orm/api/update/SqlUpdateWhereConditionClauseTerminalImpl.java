@@ -78,7 +78,7 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
     }
 
     private SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(tableName, node, litebridgeContext);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(tableName, null, litebridgeContext);
         final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
         this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;

@@ -130,7 +130,7 @@ public final class SqlWhereConditionClauseTerminal
             throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + node);
         }
 
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, node, litebridgeContext);
+        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
         final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
 
         whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));

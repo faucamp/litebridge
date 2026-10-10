@@ -109,7 +109,7 @@ public final class DtoHavingConditionClauseTerminal<DTO>
     }
 
     private DtoHavingConditionClauseTerminal<DTO> havingImpl(final LogicOperator logicOperator, final DtoQueryConditionBuilder<DTO> query) {
-        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(node, litebridgeContext);
+        final DtoConditionClauseStart<DTO> conditionClauseStart = new DtoConditionClauseStart<>(null, litebridgeContext);
         final CbDtoConditionClauseTerminal<DTO> terminal = query.apply(conditionClauseStart);
         final QueryNode conditionNode = CbConditionClauseTerminalInspector.getNode(terminal);
 
