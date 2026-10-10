@@ -73,7 +73,7 @@ litebridge.nativeSql()
 // Using named parameters
 litebridge.nativeSql()
     .execute("MERGE INTO LB.PERSON AS P "
-        + "USING (VALUES (:personId)) AS \"newPerson\" (\"id\") "
+        + "USING (VALUES (:personId)) AS \\"newPerson\\" (\\"id\\") "
         + "ON (P.PERSON_ID = \\"newPerson\\".\\"id\\") "
         + "WHEN MATCHED THEN UPDATE SET FIRST_NAME = :firstName, SURNAME = :surname "
         + "WHEN NOT MATCHED THEN INSERT (PERSON_ID, FIRST_NAME, SURNAME) "

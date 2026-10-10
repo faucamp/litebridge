@@ -232,8 +232,8 @@ for (String name : names) {
 }
 
 // Specific logical combinations may be specified, overriding the default operator
-// Shorthand alternative: criteria.and(q -> q.where(PersonMeta.tags).contains("important"));
-criteria.add(LogicOperator.AND, q -> q.where(PersonMeta.tags).contains("important"));
+// Shorthand alternative: criteria.and(q -> q.where(PersonMeta.surname).like("A%"));
+criteria.add(LogicOperator.AND, q -> q.where(PersonMeta.surname).like("A%"));
 
 List<Person> results = criteria.build().list();`
     }
