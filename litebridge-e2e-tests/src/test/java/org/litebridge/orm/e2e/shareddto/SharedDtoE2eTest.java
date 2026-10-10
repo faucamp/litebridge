@@ -94,11 +94,10 @@ class SharedDtoE2eTest extends AbstractE2eTest {
         assertEquals(server.getStatus().message(), resultStatus.message());
 
         // Count specific Status records
-        final int sqlapplicationStatusCount = litebridge.select(Fn.count())
+        final long sqlapplicationStatusCount = litebridge.select(Fn.count())
                 .from(tableApplicationStatus)
                 .where(columnCode).neq(418)
                 .stream()
-                .map(row -> ((Number) row.column(0).value()).intValue())
                 .findFirst().orElseThrow();
 
         assertEquals(1, sqlapplicationStatusCount);

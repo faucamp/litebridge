@@ -47,11 +47,11 @@ class SqlHavingConditionClauseTerminalTest {
     void and_withColumn_whenNodeIsNotHavingNode() {
         // Given
         final QueryNode queryNode = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, queryNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, queryNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlHavingConditionClause clause = terminal.and("age");
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.gt(18);
+        final SqlHavingConditionClause<Row> clause = terminal.and("age");
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.gt(18);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -70,11 +70,11 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 5);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlHavingConditionClause clause = terminal.and("age");
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.lt(65);
+        final SqlHavingConditionClause<Row> clause = terminal.and("age");
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.lt(65);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -91,12 +91,12 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void and_withExpression_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
-        final SqlHavingConditionClause clause = terminal.and(countExpr);
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.gte(2);
+        final SqlHavingConditionClause<Row> clause = terminal.and(countExpr);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.gte(2);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -114,12 +114,12 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
-        final SqlHavingConditionClause clause = terminal.and(countExpr);
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.lte(10);
+        final SqlHavingConditionClause<Row> clause = terminal.and(countExpr);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.lte(10);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -136,11 +136,11 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void and_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").gt(21);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
 
         // When
-        final SqlHavingConditionClauseTerminal nextTerminal = terminal.and(builder);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = terminal.and(builder);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -162,11 +162,11 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("name").isNotNull();
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("name").isNotNull();
 
         // When
-        final SqlHavingConditionClauseTerminal nextTerminal = terminal.and(builder);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = terminal.and(builder);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -181,11 +181,11 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void or_withColumn_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlHavingConditionClause clause = terminal.or("name");
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.eq("Alice");
+        final SqlHavingConditionClause<Row> clause = terminal.or("name");
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.eq("Alice");
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -202,11 +202,11 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlHavingConditionClause clause = terminal.or("name");
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.eq("Bob");
+        final SqlHavingConditionClause<Row> clause = terminal.or("name");
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.eq("Bob");
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -222,12 +222,12 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void or_withExpression_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
-        final SqlHavingConditionClause clause = terminal.or(countExpr);
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.lte(10);
+        final SqlHavingConditionClause<Row> clause = terminal.or(countExpr);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.lte(10);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -244,12 +244,12 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
-        final SqlHavingConditionClause clause = terminal.or(countExpr);
-        final SqlHavingConditionClauseTerminal nextTerminal = clause.gt(5);
+        final SqlHavingConditionClause<Row> clause = terminal.or(countExpr);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = clause.gt(5);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -265,11 +265,11 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void or_withQueryConditionBuilder_whenNodeIsNotHavingNode() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When
-        final SqlHavingConditionClauseTerminal nextTerminal = terminal.or(builder);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = terminal.or(builder);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -284,11 +284,11 @@ class SqlHavingConditionClauseTerminalTest {
         // Given
         final ConditionNode existingCondition = new ConditionNode(null, LogicOperator.NOOP, null, Fn.count(), Operator.GT, 1);
         final HavingNode existingHavingNode = new HavingNode(groupByNode, existingCondition);
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, existingHavingNode, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When
-        final SqlHavingConditionClauseTerminal nextTerminal = terminal.or(builder);
+        final SqlHavingConditionClauseTerminal<Row> nextTerminal = terminal.or(builder);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -300,14 +300,14 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void orderBy_withColumns() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy("age");
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy("age");
 
         // Then
         assertNotNull(orderByClause);
-        final SqlOrderByClauseChain chain = orderByClause.asc();
+        final SqlOrderByClauseChain<Row> chain = orderByClause.asc();
         final OrderByNode orderByNode = assertInstanceOf(OrderByNode.class, SelectTerminalInspector.getNode(chain));
         assertEquals("age", orderByNode.column());
         assertTrue(orderByNode.ascending());
@@ -316,15 +316,15 @@ class SqlHavingConditionClauseTerminalTest {
     @Test
     void orderBy_withExpressions() {
         // Given
-        final SqlHavingConditionClauseTerminal terminal = new SqlHavingConditionClauseTerminal(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
+        final SqlHavingConditionClauseTerminal<Row> terminal = new SqlHavingConditionClauseTerminal<>(selectNode, groupByNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy(expr);
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy(expr);
 
         // Then
         assertNotNull(orderByClause);
-        final SqlOrderByClauseChain chain = orderByClause.desc();
+        final SqlOrderByClauseChain<Row> chain = orderByClause.desc();
         final OrderByNode orderByNode = assertInstanceOf(OrderByNode.class, SelectTerminalInspector.getNode(chain));
         assertEquals(expr, orderByNode.expression());
         assertFalse(orderByNode.ascending());

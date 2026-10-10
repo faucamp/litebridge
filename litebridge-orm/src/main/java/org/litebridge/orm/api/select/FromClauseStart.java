@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.select;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.impl.DelegatingSelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
@@ -23,7 +22,7 @@ import java.util.function.Function;
 /**
  * Entry point for the "FROM" clause of a query.
  */
-public final class FromClauseStart extends DelegatingSelectTerminal<Row> {
+public final class FromClauseStart<ReturnType> extends DelegatingSelectTerminal<ReturnType> {
 
     private final String @Nullable [] columns;
     private final ExpressionSpec @Nullable [] expressionSpecs;
@@ -113,11 +112,11 @@ public final class FromClauseStart extends DelegatingSelectTerminal<Row> {
      * @param table the table name.
      * @return the SQL from clause terminal.
      */
-    public SqlFromClauseTerminal from(final String table) {
+    public SqlFromClauseTerminal<ReturnType> from(final String table) {
         return fromImpl(table, null);
     }
 
-    public SqlFromClauseTerminal from(final SqlFromTargetSpec fromTargetSpec) {
+    public SqlFromClauseTerminal<ReturnType> from(final SqlFromTargetSpec fromTargetSpec) {
         return switch (fromTargetSpec) {
             case QueryAliasSpec queryAliasSpec -> fromImpl(queryAliasSpec.query(), queryAliasSpec.alias());
             case TableAliasSpec tableAliasSpec -> fromImpl(tableAliasSpec.table(), tableAliasSpec.alias());
@@ -130,23 +129,23 @@ public final class FromClauseStart extends DelegatingSelectTerminal<Row> {
      * @param query function building the subquery
      * @return the merge ON condition clause terminal
      */
-    public SqlFromClauseTerminal from(final Function<SelectApi, SelectTerminal<?>> query) {
+    public SqlFromClauseTerminal<ReturnType> from(final Function<SelectApi, SelectTerminal<?>> query) {
         return fromImpl(query, null);
     }
 
-    private SqlFromClauseTerminal fromImpl(final String table, final @Nullable String alias) {
+    private SqlFromClauseTerminal<ReturnType> fromImpl(final String table, final @Nullable String alias) {
         final Class<?>[] resultTypes = createResultTypes();
         final SelectNode selectNode = new SelectNode(table, alias, columns, expressionSpecs, resultTypes);
-        return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
+        return new SqlFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
     }
 
-    private SqlFromClauseTerminal fromImpl(final Function<SelectApi, SelectTerminal<?>> query, final @Nullable String alias) {
+    private SqlFromClauseTerminal<ReturnType> fromImpl(final Function<SelectApi, SelectTerminal<?>> query, final @Nullable String alias) {
         final Class<?>[] resultTypes = createResultTypes();
         final LitebridgeContext litebridgeContext = litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL);
         final SelectTerminal<?> selectTerminal = query.apply(new SelectApiImpl(litebridgeContext));
         final QueryNode fromQueryTerminalNode = Objects.requireNonNull(SelectTerminalInspector.getNode(selectTerminal));
         final SelectNode selectNode = new SelectNode(fromQueryTerminalNode, alias, columns, expressionSpecs, resultTypes);
-        return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContext);
+        return new SqlFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
     private Class<?> @Nullable [] createResultTypes() {

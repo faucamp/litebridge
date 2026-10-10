@@ -19,12 +19,12 @@ public final class SqlUpdateWhereConditionClause
         extends ConditionClauseImpl<Row,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder>
+        SqlQueryConditionBuilder<Row>>
 
         implements UpdateWhereConditionClause<Row,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder> {
+        SqlQueryConditionBuilder<Row>> {
 
     /**
      * Creates a new {@code SqlUpdateWhereConditionClause} instance.

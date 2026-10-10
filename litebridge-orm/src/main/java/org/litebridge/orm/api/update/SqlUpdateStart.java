@@ -16,7 +16,7 @@ public final class SqlUpdateStart extends UpdateStepBase
         SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder> {
+        SqlQueryConditionBuilder<Row>> {
 
     private final UpdateNode updateNode;
     private final String tableName;

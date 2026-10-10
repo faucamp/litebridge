@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 class ConditionImplementationTest {
 
     @Test
-    @SuppressWarnings("unchecked")
     void testDtoConditionClauses() {
         final OrmTable ormTable = mock(OrmTable.class);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
@@ -49,28 +48,26 @@ class ConditionImplementationTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void testSqlConditionClauses() {
         final String table = "TEST";
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
 
-        final SqlConditionClauseStart start = new SqlConditionClauseStart(table, null, litebridgeContext);
-        final CbSqlConditionClause clause = start.where("COL");
+        final SqlConditionClauseStart<Row> start = new SqlConditionClauseStart<>(table, null, litebridgeContext);
+        final CbSqlConditionClause<Row> clause = start.where("COL");
 
         assertNotNull(clause);
         assertInstanceOf(CbSqlConditionClause.class, clause);
 
-        final CbSqlConditionClauseTerminal terminal = clause.eq("val");
+        final CbSqlConditionClauseTerminal<Row> terminal = clause.eq("val");
         assertNotNull(terminal);
         assertInstanceOf(ConditionNode.class, terminal.node());
 
-        final CbSqlConditionClause nextClause = terminal.or("OTHER_COL");
+        final CbSqlConditionClause<Row> nextClause = terminal.or("OTHER_COL");
         assertNotNull(nextClause);
         assertEquals(LogicOperator.OR, ((ConditionNode) nextClause.eq("x").node()).logicOperator());
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void testNestedConditions() {
         final OrmTable ormTable = mock(OrmTable.class);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);

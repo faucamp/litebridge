@@ -46,11 +46,11 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlWhereConditionClause clause = terminal.and("age");
-        final SqlWhereConditionClauseTerminal nextTerminal = clause.gt(18);
+        final SqlWhereConditionClause<Row> clause = terminal.and("age");
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = clause.gt(18);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -66,11 +66,11 @@ class SqlWhereConditionClauseTerminalTest {
     void and_withColumn_whenNodeIsNotWhereNode() {
         // Given
         final QueryNode queryNode = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, queryNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, queryNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlWhereConditionClause clause = terminal.and("name");
-        final SqlWhereConditionClauseTerminal nextTerminal = clause.eq("Bob");
+        final SqlWhereConditionClause<Row> clause = terminal.and("name");
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = clause.eq("Bob");
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
@@ -87,12 +87,12 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlWhereConditionClause clause = terminal.and(expr);
-        final SqlWhereConditionClauseTerminal nextTerminal = clause.lte(60);
+        final SqlWhereConditionClause<Row> clause = terminal.and(expr);
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = clause.lte(60);
 
         // Then
         final ConditionNode conditionNode = assertInstanceOf(ConditionNode.class, whereNode.condition());
@@ -107,11 +107,11 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").gt(21);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
 
         // When
-        final SqlWhereConditionClauseTerminal result = terminal.and(builder);
+        final SqlWhereConditionClauseTerminal<Row> result = terminal.and(builder);
 
         // Then
         assertSame(terminal, result);
@@ -128,8 +128,8 @@ class SqlWhereConditionClauseTerminalTest {
     void and_withQueryConditionBuilder_throwsExceptionWhenNodeNotWhereNode() {
         // Given
         final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").gt(21);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, node, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").gt(21);
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> terminal.and(builder));
@@ -141,11 +141,11 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlWhereConditionClause clause = terminal.or("age");
-        final SqlWhereConditionClauseTerminal nextTerminal = clause.lt(30);
+        final SqlWhereConditionClause<Row> clause = terminal.or("age");
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = clause.lt(30);
 
         // Then
         final ConditionNode conditionNode = assertInstanceOf(ConditionNode.class, whereNode.condition());
@@ -160,12 +160,12 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlWhereConditionClause clause = terminal.or(expr);
-        final SqlWhereConditionClauseTerminal nextTerminal = clause.gte(18);
+        final SqlWhereConditionClause<Row> clause = terminal.or(expr);
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = clause.gte(18);
 
         // Then
         final ConditionNode conditionNode = assertInstanceOf(ConditionNode.class, whereNode.condition());
@@ -180,11 +180,11 @@ class SqlWhereConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "name", null, Operator.EQ, "Alice");
         final WhereNode whereNode = new WhereNode(selectNode, initialCondition);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When
-        final SqlWhereConditionClauseTerminal result = terminal.or(builder);
+        final SqlWhereConditionClauseTerminal<Row> result = terminal.or(builder);
 
         // Then
         assertSame(terminal, result);
@@ -201,8 +201,8 @@ class SqlWhereConditionClauseTerminalTest {
     void or_withQueryConditionBuilder_throwsExceptionWhenNodeNotWhereNode() {
         // Given
         final QueryNode node = new ConditionNode(null, LogicOperator.NOOP, "age", null, Operator.GT, 18);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, node, selectEngineTerminal, litebridgeContext);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").lt(10);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, node, selectEngineTerminal, litebridgeContext);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").lt(10);
 
         // When & Then
         final IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> terminal.or(builder));
@@ -213,10 +213,10 @@ class SqlWhereConditionClauseTerminalTest {
     void groupBy_withColumns() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlGroupByClauseTerminal groupByTerminal = terminal.groupBy("name");
+        final SqlGroupByClauseTerminal<Row> groupByTerminal = terminal.groupBy("name");
 
         // Then
         assertNotNull(groupByTerminal);
@@ -229,11 +229,11 @@ class SqlWhereConditionClauseTerminalTest {
     void groupBy_withExpressions() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("name");
 
         // When
-        final SqlGroupByClauseTerminal groupByTerminal = terminal.groupBy(expr);
+        final SqlGroupByClauseTerminal<Row> groupByTerminal = terminal.groupBy(expr);
 
         // Then
         assertNotNull(groupByTerminal);
@@ -246,11 +246,11 @@ class SqlWhereConditionClauseTerminalTest {
     void orderBy_withColumns() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy("age");
-        final SqlOrderByClauseChain chain = orderByClause.asc();
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy("age");
+        final SqlOrderByClauseChain<Row> chain = orderByClause.asc();
 
         // Then
         assertNotNull(chain);
@@ -264,12 +264,12 @@ class SqlWhereConditionClauseTerminalTest {
     void orderBy_withExpressions() {
         // Given
         final WhereNode whereNode = new WhereNode(selectNode, null);
-        final SqlWhereConditionClauseTerminal terminal = new SqlWhereConditionClauseTerminal(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
+        final SqlWhereConditionClauseTerminal<Row> terminal = new SqlWhereConditionClauseTerminal<>(selectNode, whereNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy(expr);
-        final SqlOrderByClauseChain chain = orderByClause.desc();
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy(expr);
+        final SqlOrderByClauseChain<Row> chain = orderByClause.desc();
 
         // Then
         assertNotNull(chain);

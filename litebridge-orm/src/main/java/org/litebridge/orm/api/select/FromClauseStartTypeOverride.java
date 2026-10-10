@@ -107,7 +107,7 @@ public final class FromClauseStartTypeOverride<ReturnType> extends DelegatingSel
      * @param table the table name.
      * @return the SQL from clause terminal.
      */
-    public SqlFromClauseTerminal from(final String table) {
+    public SqlFromClauseTerminal<ReturnType> from(final String table) {
         final SelectNode selectNode = new SelectNode(table, null, null, expressionSpecs, new Class<?>[]{typeOverride});
         return new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContextCreator.apply(LitebridgeContext.Mode.SQL));
     }

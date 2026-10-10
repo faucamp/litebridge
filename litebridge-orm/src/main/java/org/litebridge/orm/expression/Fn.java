@@ -5,6 +5,7 @@ import org.litebridge.commons.StringUtils;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
+import org.litebridge.db.spi.query.Limit;
 import org.litebridge.orm.api.select.SelectApi;
 import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.expression.function.aggregate.AvgSpec;
@@ -23,6 +24,7 @@ import org.litebridge.orm.expression.select.DtoAliasSpec;
 import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.expression.select.QueryAliasSpec;
+import org.litebridge.orm.expression.select.QueryAlteringExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.expression.select.SqlFromTargetSpec;
 import org.litebridge.orm.expression.select.TableAliasSpec;
@@ -43,6 +45,12 @@ import java.util.function.Function;
  * This class cannot be instantiated.
  */
 public final class Fn {
+
+    /**
+     * EXISTS select expression
+     */
+    private static final QueryAlteringExpressionSpec<Boolean> EXISTS_EXPRESSION_SPEC
+            = new QueryAlteringExpressionSpec<>(new LiteralExpressionSpec<>(true), false, new Limit(1, null));
 
     private Fn() {
     }
@@ -824,5 +832,9 @@ public final class Fn {
 
     public static ExistsExpressionSpec exists(final Function<SelectApi, SelectTerminal<?>> query) {
         return new ExistsExpressionSpec(query);
+    }
+
+    public static QueryAlteringExpressionSpec<Boolean> exists() {
+        return EXISTS_EXPRESSION_SPEC;
     }
 }

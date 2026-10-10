@@ -18,7 +18,7 @@ public final class SqlMergeOnConditionClauseTerminal
         SqlMergeOnConditionClauseTerminal,
         SqlMergeUpdateStep,
         MergeInsertStep,
-        SqlQueryConditionBuilder> {
+        SqlQueryConditionBuilder<Row>> {
 
     /**
      * Creates a new {@code MergeOnConditionClauseTerminal} instance.
@@ -37,9 +37,9 @@ public final class SqlMergeOnConditionClauseTerminal
 
     @Override
     @SuppressWarnings("ConstantConditions")
-    protected SqlMergeOnConditionClauseTerminal onImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(usingTable, null, litebridgeContext);
-        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
+    protected SqlMergeOnConditionClauseTerminal onImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder<Row> query) {
+        final SqlConditionClauseStart<Row> conditionClauseStart = new SqlConditionClauseStart<>(usingTable, null, litebridgeContext);
+        final CbSqlConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
         node = new ConditionGroupNode(node, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal));
         return this;
     }

@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.condition;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.QueryNode;
@@ -11,7 +10,11 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * Implementation of a condition clause for SQL-based queries.
  */
-public class CbSqlConditionClause extends AbstractCbConditionClause<Row, CbSqlConditionClause, CbSqlConditionClauseTerminal, SqlQueryConditionBuilder> {
+public class CbSqlConditionClause<ReturnType>
+        extends AbstractCbConditionClause<ReturnType,
+        CbSqlConditionClause<ReturnType>,
+        CbSqlConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>> {
 
     private final SelectNode selectNode;
 

@@ -3,6 +3,7 @@ package org.litebridge.orm.api.select.sql;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
@@ -26,13 +27,13 @@ class SqlJoinClauseTest {
 
     private LitebridgeContext litebridgeContext;
     private AtomicReference<QueryNode> capturedConditionNode;
-    private SqlJoinClause joinClause;
+    private SqlJoinClause<Row> joinClause;
 
     @BeforeEach
     void setUp() {
         litebridgeContext = mock(LitebridgeContext.class);
         capturedConditionNode = new AtomicReference<>();
-        joinClause = new SqlJoinClause(litebridgeContext, conditionNode -> {
+        joinClause = new SqlJoinClause<>(litebridgeContext, conditionNode -> {
             capturedConditionNode.set(conditionNode);
             return mock(SqlJoinConditionClauseTerminal.class);
         });
@@ -41,7 +42,7 @@ class SqlJoinClauseTest {
     @Test
     void on_withString() {
         // When
-        final SqlJoinConditionClause conditionClause = joinClause.on("user_id");
+        final SqlJoinConditionClause<Row> conditionClause = joinClause.on("user_id");
 
         // Then
         assertNotNull(conditionClause);
@@ -59,7 +60,7 @@ class SqlJoinClauseTest {
         final ProtoExpressionSpec protoExpr = (ProtoExpressionSpec) Fn.column("age");
 
         // When
-        final SqlJoinConditionClause conditionClause = joinClause.on(protoExpr);
+        final SqlJoinConditionClause<Row> conditionClause = joinClause.on(protoExpr);
 
         // Then
         assertNotNull(conditionClause);
@@ -77,7 +78,7 @@ class SqlJoinClauseTest {
         final SelectColumnSpec selectColumnSpec = new SelectColumnSpec(column);
 
         // When
-        final SqlJoinConditionClause conditionClause = joinClause.on(selectColumnSpec);
+        final SqlJoinConditionClause<Row> conditionClause = joinClause.on(selectColumnSpec);
 
         // Then
         assertNotNull(conditionClause);
@@ -101,7 +102,7 @@ class SqlJoinClauseTest {
     @Test
     void using() {
         // When
-        final SqlJoinConditionClauseTerminal terminal = joinClause.using("user_id");
+        final SqlJoinConditionClauseTerminal<Row> terminal = joinClause.using("user_id");
 
         // Then
         assertNotNull(terminal);

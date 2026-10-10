@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.condition;
 
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
@@ -11,7 +10,11 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * Implementation of a terminal condition clause for SQL-based queries.
  */
-public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClauseTerminal<Row, CbSqlConditionClause, CbSqlConditionClauseTerminal, SqlQueryConditionBuilder> {
+public final class CbSqlConditionClauseTerminal<ReturnType>
+        extends AbstractCbConditionClauseTerminal<ReturnType,
+        CbSqlConditionClause<ReturnType>,
+        CbSqlConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>> {
 
     private final SelectNode selectNode;
 
@@ -40,9 +43,9 @@ public final class CbSqlConditionClauseTerminal extends AbstractCbConditionClaus
     }
 
     @Override
-    protected CbSqlConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
-        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
+    protected CbSqlConditionClauseTerminal<ReturnType> whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder<ReturnType> query) {
+        final SqlConditionClauseStart<ReturnType> conditionClauseStart = new SqlConditionClauseStart<>(selectNode, null, litebridgeContext);
+        final CbSqlConditionClauseTerminal<ReturnType> terminal = query.apply(conditionClauseStart);
         return new CbSqlConditionClauseTerminal(selectNode,
                 new ConditionGroupNode(node, logicOperator, terminal.node()),
                 litebridgeContext);

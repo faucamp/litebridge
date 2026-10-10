@@ -26,6 +26,7 @@ import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.intent.ExpressionSpecArray;
 import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
+import org.litebridge.orm.expression.select.QueryAlteringExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
@@ -99,6 +100,8 @@ public final class SelectExpressionMapper {
             // Nestable expressions
             case DelegateExpressionSpec nestableExpression ->
                     resolveNestedExpression(nestableExpression, selectExpressionAliasMap);
+            case QueryAlteringExpressionSpec<?> queryAlteringExpressionSpec ->
+                    toSelectExpression(queryAlteringExpressionSpec.delegate(), selectExpressionAliasMap);
 
             // Date/time
             case CurrentTimestampSpec currentTimestampSpec -> sqlFunctionRegistry.date().currentTimestamp();

@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.select.sql;
 
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractGroupByClauseTerminal;
@@ -15,12 +14,12 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * SQL-mode terminal clause for GROUP BY clauses.
  */
-public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTerminal<Row,
-        SqlHavingConditionClause,
-        SqlHavingConditionClauseTerminal,
-        SqlQueryConditionBuilder,
-        SqlOrderByClause,
-        SqlOrderByClauseChain> {
+public final class SqlGroupByClauseTerminal<ReturnType> extends AbstractGroupByClauseTerminal<ReturnType,
+        SqlHavingConditionClause<ReturnType>,
+        SqlHavingConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>,
+        SqlOrderByClause<ReturnType>,
+        SqlOrderByClauseChain<ReturnType>> {
 
     private final SelectNode selectNode;
 
@@ -61,22 +60,22 @@ public final class SqlGroupByClauseTerminal extends AbstractGroupByClauseTermina
     }
 
     @Override
-    public SqlHavingConditionClause having(final ExpressionSpec expression) {
-        return new SqlHavingConditionClause(litebridgeContext,
+    public SqlHavingConditionClause<ReturnType> having(final ExpressionSpec expression) {
+        return new SqlHavingConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
                 null,
                 expression,
                 null,
-                conditionNode -> new SqlHavingConditionClauseTerminal(selectNode, new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlHavingConditionClauseTerminal<>(selectNode, new HavingNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
     @Override
-    public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(columns, node(), selectEngineTerminal, litebridgeContext);
+    public SqlOrderByClause<ReturnType> orderBy(final String... columns) {
+        return new SqlOrderByClause<>(columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
-        return new SqlOrderByClause(expressions, node(), selectEngineTerminal, litebridgeContext);
+    public SqlOrderByClause<ReturnType> orderBy(final ExpressionSpec... expressions) {
+        return new SqlOrderByClause<>(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 }

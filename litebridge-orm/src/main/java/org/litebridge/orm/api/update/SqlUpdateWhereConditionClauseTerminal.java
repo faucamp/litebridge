@@ -11,7 +11,7 @@ public sealed interface SqlUpdateWhereConditionClauseTerminal
         extends UpdateWhereConditionClauseTerminal<Row,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder>
+        SqlQueryConditionBuilder<Row>>
 
         permits SqlUpdateWhereConditionClauseTerminalImpl {
 

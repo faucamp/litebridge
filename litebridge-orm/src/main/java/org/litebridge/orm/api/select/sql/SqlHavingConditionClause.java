@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.select.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.HavingConditionClause;
@@ -15,18 +14,18 @@ import java.util.function.Function;
 /**
  * Represents a HAVING condition clause for SQL queries.
  */
-public final class SqlHavingConditionClause
-        extends ConditionClauseImpl<Row,
-        SqlHavingConditionClause,
-        SqlHavingConditionClauseTerminal,
-        SqlQueryConditionBuilder>
+public final class SqlHavingConditionClause<ReturnType>
+        extends ConditionClauseImpl<ReturnType,
+        SqlHavingConditionClause<ReturnType>,
+        SqlHavingConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>>
 
-        implements HavingConditionClause<Row,
-        SqlHavingConditionClause,
-        SqlHavingConditionClauseTerminal,
-        SqlQueryConditionBuilder,
-        SqlOrderByClause,
-        SqlOrderByClauseChain> {
+        implements HavingConditionClause<ReturnType,
+        SqlHavingConditionClause<ReturnType>,
+        SqlHavingConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>,
+        SqlOrderByClause<ReturnType>,
+        SqlOrderByClauseChain<ReturnType>> {
 
     /**
      * Creates a new {@code SqlHavingConditionClause} instance.
@@ -43,7 +42,7 @@ public final class SqlHavingConditionClause
                                     final @Nullable String lhsColumn,
                                     final @Nullable ExpressionSpec lhsExpression,
                                     final @Nullable QueryNode node,
-                                    final Function<QueryNode, SqlHavingConditionClauseTerminal> terminalRecreator) {
+                                    final Function<QueryNode, SqlHavingConditionClauseTerminal<ReturnType>> terminalRecreator) {
         super(litebridgeContext, logicOperator, lhsColumn, lhsExpression, node, terminalRecreator);
     }
 }

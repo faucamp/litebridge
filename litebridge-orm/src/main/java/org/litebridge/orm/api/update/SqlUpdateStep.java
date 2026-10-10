@@ -24,7 +24,7 @@ public final class SqlUpdateStep extends UpdateStepBase
         SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder> {
+        SqlQueryConditionBuilder<Row>> {
 
     private final String tableName;
     private QueryNode node;

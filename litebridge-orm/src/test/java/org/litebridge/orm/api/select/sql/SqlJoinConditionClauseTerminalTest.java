@@ -34,7 +34,7 @@ class SqlJoinConditionClauseTerminalTest {
     private SelectEngineTerminal selectEngineTerminal;
     private LitebridgeContext litebridgeContext;
     private JoinNode joinNode;
-    private SqlJoinConditionClauseTerminal terminal;
+    private SqlJoinConditionClauseTerminal<Row> terminal;
 
     @BeforeEach
     void setUp() {
@@ -42,14 +42,14 @@ class SqlJoinConditionClauseTerminalTest {
         litebridgeContext = mock(LitebridgeContext.class);
         final SelectNode selectNode = new SelectNode("users", null, null, null, null);
         joinNode = new JoinNode(selectNode, Join.JoinType.INNER, null, null, "orders", null, null);
-        terminal = new SqlJoinConditionClauseTerminal(selectNode, joinNode, selectEngineTerminal, litebridgeContext);
+        terminal = new SqlJoinConditionClauseTerminal<>(selectNode, joinNode, selectEngineTerminal, litebridgeContext);
     }
 
     @Test
     void and_withColumn() {
         // When
-        final SqlJoinConditionClause clause = terminal.and("name");
-        final SqlJoinConditionClauseTerminal nextTerminal = clause.eq("Alice");
+        final SqlJoinConditionClause<Row> clause = terminal.and("name");
+        final SqlJoinConditionClauseTerminal<Row> nextTerminal = clause.eq("Alice");
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -66,8 +66,8 @@ class SqlJoinConditionClauseTerminalTest {
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlJoinConditionClause clause = terminal.and(expr);
-        final SqlJoinConditionClauseTerminal nextTerminal = clause.gt(18);
+        final SqlJoinConditionClause<Row> clause = terminal.and(expr);
+        final SqlJoinConditionClauseTerminal<Row> nextTerminal = clause.gt(18);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -83,10 +83,10 @@ class SqlJoinConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "status", null, Operator.EQ, "ACTIVE");
         joinNode.setCondition(initialCondition);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").gte(21);
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").gte(21);
 
         // When
-        final SqlJoinConditionClauseTerminal nextTerminal = terminal.and(builder);
+        final SqlJoinConditionClauseTerminal<Row> nextTerminal = terminal.and(builder);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -102,8 +102,8 @@ class SqlJoinConditionClauseTerminalTest {
     @Test
     void or_withColumn() {
         // When
-        final SqlJoinConditionClause clause = terminal.or("age");
-        final SqlJoinConditionClauseTerminal nextTerminal = clause.lt(30);
+        final SqlJoinConditionClause<Row> clause = terminal.or("age");
+        final SqlJoinConditionClauseTerminal<Row> nextTerminal = clause.lt(30);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -120,8 +120,8 @@ class SqlJoinConditionClauseTerminalTest {
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlJoinConditionClause clause = terminal.or(expr);
-        final SqlJoinConditionClauseTerminal nextTerminal = clause.lte(60);
+        final SqlJoinConditionClause<Row> clause = terminal.or(expr);
+        final SqlJoinConditionClauseTerminal<Row> nextTerminal = clause.lte(60);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -137,10 +137,10 @@ class SqlJoinConditionClauseTerminalTest {
         // Given
         final ConditionNode initialCondition = new ConditionNode(null, LogicOperator.NOOP, "status", null, Operator.EQ, "INACTIVE");
         joinNode.setCondition(initialCondition);
-        final SqlQueryConditionBuilder builder = q -> q.where("age").isNull();
+        final SqlQueryConditionBuilder<Row> builder = q -> q.where("age").isNull();
 
         // When
-        final SqlJoinConditionClauseTerminal nextTerminal = terminal.or(builder);
+        final SqlJoinConditionClauseTerminal<Row> nextTerminal = terminal.or(builder);
 
         // Then
         assertSame(terminal, nextTerminal);
@@ -155,8 +155,8 @@ class SqlJoinConditionClauseTerminalTest {
     @Test
     void where_withColumn() {
         // When
-        final SqlWhereConditionClause whereClause = terminal.where("name");
-        final SqlWhereConditionClauseTerminal nextTerminal = whereClause.eq("Bob");
+        final SqlWhereConditionClause<Row> whereClause = terminal.where("name");
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = whereClause.eq("Bob");
 
         // Then
         assertNotNull(nextTerminal);
@@ -175,8 +175,8 @@ class SqlJoinConditionClauseTerminalTest {
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlWhereConditionClause whereClause = terminal.where(expr);
-        final SqlWhereConditionClauseTerminal nextTerminal = whereClause.gt(25);
+        final SqlWhereConditionClause<Row> whereClause = terminal.where(expr);
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = whereClause.gt(25);
 
         // Then
         assertNotNull(nextTerminal);
@@ -191,8 +191,8 @@ class SqlJoinConditionClauseTerminalTest {
     @Test
     void join() {
         // When
-        final SqlJoinClause newJoinClause = terminal.join("items");
-        final SqlJoinConditionClauseTerminal nextTerminal = newJoinClause.using("order_id");
+        final SqlJoinClause<Row> newJoinClause = terminal.join("items");
+        final SqlJoinConditionClauseTerminal<Row> nextTerminal = newJoinClause.using("order_id");
 
         // Then
         assertNotNull(nextTerminal);
@@ -205,7 +205,7 @@ class SqlJoinConditionClauseTerminalTest {
     @Test
     void groupBy_withColumns() {
         // When
-        final SqlGroupByClauseTerminal groupByTerminal = terminal.groupBy("name");
+        final SqlGroupByClauseTerminal<Row> groupByTerminal = terminal.groupBy("name");
 
         // Then
         assertNotNull(groupByTerminal);
@@ -220,7 +220,7 @@ class SqlJoinConditionClauseTerminalTest {
         final ExpressionSpec expr = Fn.column("name");
 
         // When
-        final SqlGroupByClauseTerminal groupByTerminal = terminal.groupBy(expr);
+        final SqlGroupByClauseTerminal<Row> groupByTerminal = terminal.groupBy(expr);
 
         // Then
         assertNotNull(groupByTerminal);
@@ -232,8 +232,8 @@ class SqlJoinConditionClauseTerminalTest {
     @Test
     void orderBy_withColumns() {
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy("age");
-        final SqlOrderByClauseChain chain = orderByClause.asc();
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy("age");
+        final SqlOrderByClauseChain<Row> chain = orderByClause.asc();
 
         // Then
         assertNotNull(chain);
@@ -249,8 +249,8 @@ class SqlJoinConditionClauseTerminalTest {
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy(expr);
-        final SqlOrderByClauseChain chain = orderByClause.desc();
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy(expr);
+        final SqlOrderByClauseChain<Row> chain = orderByClause.desc();
 
         // Then
         assertNotNull(chain);

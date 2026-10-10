@@ -1,12 +1,11 @@
 package org.litebridge.orm.api.select.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.OrderByClause;
-import org.litebridge.orm.engine.ast.OrderByNode;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.OrderByNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Objects;
@@ -14,7 +13,7 @@ import java.util.Objects;
 /**
  * Represents an ORDER BY clause in a SQL-based query.
  */
-public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClause, SqlOrderByClauseChain> {
+public final class SqlOrderByClause<ReturnType> implements OrderByClause<ReturnType, SqlOrderByClause<ReturnType>, SqlOrderByClauseChain<ReturnType>> {
 
     private final String @Nullable [] columns;
     private final ExpressionSpec @Nullable [] expressions;
@@ -66,16 +65,16 @@ public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClau
     }
 
     @Override
-    public SqlOrderByClauseChain asc() {
+    public SqlOrderByClauseChain<ReturnType> asc() {
         return createSqlOrderByClauseChain(true);
     }
 
     @Override
-    public SqlOrderByClauseChain desc() {
+    public SqlOrderByClauseChain<ReturnType> desc() {
         return createSqlOrderByClauseChain(false);
     }
 
-    private SqlOrderByClauseChain createSqlOrderByClauseChain(final boolean ascending) {
+    private SqlOrderByClauseChain<ReturnType> createSqlOrderByClauseChain(final boolean ascending) {
         if (expressions != null) {
             for (final ExpressionSpec expression : expressions) {
                 node = new OrderByNode(node, null, expression, ascending);
@@ -86,6 +85,6 @@ public final class SqlOrderByClause implements OrderByClause<Row, SqlOrderByClau
             }
         }
 
-        return new SqlOrderByClauseChain(node, selectEngineTerminal, litebridgeContext);
+        return new SqlOrderByClauseChain<>(node, selectEngineTerminal, litebridgeContext);
     }
 }

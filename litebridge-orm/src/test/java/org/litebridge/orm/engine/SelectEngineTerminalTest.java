@@ -803,9 +803,8 @@ class SelectEngineTerminalTest {
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(singleColRow));
         when(typeConverter.convert(42, String.class)).thenReturn("42_str");
 
-        final Row resultRow = terminal.fetchOneOrNull(tableWithSingleResultTypeNode, context);
-        assertNotNull(resultRow);
-        assertEquals("42_str", resultRow.column(0).value());
+        final String result = terminal.fetchOneOrNull(tableWithSingleResultTypeNode, context);
+        assertEquals("42_str", result);
 
         // Case 2: row == null on fetchOneOrNullImpl in SQL mode with single result type
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(Collections.emptyList());

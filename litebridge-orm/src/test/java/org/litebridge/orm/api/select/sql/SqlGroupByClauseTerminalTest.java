@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -42,7 +43,7 @@ class SqlGroupByClauseTerminalTest {
         final String[] columns = new String[]{"name", "age"};
 
         // When
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal<Row> terminal = new SqlGroupByClauseTerminal<>(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(terminal);
@@ -58,7 +59,7 @@ class SqlGroupByClauseTerminalTest {
         final ExpressionSpec[] expressions = new ExpressionSpec[]{Fn.column("name")};
 
         // When
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, expressions, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal<Row> terminal = new SqlGroupByClauseTerminal<>(selectNode, expressions, selectNode, selectEngineTerminal, litebridgeContext);
 
         // Then
         final QueryNode node = SelectTerminalInspector.getNode(terminal);
@@ -72,15 +73,15 @@ class SqlGroupByClauseTerminalTest {
     void having() {
         // Given
         final String[] columns = new String[]{"name"};
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal<Row> terminal = new SqlGroupByClauseTerminal<>(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec countExpr = Fn.count();
 
         // When
-        final SqlHavingConditionClause havingClause = terminal.having(countExpr);
+        final SqlHavingConditionClause<Row> havingClause = terminal.having(countExpr);
 
         // Then
         assertNotNull(havingClause);
-        final SqlHavingConditionClauseTerminal havingTerminal = havingClause.gt(5);
+        final SqlHavingConditionClauseTerminal<Row> havingTerminal = havingClause.gt(5);
         final QueryNode node = SelectTerminalInspector.getNode(havingTerminal);
         assertInstanceOf(HavingNode.class, node);
         final HavingNode havingNode = (HavingNode) node;
@@ -95,14 +96,14 @@ class SqlGroupByClauseTerminalTest {
     void orderBy_withColumns() {
         // Given
         final String[] columns = new String[]{"name"};
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal<Row> terminal = new SqlGroupByClauseTerminal<>(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy("age");
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy("age");
 
         // Then
         assertNotNull(orderByClause);
-        final SqlOrderByClauseChain chain = orderByClause.asc();
+        final SqlOrderByClauseChain<Row> chain = orderByClause.asc();
         final QueryNode node = SelectTerminalInspector.getNode(chain);
         assertInstanceOf(OrderByNode.class, node);
         final OrderByNode orderByNode = (OrderByNode) node;
@@ -115,15 +116,15 @@ class SqlGroupByClauseTerminalTest {
     void orderBy_withExpressions() {
         // Given
         final String[] columns = new String[]{"name"};
-        final SqlGroupByClauseTerminal terminal = new SqlGroupByClauseTerminal(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
+        final SqlGroupByClauseTerminal<Row> terminal = new SqlGroupByClauseTerminal<>(selectNode, columns, selectNode, selectEngineTerminal, litebridgeContext);
         final ExpressionSpec expr = Fn.column("age");
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy(expr);
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy(expr);
 
         // Then
         assertNotNull(orderByClause);
-        final SqlOrderByClauseChain chain = orderByClause.desc();
+        final SqlOrderByClauseChain<Row> chain = orderByClause.desc();
         final QueryNode node = SelectTerminalInspector.getNode(chain);
         assertInstanceOf(OrderByNode.class, node);
         final OrderByNode orderByNode = (OrderByNode) node;

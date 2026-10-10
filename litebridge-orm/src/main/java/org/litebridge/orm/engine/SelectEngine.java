@@ -1,5 +1,6 @@
 package org.litebridge.orm.engine;
 
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.FromClauseStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
@@ -62,8 +63,8 @@ public class SelectEngine {
      * @param litebridgeContextCreator the factory function for creating the Litebridge context
      * @return the initial FROM clause step
      */
-    public FromClauseStart select(final String[] fieldsOrColumns, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
-        return new FromClauseStart(fieldsOrColumns, selectEngineTerminal, litebridgeContextCreator);
+    public FromClauseStart<Row> select(final String[] fieldsOrColumns, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        return new FromClauseStart<>(fieldsOrColumns, selectEngineTerminal, litebridgeContextCreator);
     }
 
     /**
@@ -73,8 +74,8 @@ public class SelectEngine {
      * @param litebridgeContextCreator the factory function for creating the Litebridge context
      * @return the initial FROM clause step
      */
-    public FromClauseStart select(final ExpressionSpec[] expressions, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
-        return new FromClauseStart(expressions, selectEngineTerminal, litebridgeContextCreator);
+    public FromClauseStart<Row> select(final ExpressionSpec[] expressions, final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        return new FromClauseStart<>(expressions, selectEngineTerminal, litebridgeContextCreator);
     }
 
     /**
@@ -100,7 +101,7 @@ public class SelectEngine {
      * @param litebridgeContextCreator the factory function for creating the Litebridge context
      * @return the initial FROM clause step
      */
-    public FromClauseStart select(final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
-        return new FromClauseStart(selectEngineTerminal, litebridgeContextCreator);
+    public FromClauseStart<Row> select(final Function<LitebridgeContext.Mode, LitebridgeContext> litebridgeContextCreator) {
+        return new FromClauseStart<>(selectEngineTerminal, litebridgeContextCreator);
     }
 }

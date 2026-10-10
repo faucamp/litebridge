@@ -1,13 +1,12 @@
 package org.litebridge.orm.api.select.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinConditionClause;
-import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.api.select.impl.ConditionClauseImpl;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.function.Function;
@@ -15,15 +14,15 @@ import java.util.function.Function;
 /**
  * Represents a condition within a JOIN clause in a SQL-based query.
  */
-public final class SqlJoinConditionClause extends ConditionClauseImpl<Row,
-        SqlJoinConditionClause,
-        SqlJoinConditionClauseTerminal,
-        SqlQueryConditionBuilder>
+public final class SqlJoinConditionClause<ReturnType> extends ConditionClauseImpl<ReturnType,
+        SqlJoinConditionClause<ReturnType>,
+        SqlJoinConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>>
 
-        implements JoinConditionClause<Row,
-        SqlJoinConditionClause,
-        SqlJoinConditionClauseTerminal,
-        SqlQueryConditionBuilder> {
+        implements JoinConditionClause<ReturnType,
+        SqlJoinConditionClause<ReturnType>,
+        SqlJoinConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>> {
 
     /**
      * Creates a new {@code SqlJoinConditionClause} instance.
@@ -40,7 +39,7 @@ public final class SqlJoinConditionClause extends ConditionClauseImpl<Row,
                                   final @Nullable String lhsField,
                                   final @Nullable ExpressionSpec lhsExpression,
                                   final @Nullable QueryNode node,
-                                  final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalRecreator) {
+                                  final Function<QueryNode, SqlJoinConditionClauseTerminal<ReturnType>> terminalRecreator) {
         super(litebridgeContext, logicOperator, lhsField, lhsExpression, node, terminalRecreator);
     }
 }

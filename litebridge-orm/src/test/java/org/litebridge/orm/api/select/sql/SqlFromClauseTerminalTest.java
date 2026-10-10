@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
@@ -30,14 +31,14 @@ class SqlFromClauseTerminalTest {
     private SelectEngineTerminal selectEngineTerminal;
     private LitebridgeContext litebridgeContext;
     private SelectNode selectNode;
-    private SqlFromClauseTerminal terminal;
+    private SqlFromClauseTerminal<Row> terminal;
 
     @BeforeEach
     void setUp() {
         selectEngineTerminal = mock(SelectEngineTerminal.class);
         litebridgeContext = mock(LitebridgeContext.class);
         selectNode = new SelectNode("users", null, null, null, null);
-        terminal = new SqlFromClauseTerminal(selectNode, selectEngineTerminal, litebridgeContext);
+        terminal = new SqlFromClauseTerminal<>(selectNode, selectEngineTerminal, litebridgeContext);
     }
 
     @Test
@@ -46,11 +47,11 @@ class SqlFromClauseTerminalTest {
         final String column = "name";
 
         // When
-        final SqlWhereConditionClause clause = terminal.where(column);
+        final SqlWhereConditionClause<Row> clause = terminal.where(column);
 
         // Then
         assertNotNull(clause);
-        final SqlWhereConditionClauseTerminal nextTerminal = clause.eq("Alice");
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = clause.eq("Alice");
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
         assertInstanceOf(WhereNode.class, node);
         final WhereNode whereNode = (WhereNode) node;
@@ -67,11 +68,11 @@ class SqlFromClauseTerminalTest {
         final ExpressionSpec expression = Fn.column("age");
 
         // When
-        final SqlWhereConditionClause clause = terminal.where(expression);
+        final SqlWhereConditionClause<Row> clause = terminal.where(expression);
 
         // Then
         assertNotNull(clause);
-        final SqlWhereConditionClauseTerminal nextTerminal = clause.gt(18);
+        final SqlWhereConditionClauseTerminal<Row> nextTerminal = clause.gt(18);
         final QueryNode node = SelectTerminalInspector.getNode(nextTerminal);
         assertInstanceOf(WhereNode.class, node);
         final WhereNode whereNode = (WhereNode) node;
@@ -88,11 +89,11 @@ class SqlFromClauseTerminalTest {
         final String joinTable = "orders";
 
         // When
-        final SqlJoinClause joinClause = terminal.join(joinTable);
+        final SqlJoinClause<Row> joinClause = terminal.join(joinTable);
 
         // Then
         assertNotNull(joinClause);
-        final SqlJoinConditionClauseTerminal joinTerminal = joinClause.using("user_id");
+        final SqlJoinConditionClauseTerminal<Row> joinTerminal = joinClause.using("user_id");
         final QueryNode node = SelectTerminalInspector.getNode(joinTerminal);
         assertInstanceOf(JoinNode.class, node);
         final JoinNode joinNode = (JoinNode) node;
@@ -107,7 +108,7 @@ class SqlFromClauseTerminalTest {
         final String[] columns = new String[]{"name", "age"};
 
         // When
-        final SqlGroupByClauseTerminal groupByTerminal = terminal.groupBy(columns);
+        final SqlGroupByClauseTerminal<Row> groupByTerminal = terminal.groupBy(columns);
 
         // Then
         assertNotNull(groupByTerminal);
@@ -124,7 +125,7 @@ class SqlFromClauseTerminalTest {
         final ExpressionSpec[] expressions = new ExpressionSpec[]{Fn.column("name")};
 
         // When
-        final SqlGroupByClauseTerminal groupByTerminal = terminal.groupBy(expressions);
+        final SqlGroupByClauseTerminal<Row> groupByTerminal = terminal.groupBy(expressions);
 
         // Then
         assertNotNull(groupByTerminal);
@@ -141,11 +142,11 @@ class SqlFromClauseTerminalTest {
         final String[] columns = new String[]{"name"};
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy(columns);
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy(columns);
 
         // Then
         assertNotNull(orderByClause);
-        final SqlOrderByClauseChain chain = orderByClause.asc();
+        final SqlOrderByClauseChain<Row> chain = orderByClause.asc();
         final QueryNode node = SelectTerminalInspector.getNode(chain);
         assertInstanceOf(OrderByNode.class, node);
         final OrderByNode orderByNode = (OrderByNode) node;
@@ -160,11 +161,11 @@ class SqlFromClauseTerminalTest {
         final ExpressionSpec[] expressions = new ExpressionSpec[]{Fn.column("age")};
 
         // When
-        final SqlOrderByClause orderByClause = terminal.orderBy(expressions);
+        final SqlOrderByClause<Row> orderByClause = terminal.orderBy(expressions);
 
         // Then
         assertNotNull(orderByClause);
-        final SqlOrderByClauseChain chain = orderByClause.desc();
+        final SqlOrderByClauseChain<Row> chain = orderByClause.desc();
         final QueryNode node = SelectTerminalInspector.getNode(chain);
         assertInstanceOf(OrderByNode.class, node);
         final OrderByNode orderByNode = (OrderByNode) node;

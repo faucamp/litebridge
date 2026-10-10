@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.delete;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.CbSqlConditionClauseTerminal;
@@ -53,7 +54,7 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
     }
 
     @Override
-    public SqlDeleteWhereConditionClauseTerminal and(final SqlQueryConditionBuilder query) {
+    public SqlDeleteWhereConditionClauseTerminal and(final SqlQueryConditionBuilder<Row> query) {
         return whereImpl(LogicOperator.AND, query);
     }
 
@@ -68,7 +69,7 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
     }
 
     @Override
-    public SqlDeleteWhereConditionClauseTerminal or(final SqlQueryConditionBuilder query) {
+    public SqlDeleteWhereConditionClauseTerminal or(final SqlQueryConditionBuilder<Row> query) {
         return whereImpl(LogicOperator.OR, query);
     }
 
@@ -85,9 +86,9 @@ public final class SqlDeleteWhereConditionClauseTerminalImpl
         return new SqlDeleteWhereConditionClause(litebridgeContext, logicOperator, column, expression, recreator);
     }
 
-    private SqlDeleteWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(tableName, null, litebridgeContext);
-        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
+    private SqlDeleteWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder<Row> query) {
+        final SqlConditionClauseStart<Row> conditionClauseStart = new SqlConditionClauseStart<>(tableName, null, litebridgeContext);
+        final CbSqlConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
         this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;
     }

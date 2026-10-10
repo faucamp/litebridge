@@ -33,6 +33,8 @@
     - Add `Fn.exists()` helper method for referencing subqueries in query conditions and clauses.
     - Add `DtoWhereCriteriaBuilder` for programmatic and conditional `WHERE` clause construction.
     - Add top-level API shortcut `select()` methods to make selecting literal numbers/booleans easier; this helps with existence checks.
+    - Query expression specs extended to allow them to alter the physical structure of the query (which allows for specific optimisations).
+    - `Fn.exists()` added as a select expression spec, executing an efficient existence check for a query.
 - Spring Integration:
     - Add Spring Data repository integration (`LitebridgeRepository`) with `ListCrudRepository` and `ListPagingAndSortingRepository` support.
     - Add support for Spring Data Derived Query Methods via `LitebridgePartTreeQuery`.
@@ -76,6 +78,7 @@
     - Propagate select expression aliases across query compilation contexts, enabling direct and contextual alias
       referencing in `WHERE`, `GROUP BY`, `HAVING`, and `ORDER BY` clauses.
     - `SqlMergeUsingStep.using()` now accepts `FromTargetSpec`.
+    - SQL mode now handles type override expressions the same way as DTO mode, resulting in a more user-friendly API. 
 - Database Provider SPI:
     - Standardised and simplified the `DatabaseProvider` SPI interface. This breaks backward compatibility.
     - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular
@@ -97,7 +100,7 @@
 
 - Oracle Database Provider:
     - Fixed the modulus math operation
-    - Fixed multi-row inserts; now uses batched insert statements
+    - Fixed multi-row inserts; now uses batched insert statements 
 - SQLite Database Provider:
     - Use correct `LIMIT -1` when a SELECT statement is generated with an offset but not limit
     

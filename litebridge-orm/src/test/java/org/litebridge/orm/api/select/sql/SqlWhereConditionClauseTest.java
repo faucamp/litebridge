@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -36,7 +37,7 @@ class SqlWhereConditionClauseTest {
     @Test
     void constructorAndCondition_withColumn() {
         // Given
-        final SqlWhereConditionClause clause = new SqlWhereConditionClause(
+        final SqlWhereConditionClause<Row> clause = new SqlWhereConditionClause<>(
                 litebridgeContext,
                 LogicOperator.AND,
                 "name",
@@ -66,7 +67,7 @@ class SqlWhereConditionClauseTest {
     void constructorAndCondition_withExpression() {
         // Given
         final ExpressionSpec expr = Fn.column("age");
-        final SqlWhereConditionClause clause = new SqlWhereConditionClause(
+        final SqlWhereConditionClause<Row> clause = new SqlWhereConditionClause<>(
                 litebridgeContext,
                 LogicOperator.OR,
                 null,

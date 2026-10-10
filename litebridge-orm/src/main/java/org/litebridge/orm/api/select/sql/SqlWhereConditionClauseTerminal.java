@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.select.sql;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.CbSqlConditionClauseTerminal;
@@ -20,24 +19,24 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * SQL-mode where condition clause terminal.
  */
-public final class SqlWhereConditionClauseTerminal
-        extends AbstractWhereClauseTerminal<Row,
-        SqlGroupByClauseTerminal,
-        SqlHavingConditionClause,
-        SqlHavingConditionClauseTerminal,
-        SqlQueryConditionBuilder,
-        SqlOrderByClause,
-        SqlOrderByClauseChain>
+public final class SqlWhereConditionClauseTerminal<ReturnType>
+        extends AbstractWhereClauseTerminal<ReturnType,
+        SqlGroupByClauseTerminal<ReturnType>,
+        SqlHavingConditionClause<ReturnType>,
+        SqlHavingConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>,
+        SqlOrderByClause<ReturnType>,
+        SqlOrderByClauseChain<ReturnType>>
 
-        implements WhereConditionClauseTerminal<Row,
-        SqlWhereConditionClause,
-        SqlWhereConditionClauseTerminal,
-        SqlGroupByClauseTerminal,
-        SqlHavingConditionClause,
-        SqlHavingConditionClauseTerminal,
-        SqlQueryConditionBuilder,
-        SqlOrderByClause,
-        SqlOrderByClauseChain> {
+        implements WhereConditionClauseTerminal<ReturnType,
+        SqlWhereConditionClause<ReturnType>,
+        SqlWhereConditionClauseTerminal<ReturnType>,
+        SqlGroupByClauseTerminal<ReturnType>,
+        SqlHavingConditionClause<ReturnType>,
+        SqlHavingConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>,
+        SqlOrderByClause<ReturnType>,
+        SqlOrderByClauseChain<ReturnType>> {
 
     private final SelectNode selectNode;
 
@@ -58,80 +57,80 @@ public final class SqlWhereConditionClauseTerminal
     }
 
     @Override
-    public SqlWhereConditionClause and(final String column) {
+    public SqlWhereConditionClause<ReturnType> and(final String column) {
         return whereImpl(LogicOperator.AND, column, null);
     }
 
     @Override
-    public SqlWhereConditionClause and(final ExpressionSpec expression) {
+    public SqlWhereConditionClause<ReturnType> and(final ExpressionSpec expression) {
         return whereImpl(LogicOperator.AND, null, expression);
     }
 
     @Override
-    public SqlWhereConditionClauseTerminal and(final SqlQueryConditionBuilder query) {
+    public SqlWhereConditionClauseTerminal<ReturnType> and(final SqlQueryConditionBuilder<ReturnType> query) {
         return whereImpl(LogicOperator.AND, query);
     }
 
     @Override
-    public SqlWhereConditionClause or(final String column) {
+    public SqlWhereConditionClause<ReturnType> or(final String column) {
         return whereImpl(LogicOperator.OR, column, null);
     }
 
     @Override
-    public SqlWhereConditionClause or(final ExpressionSpec expression) {
+    public SqlWhereConditionClause<ReturnType> or(final ExpressionSpec expression) {
         return whereImpl(LogicOperator.OR, null, expression);
     }
 
     @Override
-    public SqlWhereConditionClauseTerminal or(final SqlQueryConditionBuilder query) {
+    public SqlWhereConditionClauseTerminal<ReturnType> or(final SqlQueryConditionBuilder<ReturnType> query) {
         return whereImpl(LogicOperator.OR, query);
     }
 
     @Override
-    public SqlGroupByClauseTerminal groupBy(final String... columns) {
-        return new SqlGroupByClauseTerminal(selectNode, columns, node(), selectEngineTerminal, litebridgeContext);
+    public SqlGroupByClauseTerminal<ReturnType> groupBy(final String... columns) {
+        return new SqlGroupByClauseTerminal<>(selectNode, columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public SqlGroupByClauseTerminal groupBy(final ExpressionSpec... expressions) {
-        return new SqlGroupByClauseTerminal(selectNode, expressions, node(), selectEngineTerminal, litebridgeContext);
+    public SqlGroupByClauseTerminal<ReturnType> groupBy(final ExpressionSpec... expressions) {
+        return new SqlGroupByClauseTerminal<>(selectNode, expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public SqlOrderByClause orderBy(final String... columns) {
-        return new SqlOrderByClause(columns, node(), selectEngineTerminal, litebridgeContext);
+    public SqlOrderByClause<ReturnType> orderBy(final String... columns) {
+        return new SqlOrderByClause<>(columns, node(), selectEngineTerminal, litebridgeContext);
     }
 
     @Override
-    public SqlOrderByClause orderBy(final ExpressionSpec... expressions) {
-        return new SqlOrderByClause(expressions, node(), selectEngineTerminal, litebridgeContext);
+    public SqlOrderByClause<ReturnType> orderBy(final ExpressionSpec... expressions) {
+        return new SqlOrderByClause<>(expressions, node(), selectEngineTerminal, litebridgeContext);
     }
 
-    private SqlWhereConditionClause whereImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
+    private SqlWhereConditionClause<ReturnType> whereImpl(final LogicOperator logicOperator, final @Nullable String column, final @Nullable ExpressionSpec expression) {
         if (node instanceof WhereNode whereNode) {
-            return new SqlWhereConditionClause(litebridgeContext,
+            return new SqlWhereConditionClause<>(litebridgeContext,
                     logicOperator,
                     column,
                     expression,
                     whereNode.condition(),
-                    node -> new SqlWhereConditionClauseTerminal(selectNode, whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
+                    node -> new SqlWhereConditionClauseTerminal<>(selectNode, whereNode.withCondition(node), selectEngineTerminal, litebridgeContext));
         }
 
-        return new SqlWhereConditionClause(litebridgeContext,
+        return new SqlWhereConditionClause<>(litebridgeContext,
                 logicOperator,
                 column,
                 expression,
                 null,
-                conditionNode -> new SqlWhereConditionClauseTerminal(selectNode, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
+                conditionNode -> new SqlWhereConditionClauseTerminal<>(selectNode, new WhereNode(this.node, conditionNode), selectEngineTerminal, litebridgeContext));
     }
 
-    private SqlWhereConditionClauseTerminal whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
+    private SqlWhereConditionClauseTerminal<ReturnType> whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder<ReturnType> query) {
         if (!(node instanceof WhereNode whereNode)) {
             throw new IllegalArgumentException("AST error: Expected a WhereNode but got " + node);
         }
 
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(selectNode, null, litebridgeContext);
-        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
+        final SqlConditionClauseStart<ReturnType> conditionClauseStart = new SqlConditionClauseStart<>(selectNode, null, litebridgeContext);
+        final CbSqlConditionClauseTerminal<ReturnType> terminal = query.apply(conditionClauseStart);
 
         whereNode.withCondition(new ConditionGroupNode(whereNode.condition(), logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;

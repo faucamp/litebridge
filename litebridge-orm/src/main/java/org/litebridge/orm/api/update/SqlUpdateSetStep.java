@@ -17,7 +17,7 @@ public final class SqlUpdateSetStep
         SqlUpdateSetStep,
         SqlUpdateWhereConditionClause,
         SqlUpdateWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder> {
+        SqlQueryConditionBuilder<Row>> {
 
     /**
      * Creates a new {@code SqlUpdateSetStep} instance with a column name.

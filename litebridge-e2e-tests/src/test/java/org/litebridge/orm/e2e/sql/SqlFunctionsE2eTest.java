@@ -16,12 +16,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SqlFunctionsE2eTest extends AbstractE2eTest {
 
@@ -43,99 +43,80 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("COUNT()")
     void count(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Count the records
-        final Row personCount = litebridge.select(Fn.count()).from(personTableName).oneOrThrow();
-        assertEquals(1, personCount.size());
-        assertEquals(1, personCount.columns().size());
-        assertEquals(3, ((Number) personCount.column(0).value()).intValue());
+        final Long personCount = litebridge.select(Fn.count()).from(personTableName).oneOrThrow();
+        assertEquals(3, personCount);
 
         // Type override
-        final Row personCountDouble = litebridge.select(Fn.convert(Fn.count(), Double.class)).from(personTableName).oneOrThrow();
-        assertEquals(1, personCountDouble.size());
-        assertEquals(3.0, personCountDouble.column(0).value());
+        final Double personCountDouble = litebridge.select(Fn.convert(Fn.count(), Double.class)).from(personTableName).oneOrThrow();
+        assertEquals(3.0, personCountDouble);
 
-        final Row personCountString = litebridge.select(Fn.convert(Fn.count(), String.class)).from(personTableName).oneOrThrow();
-        assertEquals(1, personCountString.size());
-        assertEquals("3", personCountString.column(0).value());
+        final String personCountString = litebridge.select(Fn.convert(Fn.count(), String.class)).from(personTableName).oneOrThrow();
+        assertEquals("3", personCountString);
     }
 
     @TestTemplate
     @DisplayName("AVG()")
     void avg(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Column name only
-        final Row averageAge = litebridge.select(Fn.avg(tableMapper.transformColumnName("AGE"))).from(personTableName).oneOrThrow();
-        assertEquals(25, ((Number) averageAge.column(0).value()).intValue());
+        final Number averageAge = litebridge.select(Fn.avg(tableMapper.transformColumnName("AGE"))).from(personTableName).oneOrThrow();
+        assertEquals(25, averageAge.intValue());
 
         // Nested column selector
-        final Row averageAgeExpr = litebridge.select(Fn.avg(Fn.f(tableMapper.transformColumnName("AGE")))).from(personTableName).oneOrThrow();
-        assertEquals(25, ((Number) averageAgeExpr.column(0).value()).intValue());
+        final Number averageAgeExpr = litebridge.select(Fn.avg(Fn.f(tableMapper.transformColumnName("AGE")))).from(personTableName).oneOrThrow();
+        assertEquals(25, averageAgeExpr.intValue());
 
         // Type conversion: get the average age and convert the return type
-        final Row averageAgeDouble = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Double.class)).from(personTableName).oneOrThrow();
-        assertInstanceOf(Double.class, averageAgeDouble.column(0).value());
-        assertEquals(25.0, averageAgeDouble.column(0).value());
+        final Double averageAgeDouble = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Double.class)).from(personTableName).oneOrThrow();
+        assertEquals(25.0, averageAgeDouble);
 
-        final Row averageAgeLong = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Long.class)).from(personTableName).oneOrThrow();
-        assertInstanceOf(Long.class, averageAgeLong.column(0).value());
-        assertEquals(25L, averageAgeLong.column(0).value());
+        final Long averageAgeLong = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Long.class)).from(personTableName).oneOrThrow();
+        assertEquals(25L, averageAgeLong);
 
-        final Row averageAgeInteger = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Integer.class)).from(personTableName).oneOrThrow();
-        assertInstanceOf(Integer.class, averageAgeInteger.column(0).value());
-        assertEquals(25, averageAgeInteger.column(0).value());
+        final Integer averageAgeInteger = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Integer.class)).from(personTableName).oneOrThrow();
+        assertEquals(25, averageAgeInteger);
 
-        final Row averageAgeShort = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Short.class)).from(personTableName).oneOrThrow();
-        assertInstanceOf(Short.class, averageAgeShort.column(0).value());
-        assertEquals((short) 25, averageAgeShort.column(0).value());
+        final Short averageAgeShort = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), Short.class)).from(personTableName).oneOrThrow();
+        assertEquals((short) 25, averageAgeShort);
 
-        final Row averageAgeString = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), String.class)).from(personTableName).oneOrThrow();
-        assertInstanceOf(String.class, averageAgeString.column(0).value());
+        final String averageAgeString = litebridge.select(Fn.convert(Fn.avg(tableMapper.transformColumnName("AGE")), String.class)).from(personTableName).oneOrThrow();
 
         if (dbEnv.getName().equals("SQLite")) {
             // SQLite returns a Double
-            assertEquals("25.0", averageAgeString.column(0).value());
+            assertEquals("25.0", averageAgeString);
         } else {
-            assertEquals("25", averageAgeString.column(0).value());
+            assertEquals("25", averageAgeString);
         }
     }
 
     @TestTemplate
     @DisplayName("MIN()")
     void min(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        final Row minAge = litebridge.select(Fn.min(tableMapper.transformColumnName("AGE"))).from(personTableName).oneOrThrow();
-        assertEquals(1, minAge.size());
-        assertEquals(20, ((Number) minAge.column(0).value()).intValue());
+        final Number minAge = litebridge.select(Fn.min(tableMapper.transformColumnName("AGE"))).from(personTableName).oneOrThrow();
+        assertEquals(20, minAge.intValue());
 
-        final Row minAgeInt = litebridge.select(Fn.convert(Fn.min(tableMapper.transformColumnName("AGE")), Integer.class)).from(personTableName).oneOrThrow();
-        assertEquals(20, ((Number) minAgeInt.column(0).value()).intValue());
+        final int minAgeInt = litebridge.select(Fn.convert(Fn.min(tableMapper.transformColumnName("AGE")), int.class)).from(personTableName).oneOrThrow();
+        assertEquals(20, minAgeInt);
     }
 
     @TestTemplate
     @DisplayName("MAX()")
     void max(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        final Row maxAge = litebridge.select(Fn.max(tableMapper.transformColumnName("AGE"))).from(personTableName).oneOrThrow();
-        assertEquals(1, maxAge.size());
-        assertEquals(30, ((Number) maxAge.column(0).value()).intValue());
+        final Number maxAge = litebridge.select(Fn.max(tableMapper.transformColumnName("AGE"))).from(personTableName).oneOrThrow();
+        assertEquals(30, maxAge.intValue());
 
-        final Row maxAgeInt = litebridge.select(Fn.convert(Fn.max(tableMapper.transformColumnName("AGE")), Integer.class)).from(personTableName).oneOrThrow();
-        assertEquals(30, maxAgeInt.column(0).value());
+        final int maxAgeInt = litebridge.select(Fn.convert(Fn.max(tableMapper.transformColumnName("AGE")), int.class)).from(personTableName).oneOrThrow();
+        assertEquals(30, maxAgeInt);
     }
 
     @TestTemplate
     @DisplayName("UPPER()")
     void upper(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        final List<Row> uppercaseNames = litebridge.select(Fn.upper(tableMapper.transformColumnName("FIRST_NAME"))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNames.stream()
-                .flatMap(row -> row.columns().stream())
-                .map(rowColumn -> (String) rowColumn.value())
-                .filter(Objects::nonNull)
-                .toList());
+        final List<String> uppercaseNames = litebridge.select(Fn.upper(tableMapper.transformColumnName("FIRST_NAME"))).from(personTableName).list();
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNames);
 
         // Get the uppercase names of the stored persons
-        final List<Row> uppercaseNamesExpr = litebridge.select(Fn.upper(Fn.c(tableMapper.transformColumnName("FIRST_NAME")))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNamesExpr.stream()
-                .flatMap(row -> row.columns().stream())
-                .map(rowColumn -> (String) rowColumn.value())
-                .filter(Objects::nonNull)
-                .toList());
+        final List<String> uppercaseNamesExpr = litebridge.select(Fn.upper(Fn.c(tableMapper.transformColumnName("FIRST_NAME")))).from(personTableName).list();
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseNamesExpr);
     }
 
     @TestTemplate
@@ -144,62 +125,43 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
         final String firstName = tableMapper.transformColumnName("FIRST_NAME");
 
         // Get the lowercase names of the stored persons
-        final List<Row> lowercaseNames = litebridge.select(Fn.lower(firstName)).from(personTableName).list();
-        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNames.stream()
-                .flatMap(row -> row.columns().stream())
-                .map(rowColumn -> (String) rowColumn.value())
-                .filter(Objects::nonNull)
-                .toList());
+        final List<String> lowercaseNames = litebridge.select(Fn.lower(firstName)).from(personTableName).list();
+        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNames);
 
-        final List<Row> lowercaseNamesExpr = litebridge.select(Fn.lower(Fn.c(firstName))).from(personTableName).list();
-        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNamesExpr.stream()
-                .flatMap(row -> row.columns().stream())
-                .map(rowColumn -> (String) rowColumn.value())
-                .filter(Objects::nonNull)
-                .toList());
+        final List<String> lowercaseNamesExpr = litebridge.select(Fn.lower(Fn.c(firstName))).from(personTableName).list();
+        assertLinesMatch(List.of("name0", "name1", "name2"), lowercaseNamesExpr);
     }
 
     @TestTemplate
     @DisplayName("SUBSTRING()")
     void substring(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Get substrings of the surnames
-        final List<Row> surnameSubstrings = litebridge.select(Fn.substring(tableMapper.transformColumnName("SURNAME"), 2, 5)).from(personTableName).list();
-        assertLinesMatch(List.of("urnam", "urnam", "urnam"), surnameSubstrings.stream()
-                .flatMap(row -> row.columns().stream())
-                .map(rowColumn -> (String) rowColumn.value())
-                .filter(Objects::nonNull)
-                .toList());
+        final List<String> surnameSubstrings = litebridge.select(Fn.substring(tableMapper.transformColumnName("SURNAME"), 2, 5)).from(personTableName).list();
+        assertLinesMatch(List.of("urnam", "urnam", "urnam"), surnameSubstrings);
 
         // Nested SQL functions
-        final List<Row> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring(tableMapper.transformColumnName("SURNAME"), 4))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings.stream()
-                .flatMap(row -> row.columns().stream())
-                .map(rowColumn -> (String) rowColumn.value())
-                .filter(Objects::nonNull)
-                .toList());
+        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring(tableMapper.transformColumnName("SURNAME"), 4))).from(personTableName).list();
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
     }
 
     @TestTemplate
     @DisplayName("ABS()")
     void abs(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Get the lowercase names of the stored persons
-        final Row absAge = litebridge.select(Fn.abs(tableMapper.transformColumnName("AGE"))).from(personTableName).firstOrThrow();
-        assertEquals(20, ((Number) absAge.column(0).value()).intValue());
+        final Number absAge = litebridge.select(Fn.abs(tableMapper.transformColumnName("AGE"))).from(personTableName).firstOrThrow();
+        assertEquals(20, absAge.intValue());
 
-        final Row absAgeExpr = litebridge.select(Fn.abs(Fn.f(tableMapper.transformColumnName("AGE")))).from(personTableName).firstOrNull();
-        assertEquals(20, ((Number) absAgeExpr.column(0).value()).intValue());
+        final Number absAgeExpr = litebridge.select(Fn.abs(Fn.f(tableMapper.transformColumnName("AGE")))).from(personTableName).firstOrNull();
+        assertNotNull(absAgeExpr);
+        assertEquals(20, absAgeExpr.intValue());
     }
 
     @TestTemplate
     @DisplayName("Nested functions")
     void nestedFunctions(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Nested SQL functions
-        final List<Row> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring(tableMapper.transformColumnName("SURNAME"), 4))).from(personTableName).list();
-        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings.stream()
-                .flatMap(row -> row.columns().stream())
-                .map(rowColumn -> (String) rowColumn.value())
-                .filter(Objects::nonNull)
-                .toList());
+        final List<String> uppercaseSubstrings = litebridge.select(Fn.upper(Fn.substring(tableMapper.transformColumnName("SURNAME"), 4))).from(personTableName).list();
+        assertLinesMatch(List.of("NAME0", "NAME1", "NAME2"), uppercaseSubstrings);
     }
 
     @TestTemplate
@@ -275,6 +237,29 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
     void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final ZonedDateTime sysdate = litebridge.select(Fn.currentTimestamp()).firstOrThrow();
         assertNotNull(sysdate);
+    }
+
+    @TestTemplate
+    @DisplayName("EXISTS")
+    void exists(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final String personTableName = tableMapper.qualifyName("PERSON");
+        final String personId = tableMapper.transformColumnName("PERSON_ID");
+
+        // Existence check - positive
+        {
+            final boolean result = litebridge.select(Fn.exists()).from(personTableName)
+                    .where(personId).eq(1L)
+                    .oneOrThrow();
+            assertTrue(result);
+        }
+
+        // Existence check - negative
+        {
+            final boolean result = litebridge.select(Fn.exists()).from(personTableName)
+                    .where(personId).eq(1L)
+                    .oneOrThrow();
+            assertFalse(result);
+        }
     }
 
     private void insertTestPersonRecords(final String personTableName) throws SQLException {

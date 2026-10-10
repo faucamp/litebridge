@@ -5,6 +5,7 @@ import org.litebridge.orm.expression.function.date.CurrentTimestampSpec;
 import org.litebridge.orm.expression.intent.ConvertSpec;
 import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
+import org.litebridge.orm.expression.select.QueryAlteringExpressionSpec;
 
 /**
  * A query expression that overrides the type of the result.
@@ -13,5 +14,5 @@ import org.litebridge.orm.expression.select.LiteralExpressionSpec;
  */
 public sealed interface TypeOverrideExpressionSpec<T> extends ExpressionSpec, TypeOverride<T>
 
-        permits AbstractTODelegateExpressionSpec, ProtoNestableTOExpr, StringTODelegateExpressionSpec, CountSpec, CurrentTimestampSpec, ConvertSpec, ExistsExpressionSpec, LiteralExpressionSpec {
+        permits AbstractTODelegateExpressionSpec, ProtoNestableTOExpr, StringTODelegateExpressionSpec, CountSpec, CurrentTimestampSpec, ConvertSpec, ExistsExpressionSpec, LiteralExpressionSpec, QueryAlteringExpressionSpec {
 }

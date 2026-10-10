@@ -37,4 +37,12 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
      * @return Number of persons matching the specified name prefix
      */
     int countAllByNameStartsWith(String namePrefix);
+
+    /**
+     * Existence check, filtered by age.
+     *
+     * @param age Age to filter on
+     * @return True if a person with the specified age exists, false otherwise
+     */
+    boolean existsByAge(int age);
 }

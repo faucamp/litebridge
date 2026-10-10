@@ -19,12 +19,12 @@ public final class SqlDeleteWhereConditionClause
         extends ConditionClauseImpl<Row,
         SqlDeleteWhereConditionClause,
         SqlDeleteWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder>
+        SqlQueryConditionBuilder<Row>>
 
         implements DeleteWhereConditionClause<Row,
         SqlDeleteWhereConditionClause,
         SqlDeleteWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder> {
+        SqlQueryConditionBuilder<Row>> {
 
     /**
      * Creates a new {@code SqlDeleteWhereConditionClause} instance.

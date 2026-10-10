@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.update;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.CbConditionClauseTerminalInspector;
 import org.litebridge.orm.api.condition.CbSqlConditionClauseTerminal;
@@ -77,9 +78,9 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
         return new SqlUpdateWhereConditionClause(litebridgeContext, logicOperator, column, expression, recreator);
     }
 
-    private SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(tableName, null, litebridgeContext);
-        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
+    private SqlUpdateWhereConditionClauseTerminalImpl whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder<Row> query) {
+        final SqlConditionClauseStart<Row> conditionClauseStart = new SqlConditionClauseStart<>(tableName, null, litebridgeContext);
+        final CbSqlConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
         this.node = new WhereNode(this.node, new ConditionGroupNode(null, logicOperator, CbConditionClauseTerminalInspector.getNode(terminal)));
         return this;
     }

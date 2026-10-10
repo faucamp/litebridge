@@ -27,6 +27,8 @@ import org.litebridge.orm.engine.ast.LimitNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.exception.NonUniqueResultException;
+import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.QueryAlteringExpressionSpec;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
@@ -414,7 +416,7 @@ public class SelectEngineTerminal {
             final List<DTO> dtos = fetchList(node, litebridgeContext);
 
             if (dtos.isEmpty()) {
-                return null;
+                return getNoResultsFallback(selectNode);
             } else if (!first && dtos.size() > 1) {
                 throw new NonUniqueResultException("Expected exactly one mapped result, but got %d".formatted(dtos.size()));
             }
@@ -424,25 +426,31 @@ public class SelectEngineTerminal {
             final Row row = fetchOneRecord(first, node, litebridgeContext);
 
             if (row == null) {
-                return null;
+                // Wrap the fallback into a row if present
+                return getNoResultsFallback(selectNode);
             }
 
-            final Row result;
-            //noinspection NullableProblems
             final Class<?>[] resultTypes = selectNode.resultTypes();
 
-            if (resultTypes != null) {
-                if (selectNode.table() != null || (resultTypes.length > 1 || row.size() > 1)) {
-                    result = convertRowValue(row, selectNode.resultTypes(), litebridgeContext.typeConverter());
-                } else {
-                    // Single type override
-                    return (DTO) unwrap(resultTypes[0], row.column(0), litebridgeContext.typeConverter());
-                }
-            } else {
-                result = row;
+            if (resultTypes == null) {
+                // Basic selection defaulting to Row
+                return (DTO) row;
             }
 
-            return (DTO) result;
+            final Class<?> singleResultType = getSqlModeSingleResultType(resultTypes);
+
+            if (singleResultType == Row.class) {
+                // Basic row selection
+                return (DTO) row;
+            }
+
+            if (singleResultType == null) {
+                // Row with multiple inner value type overrides
+                return (DTO) convertRowValue(row, resultTypes, litebridgeContext.typeConverter());
+            }
+
+            // Single value return type override
+            return (DTO) unwrap(resultTypes[0], row.column(0), litebridgeContext.typeConverter());
         }
     }
 
@@ -540,5 +548,31 @@ public class SelectEngineTerminal {
         }
 
         return litebridgeContext.tableMetaDataCache().ensureTableMetaData(table);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> @Nullable T getNoResultsFallback(final SelectNode selectNode) {
+        if (selectNode.expressions() == null) {
+            return null;
+        }
+
+        for (final ExpressionSpec expressionSpec : selectNode.expressions()) {
+            if (expressionSpec instanceof QueryAlteringExpressionSpec<?> queryAlteringExpressionSpec
+                    && queryAlteringExpressionSpec.noMatchFallback() != null) {
+                return (T) queryAlteringExpressionSpec.noMatchFallback();
+            }
+        }
+
+        return null;
+    }
+
+    private static @Nullable Class<?> getSqlModeSingleResultType(final Class<?> @Nullable [] resultTypes) {
+        if (resultTypes != null && resultTypes.length == 1) {
+            return resultTypes[0];
+        } else if (resultTypes == null) {
+            return Row.class;
+        }
+
+        return null;
     }
 }

@@ -419,15 +419,13 @@ class SqlE2eTest extends AbstractE2eTest {
 
         // When
         LOGGER.info("Selecting specific expressions and filtering records using a query");
-        final Row result = litebridge.select(Fn.count()).from(personTableName)
+        final Long result = litebridge.select(Fn.count()).from(personTableName)
                 .where(tableMapper.transformColumnName("AGE")).gt(18)
                 .and(tableMapper.transformColumnName("AGE")).lt(25)
                 .oneOrThrow();
 
         // Then
-        assertEquals(1, result.size());
-        assertInstanceOf(Number.class, result.column(0).value());
-        assertEquals(1L, ((Number) result.column(0).value()).longValue());
+        assertEquals(1L, result);
     }
 
     @TestTemplate
@@ -471,8 +469,8 @@ class SqlE2eTest extends AbstractE2eTest {
         final String firstName = tableMapper.transformColumnName("FIRST_NAME");
         insertTestPersonRecords(personTableName);
         litebridge.insert(accountTableName, i -> i
-                        .into("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
-                        .values(1L, "Alice's Account", 1000L, 1L));
+                .into("ACCOUNT_ID", "ACCOUNT_NAME", "BALANCE", "PERSON_ID")
+                .values(1L, "Alice's Account", 1000L, 1L));
 
         // Update record where EXISTS
         {

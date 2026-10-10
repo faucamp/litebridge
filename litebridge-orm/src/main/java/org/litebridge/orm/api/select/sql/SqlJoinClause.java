@@ -1,6 +1,5 @@
 package org.litebridge.orm.api.select.sql;
 
-import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
 import org.litebridge.orm.api.select.impl.AbstractJoinClause;
@@ -15,9 +14,13 @@ import java.util.function.Function;
 /**
  * Represents a JOIN clause in a SQL-based query.
  */
-public final class SqlJoinClause extends AbstractJoinClause<Row, SqlJoinConditionClause, SqlJoinConditionClauseTerminal, SqlQueryConditionBuilder> {
+public final class SqlJoinClause<ReturnType>
+        extends AbstractJoinClause<ReturnType,
+        SqlJoinConditionClause<ReturnType>,
+        SqlJoinConditionClauseTerminal<ReturnType>,
+        SqlQueryConditionBuilder<ReturnType>> {
 
-    private final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator;
+    private final Function<QueryNode, SqlJoinConditionClauseTerminal<ReturnType>> terminalCreator;
 
     /**
      * Creates a new instance of {@code SqlJoinClause}.
@@ -26,7 +29,7 @@ public final class SqlJoinClause extends AbstractJoinClause<Row, SqlJoinConditio
      * @param terminalCreator   the function to create the terminal clause
      */
     public SqlJoinClause(final LitebridgeContext litebridgeContext,
-                         final Function<QueryNode, SqlJoinConditionClauseTerminal> terminalCreator) {
+                         final Function<QueryNode, SqlJoinConditionClauseTerminal<ReturnType>> terminalCreator) {
         super(litebridgeContext);
         this.terminalCreator = terminalCreator;
     }
@@ -37,8 +40,8 @@ public final class SqlJoinClause extends AbstractJoinClause<Row, SqlJoinConditio
      * @param column the name of the column to be used in the join condition
      * @return an instance of the join condition clause to allow further configuration
      */
-    public SqlJoinConditionClause on(final String column) {
-        return new SqlJoinConditionClause(litebridgeContext,
+    public SqlJoinConditionClause<ReturnType> on(final String column) {
+        return new SqlJoinConditionClause<>(litebridgeContext,
                 LogicOperator.NOOP,
                 column,
                 null,
@@ -52,7 +55,7 @@ public final class SqlJoinClause extends AbstractJoinClause<Row, SqlJoinConditio
      * @param expression the expression to use for the join condition
      * @return an instance of the join condition clause to allow further configuration
      */
-    public SqlJoinConditionClause on(final ExpressionSpec expression) {
+    public SqlJoinConditionClause<ReturnType> on(final ExpressionSpec expression) {
         return switch (expression) {
             case ProtoExpressionSpec protoExpressionSpec -> on(protoExpressionSpec.column());
             case SelectColumnSpec selectColumnSpec -> on(selectColumnSpec.getColumn().name());
@@ -68,7 +71,7 @@ public final class SqlJoinClause extends AbstractJoinClause<Row, SqlJoinConditio
      * @param column the name of the column to be used for the join condition
      * @return an instance of the terminal join condition clause to finalize the join conditions
      */
-    public SqlJoinConditionClauseTerminal using(final String column) {
+    public SqlJoinConditionClauseTerminal<ReturnType> using(final String column) {
         return on(column).using(column);
     }
 }

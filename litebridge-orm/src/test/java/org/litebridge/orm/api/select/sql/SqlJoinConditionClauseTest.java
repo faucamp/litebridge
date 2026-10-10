@@ -2,6 +2,7 @@ package org.litebridge.orm.api.select.sql;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
@@ -38,7 +39,7 @@ class SqlJoinConditionClauseTest {
     @Test
     void constructorAndCondition_withColumn() {
         // Given
-        final SqlJoinConditionClause clause = new SqlJoinConditionClause(
+        final SqlJoinConditionClause<Row> clause = new SqlJoinConditionClause<>(
                 litebridgeContext,
                 LogicOperator.AND,
                 "user_id",
@@ -68,7 +69,7 @@ class SqlJoinConditionClauseTest {
     void constructorAndCondition_withExpression() {
         // Given
         final ExpressionSpec expr = Fn.column("age");
-        final SqlJoinConditionClause clause = new SqlJoinConditionClause(
+        final SqlJoinConditionClause<Row> clause = new SqlJoinConditionClause<>(
                 litebridgeContext,
                 LogicOperator.OR,
                 null,

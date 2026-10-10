@@ -47,6 +47,8 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
 
         if (tree.isCountProjection()) {
             select = litebridge.select(Fn.count()).from(entityClass);
+        } else if (tree.isExistsProjection()) {
+            select = litebridge.select(Fn.exists()).from(entityClass);
         } else {
             select = litebridge.select(entityClass);
         }
@@ -106,6 +108,8 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
                         criteriaBuilder.add(q -> q.where(propertyPath).like(likeStr));
                     }
                     case IS_NULL -> criteriaBuilder.add(q -> q.where(propertyPath).isNull());
+                    case BETWEEN -> {
+                    }
                     case IS_NOT_NULL -> criteriaBuilder.add(q -> q.where(propertyPath).isNotNull());
                     case IN -> {
                         final Object value = Objects.requireNonNull(accessor.getBindableValue(paramIndex++), "Value cannot be null for IN");
@@ -127,6 +131,9 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
                     }
                     case TRUE -> criteriaBuilder.add(q -> q.where(propertyPath).eq(true));
                     case FALSE -> criteriaBuilder.add(q -> q.where(propertyPath).eq(false));
+                    case EXISTS -> {
+                        System.out.println("here");
+                    }
                     default -> throw new UnsupportedOperationException("Unsupported query part type: " + type);
                 }
 

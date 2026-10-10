@@ -26,13 +26,13 @@ public record SelectNode(@Nullable String table,
                          @Nullable String alias,
                          String @Nullable [] columns,
                          ExpressionSpec @Nullable [] expressions,
-                         @Nullable Class<?> @Nullable [] resultTypes) implements QueryNode {
+                         Class<?> @Nullable [] resultTypes) implements QueryNode {
 
     public SelectNode(final String table,
                       final @Nullable String alias,
                       final String @Nullable [] columns,
                       final ExpressionSpec @Nullable [] expressions,
-                      final @Nullable Class<?> @Nullable [] resultTypes) {
+                      final Class<?> @Nullable [] resultTypes) {
         this(table, null, null, null, alias, columns, expressions, resultTypes);
     }
 
@@ -41,7 +41,7 @@ public record SelectNode(@Nullable String table,
                       final @Nullable String alias,
                       final String @Nullable [] columns,
                       final ExpressionSpec @Nullable [] expressions,
-                      final @Nullable Class<?> @Nullable [] resultTypes) {
+                      final Class<?> @Nullable [] resultTypes) {
         this(null, dtoClass, contextDtoClass, null, alias, columns, expressions, resultTypes);
     }
 
@@ -49,13 +49,13 @@ public record SelectNode(@Nullable String table,
                       final @Nullable String alias,
                       final String @Nullable [] columns,
                       final ExpressionSpec @Nullable [] expressions,
-                      final @Nullable Class<?> @Nullable [] resultTypes) {
+                      final Class<?> @Nullable [] resultTypes) {
         this(null, null, null, fromQueryNode, alias, columns, expressions, resultTypes);
     }
 
     public SelectNode(final String @Nullable [] columns,
                       final ExpressionSpec @Nullable [] expressions,
-                      final @Nullable Class<?> @Nullable [] resultTypes) {
+                      final Class<?> @Nullable [] resultTypes) {
         this(null, null, null, null, null, columns, expressions, resultTypes);
     }
 

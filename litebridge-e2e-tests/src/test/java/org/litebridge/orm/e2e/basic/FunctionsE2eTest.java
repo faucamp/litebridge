@@ -20,8 +20,10 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertLinesMatch;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -266,8 +268,24 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("CURRENT_TIMESTAMP")
     void currentTimestamp(final DbEnvDtoTableMapper tableMapper) throws Exception {
-        final ZonedDateTime sysdate = litebridge.select(Fn.currentTimestamp()).from(Person.class).firstOrThrow();
+        final ZonedDateTime sysdate = litebridge.select(Fn.currentTimestamp()).firstOrThrow();
         assertNotNull(sysdate);
+    }
+
+    @TestTemplate
+    @DisplayName("EXISTS")
+    void exists(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Existence check - positive
+//        {
+//            final boolean result = litebridge.select(Fn.exists()).from(Person.class).withIdOrThrow(1L);
+//            assertTrue(result);
+//        }
+
+        // Existence check - negative
+        {
+            final boolean result = litebridge.select(Fn.exists()).from(Person.class).withIdOrThrow(50L);
+            assertFalse(result);
+        }
     }
 
     @TestTemplate

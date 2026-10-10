@@ -483,7 +483,7 @@ public class LitebridgeCore implements SelectApi {
     }
 
     @Override
-    public FromClauseStart select(final String... fieldsOrColumns) {
+    public FromClauseStart<Row> select(final String... fieldsOrColumns) {
         return selectEngine.select(fieldsOrColumns, this::createLitebridgeContext);
     }
 
@@ -498,7 +498,7 @@ public class LitebridgeCore implements SelectApi {
     }
 
     @Override
-    public FromClauseStart select(final ExpressionSpec... expressions) {
+    public FromClauseStart<Row> select(final ExpressionSpec... expressions) {
         return selectEngine.select(expressions, this::createLitebridgeContext);
     }
 
@@ -508,7 +508,7 @@ public class LitebridgeCore implements SelectApi {
     }
 
     @Override
-    public FromClauseStart select() {
+    public FromClauseStart<Row> select() {
         return selectEngine.select(this::createLitebridgeContext);
     }
 

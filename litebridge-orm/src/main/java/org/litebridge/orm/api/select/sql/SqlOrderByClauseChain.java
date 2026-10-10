@@ -11,9 +11,9 @@ import org.litebridge.orm.expression.ExpressionSpec;
 /**
  * Represents a chain of ORDER BY clauses in a SQL-based query.
  */
-public final class SqlOrderByClauseChain
-        extends OrderByClauseTerminalImpl<Row>
-        implements OrderByClauseChain<Row, SqlOrderByClause, SqlOrderByClauseChain> {
+public final class SqlOrderByClauseChain<ReturnType>
+        extends OrderByClauseTerminalImpl<ReturnType>
+        implements OrderByClauseChain<ReturnType, SqlOrderByClause<ReturnType>, SqlOrderByClauseChain<ReturnType>> {
 
     /**
      * Creates a new instance of {@code SqlOrderByClauseChain}.

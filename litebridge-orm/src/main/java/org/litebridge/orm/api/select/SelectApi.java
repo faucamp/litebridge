@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.expression.ExpressionSpec;
@@ -40,9 +41,9 @@ public interface SelectApi {
      * <p>
      * Shortcut method; equivalent to {@code select().from(dtoClass, contextDtoClass)}.
      *
-     * @param <DTO>            The type of the DTO to select.
-     * @param dtoClass         The class of the DTO to be queried, which must already be registered.
-     * @param contextDtoClass  The context DTO class for determining the table mapping.
+     * @param <DTO>           The type of the DTO to select.
+     * @param dtoClass        The class of the DTO to be queried, which must already be registered.
+     * @param contextDtoClass The context DTO class for determining the table mapping.
      * @return A {@link DtoFromClauseTerminal} instance for querying and retrieving data for the specified DTO class.
      * @throws IllegalArgumentException if the specified DTO class is not registered in the table registry.
      */
@@ -62,7 +63,7 @@ public interface SelectApi {
      *                        Each field/column name must be a valid, non-null string.
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    FromClauseStart select(String... fieldsOrColumns);
+    FromClauseStart<Row> select(String... fieldsOrColumns);
 
     <T extends Number> FromClauseStartTypeOverride<T> select(T literal);
 
@@ -81,7 +82,7 @@ public interface SelectApi {
      *                    to be part of the SELECT statement.
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    FromClauseStart select(ExpressionSpec... expressions);
+    FromClauseStart<Row> select(ExpressionSpec... expressions);
 
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
@@ -109,5 +110,5 @@ public interface SelectApi {
      *
      * @return A {@link FromClauseStartTypeOverride} instance allowing further refinement of the SQL query by specifying the target DTO or table.
      */
-    FromClauseStart select();
+    FromClauseStart<Row> select();
 }

@@ -11,7 +11,7 @@ public sealed interface SqlDeleteWhereConditionClauseTerminal
         extends DeleteWhereConditionClauseTerminal<Row,
         SqlDeleteWhereConditionClause,
         SqlDeleteWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder>
+        SqlQueryConditionBuilder<Row>>
 
         permits SqlDeleteWhereConditionClauseTerminalImpl {
 

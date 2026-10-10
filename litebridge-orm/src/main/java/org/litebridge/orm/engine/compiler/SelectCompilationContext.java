@@ -39,6 +39,7 @@ import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.intent.ConvertSpec;
+import org.litebridge.orm.expression.select.QueryAlteringExpressionSpec;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.MappedManyToMany;
@@ -685,6 +686,11 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             if (selectExpression instanceof AliasedExpression aliasedExpression && aliasedExpression.alias() != null) {
                 //noinspection DataFlowIssue
                 aliases.put(aliasedExpression.alias(), aliasedExpression);
+            }
+
+            // Set the limit from the query expression spec unless already set
+            if (limit == null && expressionSpec instanceof QueryAlteringExpressionSpec<?> queryAlteringExpressionSpec) {
+                limit = queryAlteringExpressionSpec.limit();
             }
         });
 

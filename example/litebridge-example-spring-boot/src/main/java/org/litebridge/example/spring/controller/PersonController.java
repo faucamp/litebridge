@@ -79,9 +79,15 @@ public class PersonController {
         return exampleService.getPersonsByNameOrSurname(name);
     }
 
-    @GetMapping(path = "/count-name-startswith")
+    @GetMapping(path = "/count/name-startswith")
     @Operation(summary = "Count all Person records with names starting with the specified prefix")
     public int countPersonsNameStartingWith(@Parameter(description = "Name prefix") @RequestParam final String namePrefix) {
         return exampleService.countPersonsNameStartingWith(namePrefix);
+    }
+
+    @GetMapping(path = "/exists/by-age")
+    @Operation(summary = "Existence check, filtered by age")
+    public boolean existByAge(@Parameter(description = "Age to filter on") @RequestParam final int age) {
+        return exampleService.existsByAge(age);
     }
 }

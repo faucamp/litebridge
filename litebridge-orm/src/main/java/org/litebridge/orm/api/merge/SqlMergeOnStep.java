@@ -17,7 +17,7 @@ public final class SqlMergeOnStep extends MergeOnStep<Row,
         SqlMergeOnConditionClauseTerminal,
         SqlMergeUpdateStep,
         MergeInsertStep,
-        SqlQueryConditionBuilder> {
+        SqlQueryConditionBuilder<Row>> {
 
     /**
      * Creates a new {@code SqlMergeOnStep} instance.
@@ -62,9 +62,9 @@ public final class SqlMergeOnStep extends MergeOnStep<Row,
 
     @Override
     @SuppressWarnings("ConstantConditions")
-    public SqlMergeOnConditionClauseTerminal on(final SqlQueryConditionBuilder query) {
-        final SqlConditionClauseStart conditionClauseStart = new SqlConditionClauseStart(usingTable, null, litebridgeContext);
-        final CbSqlConditionClauseTerminal terminal = query.apply(conditionClauseStart);
+    public SqlMergeOnConditionClauseTerminal on(final SqlQueryConditionBuilder<Row> query) {
+        final SqlConditionClauseStart<Row> conditionClauseStart = new SqlConditionClauseStart<>(usingTable, null, litebridgeContext);
+        final CbSqlConditionClauseTerminal<Row> terminal = query.apply(conditionClauseStart);
         final ConditionGroupNode onConditionNode = new ConditionGroupNode(null, LogicOperator.NOOP, CbConditionClauseTerminalInspector.getNode(terminal));
         return new SqlMergeOnConditionClauseTerminal(usingTable, usingQueryNode, usingValues, usingAlias, onConditionNode, mergeNode, litebridgeContext);
     }

@@ -19,7 +19,7 @@ public final class SqlDeleteStart extends UpdateStepBase
         implements DeleteStart<Row,
         SqlDeleteWhereConditionClause,
         SqlDeleteWhereConditionClauseTerminal,
-        SqlQueryConditionBuilder>,
+        SqlQueryConditionBuilder<Row>>,
         DeleteTerminal {
 
     private final String tableName;

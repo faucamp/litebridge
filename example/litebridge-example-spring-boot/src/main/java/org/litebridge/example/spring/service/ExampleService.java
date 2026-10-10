@@ -58,6 +58,10 @@ public class ExampleService {
         return personRepository.countAllByNameStartsWith(namePrefix);
     }
 
+    public boolean existsByAge(final int age) {
+        return personRepository.existsByAge(age);
+    }
+
     public Person updatePerson(final Person person) {
         if (person.getId() == null) {
             throw new IllegalArgumentException("Person ID cannot be null");
