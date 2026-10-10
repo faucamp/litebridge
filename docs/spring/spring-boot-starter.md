@@ -129,6 +129,81 @@ public class UserService {
 }
 ```
 
+#### Derived Query Methods
+
+`LitebridgeRepository` supports Spring Data's Derived Query Methods via `LitebridgePartTreeQuery`. 
+Query criteria, logical operators, projections, sorting, and limits are parsed directly from repository method names and converted into Litebridge AST queries.
+
+##### Supported Keywords
+
+The following keywords and operators are supported in method names:
+
+| Keyword | Part Type | SQL Operation | Example Method Signature|
+|:---|:---|:---|:---|
+| `Is`, `Equals`, (none) | Simple Property | `=` | `findByName(String name)` |
+| `IsNot`, `Not` | Negating Simple Property | `<>` | `findByNameIsNot(String name)` |
+| `GreaterThan` | Greater Than | `>` | `findByAgeGreaterThan(int age)` |
+| `GreaterThanEqual` | Greater Than Equal | `>=` | `findByAgeGreaterThanEqual(int age)` |
+| `LessThan` | Less Than | `<` | `findByAgeLessThan(int age)` |
+| `LessThanEqual` | Less Than Equal | `<=` | `findByAgeLessThanEqual(int age)` |
+| `Like`, `Containing` | Pattern Matching | `LIKE '%...%'` | `findByNameContaining(String part)` |
+| `NotLike`, `NotContaining` | Pattern Negation | `NOT LIKE '%...%'` | `findByNameNotContaining(String part)` |
+| `StartingWith` | Prefix Matching | `LIKE '...%'` | `findByNameStartingWith(String prefix)` |
+| `EndingWith` | Suffix Matching | `LIKE '%...'` | `findByNameEndingWith(String suffix)` |
+| `IsNull` | Null Check | `IS NULL` | `findByEmailIsNull()` |
+| `IsNotNull` | Non-null Check | `IS NOT NULL` | `findByEmailIsNotNull()` |
+| `In` | Collection Inclusion | `IN (...)` | `findByStatusIn(Collection<String> statuses)` |
+| `NotIn` | Collection Exclusion | `NOT IN (...)` | `findByStatusNotIn(Collection<String> statuses)` |
+| `True` | Boolean True | `= true` | `findByActiveTrue()` |
+| `False` | Boolean False | `= false` | `findByActiveFalse()` |
+
+##### Combining Conditions
+
+Conditions within method names can be combined using `And` and `Or`:
+
+```java
+List<User> findByNameAndActive(String name, boolean active);
+List<User> findByNameOrEmail(String name, String email);
+```
+
+##### Limits and Sorting
+
+Static limits (`First<N>`, `Top<N>`) and static ordering (`OrderBy<Property>Asc`, `OrderBy<Property>Desc`) are fully supported:
+
+```java
+List<User> findFirst10ByActiveTrueOrderByCreatedDateDesc();
+Optional<User> findTopByStatusOrderByIdAsc(String status);
+```
+
+##### Projections and Counts
+
+In addition to entity and collection returns, count and existence queries are supported:
+
+```java
+long countByNameStartingWith(String prefix);
+boolean existsByEmail(String email);
+```
+
+##### Complete Repository Example
+
+```java
+@Repository
+public interface PersonRepository extends LitebridgeRepository<Person, Long> {
+
+    List<Person> findAllByNameAndSurname(String name, String surname);
+
+    List<Person> findAllByNameOrSurname(String name, String surname);
+
+    List<Person> findFirst10ByActiveTrueOrderByCreatedDateDesc();
+
+    long countAllByNameStartingWith(String namePrefix);
+
+    boolean existsByEmail(String email);
+
+    Optional<Person> findByEmail(String email);
+}
+```
+
 ### Custom Repository Configuration
 
 Explicit `@EnableLitebridgeRepositories` annotations take precedence over repository auto-configuration. When `@EnableLitebridgeRepositories` is declared, the auto-configuration backs off.

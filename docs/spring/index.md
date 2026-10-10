@@ -25,3 +25,5 @@ The following components are provided by the `litebridge-spring` module:
 
 - `LitebridgeTransactionManager`: A Spring `PlatformTransactionManager` implementation that integrates Litebridge with Spring's `@Transactional` support.
 - `Litebridge`: The main entry point, which can be easily defined as a Spring bean.
+- `LitebridgeRepository`: Base Spring Data repository interface extending `ListCrudRepository` and `ListPagingAndSortingRepository`.
+- `@EnableLitebridgeRepositories`: Annotation enabling Spring Data repository support with custom configuration.

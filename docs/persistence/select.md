@@ -403,6 +403,8 @@ Query filters are defined using `where()`, `and()` and `or()` clauses.
 A complete list of available operators (such as `.eq()`, `.gt()`, `.in()`, etc.) and examples of how to build complex 
 conditions can be found on the [Where Clauses](where.md) page.
 
+For programmatic assembly of dynamic filters without conditional `.where()` vs `.and()` branching, see [Programmatic Conditional Queries with DtoWhereCriteriaBuilder](where.md#programmatic-conditional-queries-with-dtowherecriteriabuilder).
+
 ## SQL-level examples
 
 The same fluent API can be used to perform any SQL query, without requiring a DTO mapping:

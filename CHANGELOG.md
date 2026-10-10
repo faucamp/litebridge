@@ -31,6 +31,11 @@
     - Add `Fn.aliasRef()` helper methods for referencing aliased columns, tables, and subqueries in query conditions
       and clauses.
     - Add `Fn.exists()` helper method for referencing subqueries in query conditions and clauses.
+    - Add `DtoWhereCriteriaBuilder` for programmatic and conditional `WHERE` clause construction.
+- Spring Integration:
+    - Add Spring Data repository integration (`LitebridgeRepository`) with `ListCrudRepository` and `ListPagingAndSortingRepository` support.
+    - Add support for Spring Data Derived Query Methods via `LitebridgePartTreeQuery`.
+    - Add `@EnableLitebridgeRepositories` and auto-configuration for Spring Data repositories via `LitebridgeRepositoriesAutoConfiguration`.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.

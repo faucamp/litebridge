@@ -205,3 +205,87 @@ SQL Equivalent:
 ```sql
 SELECT ... FROM LB.PERSON WHERE FIRST_NAME = ? AND (SURNAME = ? OR AGE = ? OR (EYE_COLOUR = ? AND AGE > ?))
 ```
+
+## Programmatic Conditional Queries with DtoWhereCriteriaBuilder
+
+When constructing dynamic queries based on optional filter criteria (such as user-submitted search parameters), chaining conditions with the standard fluent API can become cumbersome. Developers must track whether a `.where()` clause has already been invoked before chaining subsequent `.and()` or `.or()` methods.
+
+The `DtoWhereCriteriaBuilder<DTO>` helper flattens and simplifies this process.
+
+### Overview and Setup
+
+`DtoWhereCriteriaBuilder` accepts a `DtoFromClauseTerminal<DTO>` and allows adding conditions sequentially in loops or conditional blocks:
+
+```java
+import org.litebridge.orm.api.condition.DtoWhereCriteriaBuilder;
+
+DtoWhereCriteriaBuilder<Person> criteria = new DtoWhereCriteriaBuilder<>(litebridge.select(Person.class));
+```
+
+The first condition added is automatically treated as the root condition (`NOOP` logical operator), and subsequent conditions default to `AND` unless configured otherwise. If no conditions are added, `.build()` safely returns the original select terminal.
+
+### API Methods
+
+| Method | Description |
+|:---|:---|
+| `add(query)` | Adds a condition using the current default logical operator (defaults to `AND` after the first condition). |
+| `add(LogicOperator, query)` | Adds a condition using the explicitly provided `LogicOperator` (`AND` or `OR`). |
+| `and(query)` | Shorthand for `add(LogicOperator.AND, query)`. |
+| `or(query)` | Shorthand for `add(LogicOperator.OR, query)`. |
+| `setLogicOperator(LogicOperator)` | Sets the default logical operator to be used by subsequent `add(...)` invocations. |
+| `getLogicOperator()` | Retrieves the currently configured default logical operator. |
+| `build()` | Compiles the added conditions into a `WhereNode` terminal, or returns the initial select terminal if no conditions were added. |
+
+### Dynamic Search Filter Example
+
+The following example demonstrates building a search query from optional criteria:
+
+```java
+public List<Person> searchPersons(
+        @Nullable String name,
+        @Nullable Integer minAge,
+        @Nullable String status) {
+
+    DtoWhereCriteriaBuilder<Person> criteria = new DtoWhereCriteriaBuilder<>(
+            litebridge.select(Person.class)
+    );
+
+    if (name != null && !name.isBlank()) {
+        criteria.add(q -> q.where(PersonMeta.name).like(name + "%"));
+    }
+
+    if (minAge != null) {
+        criteria.add(q -> q.where(PersonMeta.age).gte(minAge));
+    }
+
+    if (status != null && !status.isBlank()) {
+        criteria.add(q -> q.where(PersonMeta.status).eq(status));
+    }
+
+    return criteria.build()
+            .orderBy(PersonMeta.id).asc()
+            .list();
+}
+```
+
+If none of the filter parameters are provided, `criteria.build()` returns the base query (`litebridge.select(Person.class)`) without a `WHERE` clause, executing an unfiltered query.
+
+### Changing the Default Logical Operator
+
+When constructing queries where multiple conditions should be joined using `OR` logic by default:
+
+```java
+DtoWhereCriteriaBuilder<Person> criteria = new DtoWhereCriteriaBuilder<>(
+        litebridge.select(Person.class)
+);
+
+// Configure subsequent conditions to use OR logic
+criteria.setLogicOperator(LogicOperator.OR);
+
+for (String name : names) {
+    // OR'ed with previous condition
+    criteria.add(q -> q.where(PersonMeta.name).like(name));
+}
+
+List<Person> results = criteria.build().list();
+```

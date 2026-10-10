@@ -29,8 +29,8 @@ const configPropertiesExamples = [
     scan-base-package: org.litebridge.db
   # Package(s) to scan for @Table entities and TypeSafeDtoTableMapping classes
   scan-base-package:
-    - com.example.app.entity
-    - com.example.app.dto
+    - org.example.entity
+    - org.example.dto
   # Strategy when related DTOs are not joined: NULL_IF_NO_JOIN or PARTIAL_OBJECT_IF_NO_JOIN
   related-dto-strategy: PARTIAL_OBJECT_IF_NO_JOIN
   # Enable or disable repository autoconfiguration (default: true)
@@ -49,7 +49,7 @@ litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider
 litebridge.database-provider.scan-base-package=org.litebridge.db
 
 # Package(s) to scan for @Table entities and TypeSafeDtoTableMapping classes
-litebridge.scan-base-package=com.example.app.entity,com.example.app.dto
+litebridge.scan-base-package=org.example.entity,org.example.dto
 
 # Strategy when related DTOs are not joined: NULL_IF_NO_JOIN or PARTIAL_OBJECT_IF_NO_JOIN
 litebridge.related-dto-strategy=PARTIAL_OBJECT_IF_NO_JOIN
@@ -71,8 +71,8 @@ const registrationExamples = [
         code: `# application.yml
 litebridge:
   scan-base-package:
-    - com.example.app.entity
-    - com.example.app.mapping
+    - org.example.entity
+    - org.example.mapping
 
 # Entities with @Table annotations and DTO mappings in these packages
 # are registered automatically with the Litebridge bean.`
@@ -90,8 +90,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.boot.autoconfigure.LitebridgeConfigurer;
 
-import com.example.app.dto.User;
-import com.example.app.entity.Account;
+import org.example.dto.User;
+import org.example.entity.Account;
 
 @Configuration
 public class LitebridgeConfig extends LitebridgeConfigurer {
@@ -111,13 +111,13 @@ public class LitebridgeConfig extends LitebridgeConfigurer {
     }
 ];
 
-const directUsageCode = `package com.example.app.service;
+const directUsageCode = `import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.litebridge.orm.Litebridge;
-import com.example.app.entity.User;
-import com.example.app.entity.meta.UserMeta;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import org.example.entity.User;
+import org.example.entity.meta.UserMeta;
 
 import java.util.List;
 
@@ -153,16 +153,53 @@ const repositoryExamples = [
         animate: false,
         description: `Define a repository by extending <code>LitebridgeRepository&lt;T, ID&gt;</code>. 
 It is automatically detected and registered as a Spring bean.`,
-        code: `package com.example.app.repository;
+        code: `import org.litebridge.spring.repository.LitebridgeRepository;
 
-import org.litebridge.spring.repository.LitebridgeRepository;
-import com.example.app.entity.User;
+import org.example.entity.User;
 
+@Repository
 public interface UserRepository extends LitebridgeRepository<User, Long> {
     // Inherits standard CRUD methods:
     // - findAll(), findById(id), existsById(id), count()
     // - save(entity), saveAll(entities)
     // - delete(entity), deleteById(id), deleteAll()
+}`
+    },
+    {
+        id: 'derivedQueries',
+        title: 'Derived query methods',
+        filename: 'PersonRepository.java',
+        lang: 'java',
+        animate: false,
+        description: `Declare derived query methods directly on repository interfaces. Litebridge translates method names into compiled AST queries with automatic parameter binding.`,
+        code: `import java.util.List;
+import java.util.Optional;
+import org.springframework.stereotype.Repository;
+
+import org.litebridge.spring.repository.LitebridgeRepository;
+
+import org.example.entity.Person;
+
+@Repository
+public interface PersonRepository extends LitebridgeRepository<Person, Long> {
+
+    // Derived equality and logical AND query
+    List<Person> findAllByNameAndSurname(String name, String surname);
+
+    // Derived logical OR query
+    List<Person> findAllByNameOrSurname(String name, String surname);
+
+    // Static limit with ordering
+    List<Person> findFirst10ByActiveTrueOrderByCreatedDateDesc();
+
+    // Derived prefix pattern matching and count projection
+    long countAllByNameStartingWith(String prefix);
+
+    // Existence check
+    boolean existsByEmail(String email);
+
+    // Single result query returning Optional
+    Optional<Person> findByEmail(String email);
 }`
     },
     {
@@ -172,15 +209,14 @@ public interface UserRepository extends LitebridgeRepository<User, Long> {
         lang: 'java',
         animate: false,
         description: `Inject the repository directly into your service layer with Spring's <code>@Transactional</code> support.`,
-        code: `package com.example.app.service;
+        code: `import java.util.List;
+import java.util.Optional;
 
-import com.example.app.entity.User;
-import com.example.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import org.example.entity.User;
+import org.example.repository.UserRepository;
 
 @Service
 public class UserAccountService {
@@ -219,14 +255,12 @@ public class UserAccountService {
         lang: 'java',
         animate: false,
         description: `Use <code>@EnableLitebridgeRepositories</code> for explicit base package scanning or custom repository setup.`,
-        code: `package com.example.app.config;
-
+        code: `import org.springframework.context.annotation.Configuration;
 import org.litebridge.spring.repository.EnableLitebridgeRepositories;
-import org.springframework.context.annotation.Configuration;
 
 @Configuration
 // Explicit configuration overrides default repository autoconfiguration
-@EnableLitebridgeRepositories(basePackages = "com.example.app.repository")
+@EnableLitebridgeRepositories(basePackages = "org.example.repository")
 public class RepositoryConfig {
 }
 
@@ -445,7 +479,7 @@ public class RepositoryConfig {
                     </div>
                     <p class="mb-4 text-gray-600 dark:text-gray-400">
                         Declare interfaces extending <code>LitebridgeRepository&lt;T, ID&gt;</code> for boilerplate-free
-                        CRUD operations and Spring Data integration:
+                        CRUD operations, custom derived query methods, and Spring Data integration:
                     </p>
                     <CodeExample examples={repositoryExamples}/>
                 </section>

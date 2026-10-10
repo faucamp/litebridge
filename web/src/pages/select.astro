@@ -7,7 +7,8 @@ import {
     DatabaseSearch,
     SquareAsterisk,
     GitMerge,
-    SquareMousePointer
+    SquareMousePointer,
+    ListFilter
 } from '@lucide/astro';
 import CodeExample from '../components/CodeExample.astro';
 
@@ -164,6 +165,80 @@ Row row = litebridge.nativeSql()
     .firstOrNull();`
     }
 ];
+
+const criteriaBuilderExamples = [
+    {
+        id: 'criteriaBuilder',
+        title: 'Dynamic search criteria',
+        description: 'Construct conditional WHERE clauses dynamically using DtoWhereCriteriaBuilder without branching over where() vs and().',
+        code: `import org.jspecify.annotations.Nullable;
+
+import org.litebridge.orm.api.condition.DtoWhereCriteriaBuilder;
+
+import org.example.dto.Person;
+import org.example.entity.meta.PersonMeta;
+
+public List<Person> searchPersons(
+        @Nullable String name,
+        @Nullable Integer minAge,
+        @Nullable String status) {
+
+    // Initialise criteria builder from a select statement
+    DtoWhereCriteriaBuilder<Person> criteria = new DtoWhereCriteriaBuilder<>(
+            litebridge.select(Person.class)
+    );
+
+    // Conditions can be added sequentially; the first condition acts as WHERE,
+    // and subsequent conditions default to AND
+    if (name != null && !name.isBlank()) {
+        criteria.add(q -> q.where(PersonMeta.name).like(name + "%"));
+    }
+
+    if (minAge != null) {
+        criteria.add(q -> q.where(PersonMeta.age).gte(minAge));
+    }
+
+    if (status != null && !status.isBlank()) {
+        criteria.add(q -> q.where(PersonMeta.status).eq(status));
+    }
+
+    return criteria.build()
+            .orderBy(PersonMeta.id).asc()
+            .list();
+}`
+    },
+    {
+        id: 'orCriteria',
+        title: 'Configuring logic operator',
+        description: 'Configure default operator behavior such as OR logic for multiple criteria.',
+        code: `import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.orm.api.condition.DtoWhereCriteriaBuilder;
+
+import org.example.dto.Person;
+import org.example.entity.meta.PersonMeta;
+
+DtoWhereCriteriaBuilder<Person> criteria = new DtoWhereCriteriaBuilder<>(
+        litebridge.select(Person.class)
+);
+
+List<String> names = List.of("Al%", "Bo%", "Fr%");
+
+// Switch default operator for subsequent conditions to default to OR
+criteria.setLogicOperator(LogicOperator.OR);
+
+for (String name : names) {
+    // OR'ed with with previous condition
+    criteria.add(q -> q.where(PersonMeta.name).like(name));
+}
+
+// Specific logical combinations may be specified, overriding the default operator
+// Shorthand alternative: criteria.and(q -> q.where(PersonMeta.tags).contains("important"));
+criteria.add(LogicOperator.AND, q -> q.where(PersonMeta.tags).contains("important"));
+
+List<Person> results = criteria.build().list();`
+    }
+
+];
 ---
 
 <Layout title={title} description={description}>
@@ -244,6 +319,22 @@ Row row = litebridge.nativeSql()
                         <h2 class="text-3xl font-bold text-primary dark:text-white">Select specific columns</h2>
                     </div>
                     <CodeExample filename="SelectColumnsExample.java" examples={specificColumnExamples}/>
+                </section>
+
+                <!-- Programmatic criteria queries -->
+                <section class="reveal" style="transition-delay: 200ms">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent">
+                            <ListFilter class="h-6 w-6"/>
+                        </div>
+                        <h2 class="text-3xl font-bold text-primary dark:text-white">Programmatic criteria queries</h2>
+                    </div>
+                    <p class="mb-4 text-gray-600 dark:text-gray-400">
+                        When assembling dynamic search filters from optional inputs, 
+                        <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm text-primary dark:text-accent">DtoWhereCriteriaBuilder</code>
+                        flattens condition assembly by eliminating manual tracking of <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm text-primary dark:text-accent">where()</code> vs <code class="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-sm text-primary dark:text-accent">and()</code>:
+                    </p>
+                    <CodeExample filename="CriteriaBuilderExample.java" examples={criteriaBuilderExamples}/>
                 </section>
             </div>
         </div>
