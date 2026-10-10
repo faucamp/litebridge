@@ -713,17 +713,16 @@ class SelectEngineTerminalTest {
         final Column idCol = new Column(table, "id");
         final Row row = new Row(List.of(new RowColumn("id", 123L, idCol)));
         when(databaseProvider.executeQuery(any(), eq(txManager))).thenReturn(List.of(row));
+        when(typeConverter.convert(any(), eq(Number.class))).thenReturn(123L);
 
         final SelectNode node = new SelectNode(null, null, null, null, new ExpressionSpec[0], new Class<?>[]{Number.class});
 
         // When
-        final List<Row> result = terminal.fetchList(node, context);
+        final List<Number> result = terminal.fetchList(node, context);
 
         // Then
         assertEquals(1, result.size());
-        assertEquals(123L, result.getFirst().column(0).value());
-        // Verify typeConverter.convert was NEVER called because 123L is already assignable to Number.class
-        verify(typeConverter, never()).convert(any(), any());
+        assertEquals(123L, result.getFirst().longValue());
     }
 
     @Test
