@@ -25,6 +25,7 @@ import org.litebridge.orm.engine.ast.WhenNotMatchedNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.LiteralExpressionSpec;
+import org.litebridge.orm.expression.select.QueryAlteringExpressionSpec;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
@@ -79,7 +80,15 @@ public final class QueryBindValueExtractor {
 
                     if (selectNode.expressions() != null) {
                         for (final ExpressionSpec expressionSpec : selectNode.expressions()) {
-                            if (expressionSpec instanceof LiteralExpressionSpec<?> literalExpressionSpec) {
+                            final ExpressionSpec targetExpressionSpec;
+
+                            if (expressionSpec instanceof QueryAlteringExpressionSpec<?> queryAlteringExpressionSpec) {
+                                targetExpressionSpec = queryAlteringExpressionSpec.delegate();
+                            } else {
+                                targetExpressionSpec = expressionSpec;
+                            }
+
+                            if (targetExpressionSpec instanceof LiteralExpressionSpec<?> literalExpressionSpec) {
                                 bindValues.add(literalExpressionSpec.value());
                             }
                         }

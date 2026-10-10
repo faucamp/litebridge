@@ -276,10 +276,10 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @DisplayName("EXISTS")
     void exists(final DbEnvDtoTableMapper tableMapper) throws Exception {
         // Existence check - positive
-//        {
-//            final boolean result = litebridge.select(Fn.exists()).from(Person.class).withIdOrThrow(1L);
-//            assertTrue(result);
-//        }
+        {
+            final boolean result = litebridge.select(Fn.exists()).from(Person.class).withIdOrThrow(1L);
+            assertTrue(result);
+        }
 
         // Existence check - negative
         {
