@@ -53,7 +53,7 @@ public class DatabaseFacade {
 
     public int countPersonsNameStartingWith(final String namePrefix) {
         return litebridge.select(Fn.convert(Fn.count(), int.class)).from(Person.class)
-                .where("name").like('%' + namePrefix)
+                .where("name").like(namePrefix + '%')
                 .oneOrThrow();
     }
 
