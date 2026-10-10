@@ -250,15 +250,27 @@ public class SqlFunctionsE2eTest extends AbstractE2eTest {
             final boolean result = litebridge.select(Fn.exists()).from(personTableName)
                     .where(personId).eq(1L)
                     .oneOrThrow();
+
             assertTrue(result);
         }
 
         // Existence check - negative
         {
             final boolean result = litebridge.select(Fn.exists()).from(personTableName)
-                    .where(personId).eq(1L)
+                    .where(personId).eq(50L)
                     .oneOrThrow();
+
             assertFalse(result);
+        }
+
+        // Existence check - negative - for a list response (to ensure the fallback is still returned)
+        {
+            final List<Boolean> result = litebridge.select(Fn.exists()).from(personTableName)
+                    .where(personId).eq(50L)
+                    .list();
+
+            assertEquals(1, result.size());
+            assertFalse(result.getFirst());
         }
     }
 

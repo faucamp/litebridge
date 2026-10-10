@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -254,17 +255,48 @@ public class SelectEngineTerminal {
                 return unwrap(dtoClass, rows, litebridgeContext.typeConverter());
             }
         } else {
-            final List<Row> resultRows;
+            if (rows.isEmpty()) {
+                // Wrap the fallback into a row if present
+                final Object fallbackValue = getNoResultsFallback(selectNode);
 
-            if (selectNode.resultTypes() != null) {
-                resultRows = rows.stream()
-                        .map(row -> convertRowValue(row, selectNode.resultTypes(), typeConverter))
-                        .toList();
-            } else {
-                resultRows = rows;
+                if (fallbackValue == null) {
+                    // No results
+                    return (List<DTO>) rows;
+                }
+
+                return (List<DTO>) Collections.singletonList(fallbackValue);
             }
 
-            return (List<DTO>) resultRows;
+            final Class<?>[] resultTypes = selectNode.resultTypes();
+
+            if (resultTypes == null) {
+                // Basic selection defaulting to Row
+                return (List<DTO>) rows;
+            }
+
+            final Class<?> singleResultType = getSqlModeSingleResultType(resultTypes);
+
+            if (singleResultType == Row.class) {
+                // Basic row selection
+                return (List<DTO>) rows;
+            }
+
+            if (singleResultType == null) {
+                // Row with multiple inner value type overrides
+                for (Row row : rows) {
+                    convertRowValue(row, selectNode.resultTypes(), typeConverter);
+                }
+
+                return (List<DTO>) rows;
+            }
+
+            // Single value return type override
+            final List<DTO> convertedResults = new ArrayList<>(rows.size());
+            for (Row row : rows) {
+                convertedResults.add((DTO) unwrap(resultTypes[0], row.column(0), litebridgeContext.typeConverter()));
+            }
+
+            return convertedResults;
         }
     }
 
