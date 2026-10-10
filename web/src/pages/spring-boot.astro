@@ -27,7 +27,7 @@ const configPropertiesExamples = [
   database-provider:
     class: org.litebridge.db.h2.H2DatabaseProvider
     scan-base-package: org.litebridge.db
-  # Package(s) to scan for @Table entities and TypeSafeDtoTableMapping classes
+  # Package(s) to scan for @Table-annotated entities
   scan-base-package:
     - org.example.entity
     - org.example.dto
@@ -48,7 +48,7 @@ const configPropertiesExamples = [
 litebridge.database-provider.class=org.litebridge.db.h2.H2DatabaseProvider
 litebridge.database-provider.scan-base-package=org.litebridge.db
 
-# Package(s) to scan for @Table entities and TypeSafeDtoTableMapping classes
+# Package(s) to scan for @Table-annotated entities
 litebridge.scan-base-package=org.example.entity,org.example.dto
 
 # Strategy when related DTOs are not joined: NULL_IF_NO_JOIN or PARTIAL_OBJECT_IF_NO_JOIN
@@ -67,7 +67,7 @@ const registrationExamples = [
         lang: 'yaml',
         animate: false,
         description: `When <code>litebridge.scan-base-package</code> is configured, Litebridge automatically scans for 
-<code>@Table</code> annotated classes and <code>TypeSafeDtoTableMapping</code> implementations upon application startup.`,
+<code>@Table</code>-annotated classes upon application startup.`,
         code: `# application.yml
 litebridge:
   scan-base-package:
@@ -332,7 +332,7 @@ public class RepositoryConfig {
                             </li>
                             <li class="flex items-start gap-3">
                                 <CheckCircle2 class="h-5 w-5 text-accent flex-shrink-0 mt-0.5"/>
-                                <span><strong>Entity &amp; DTO scanning</strong>: Discovers annotated <code>@Table</code> entities and <code>TypeSafeDtoTableMapping</code> classes in packages specified by <code>litebridge.scan-base-package</code>.</span>
+                                <span><strong>Entity &amp; DTO scanning</strong>: Discovers <code>@Table</code>-annotated entities in packages specified by <code>litebridge.scan-base-package</code>.</span>
                             </li>
                         </ul>
                     </div>
@@ -383,8 +383,7 @@ public class RepositoryConfig {
                                 <td class="px-4 py-3 font-mono text-xs text-primary dark:text-white">
                                     litebridge.scan-base-package
                                 </td>
-                                <td class="px-4 py-3">Package(s) to scan for <code>@Table</code> entities and <code>TypeSafeDtoTableMapping</code>
-                                    classes.
+                                <td class="px-4 py-3">Package(s) to scan for <code>@Table</code>-annotated entities.
                                 </td>
                                 <td class="px-4 py-3 font-mono text-xs">(None)</td>
                             </tr>
@@ -446,8 +445,7 @@ public class RepositoryConfig {
                             <div>
                                 <h4 class="font-bold text-primary dark:text-white group-hover:text-accent transition-colors">
                                     Plain DTO mappings</h4>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Explore <code>TypeSafeDtoTableMapping</code>
-                                    and <code>TableSpec</code></p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Explore using unaltered DTOs as entities.</p>
                             </div>
                             <ArrowRight class="h-4 w-4 text-accent transition-transform group-hover:translate-x-1"/>
                         </a>
