@@ -59,7 +59,7 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
         for (PartTree.OrPart orPart : tree) {
             // Traverse AND conditions inside each OR group
             for (Part part : orPart) {
-                String propertyPath = part.getProperty().toDotPath();
+                String propertyPath = extractPropertyPath(part);
                 Part.Type type = part.getType();
 
                 switch (type) {
@@ -181,5 +181,16 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
     @Override
     public QueryMethod getQueryMethod() {
         return this.queryMethod;
+    }
+
+    private static String extractPropertyPath(final Part part) {
+        try {
+            final Method getPropertyMethod = part.getClass().getMethod("getProperty");
+            final Object property = getPropertyMethod.invoke(part);
+            final Method toDotPathMethod = property.getClass().getMethod("toDotPath");
+            return (String) toDotPathMethod.invoke(property);
+        } catch (final Exception e) {
+            throw new IllegalStateException("Failed to extract property path from Part: " + part, e);
+        }
     }
 }

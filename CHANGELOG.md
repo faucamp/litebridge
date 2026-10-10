@@ -36,6 +36,7 @@
     - Query expression specs extended to allow them to alter the physical structure of the query (which allows for specific optimisations).
     - `Fn.exists()` added as a select expression spec, executing an efficient existence check for a query.
 - Spring Integration:
+    - Update to latest supported Spring Framework 7 and Spring Boot 4.1.x versions.
     - Add Spring Data repository integration (`LitebridgeRepository`) with `ListCrudRepository` and `ListPagingAndSortingRepository` support.
     - Add support for Spring Data Derived Query Methods via `LitebridgePartTreeQuery`.
     - Add `@EnableLitebridgeRepositories` and auto-configuration for Spring Data repositories via `LitebridgeRepositoriesAutoConfiguration`.
@@ -98,6 +99,9 @@
 
 ### Fixed
 
+- Spring Integration:
+    - Resolved Spring Data derived query lookup strategy compatibility across both Spring Boot 3.2.x and Spring Boot 4.x runtimes in `LitebridgeRepositoryFactory`.
+    - Support cross-version property path extraction between Spring Data Commons 3.x and 4.x in `LitebridgePartTreeQuery`.
 - Oracle Database Provider:
     - Fixed the modulus math operation
     - Fixed multi-row inserts; now uses batched insert statements 

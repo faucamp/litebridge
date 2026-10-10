@@ -4,12 +4,15 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.orm.LitebridgeCore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.AbstractEntityInformation;
 import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 import java.io.Serializable;
@@ -43,6 +46,22 @@ public class LitebridgeRepositoryFactoryBean<T extends Repository<S, ID>, S, ID 
         }
 
         @Override
+        @SuppressWarnings("unchecked")
+        public <T, ID> EntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
+            return new AbstractEntityInformation<>(domainClass) {
+                @Override
+                public @Nullable ID getId(final T entity) {
+                    return null;
+                }
+
+                @Override
+                public Class<ID> getIdType() {
+                    return (Class<ID>) Serializable.class;
+                }
+            };
+        }
+
+        @Override
         protected Object getTargetRepository(final RepositoryInformation metadata) {
             return new LitebridgeRepositoryImpl<>(metadata.getDomainType(), litebridge);
         }
@@ -53,12 +72,22 @@ public class LitebridgeRepositoryFactoryBean<T extends Repository<S, ID>, S, ID 
         }
 
         @Override
-        public <T> T getRepository(Class<T> repositoryInterface, RepositoryComposition.RepositoryFragments fragments) {
+        public <T> T getRepository(final Class<T> repositoryInterface, final RepositoryComposition.RepositoryFragments fragments) {
             return super.getRepository(repositoryInterface, fragments);
         }
 
         @Override
-        protected Optional<QueryLookupStrategy> getQueryLookupStrategy(QueryLookupStrategy.@Nullable Key key, ValueExpressionDelegate valueExpressionDelegate) {
+        @SuppressWarnings("deprecation")
+        protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
+                final QueryLookupStrategy.@Nullable Key key,
+                final QueryMethodEvaluationContextProvider evaluationContextProvider) {
+            return Optional.of(new LitebridgeQueryLookupStrategy(litebridge));
+        }
+
+        @Override
+        protected Optional<QueryLookupStrategy> getQueryLookupStrategy(
+                final QueryLookupStrategy.@Nullable Key key,
+                final ValueExpressionDelegate valueExpressionDelegate) {
             return Optional.of(new LitebridgeQueryLookupStrategy(litebridge));
         }
     }

@@ -16,6 +16,23 @@
     <name>Litebridge Spring</name>
     <description>Core Spring Framework integration for Litebridge</description>
 
+    <properties>
+        <!-- Version 3.4.3 to allow compatibility with both Spring Boot 3.2.x and Spring Boot 4 -->
+        <spring-boot.version>3.4.3</spring-boot.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <plugins>
             <plugin>
