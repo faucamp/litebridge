@@ -153,7 +153,8 @@ const repositoryExamples = [
         animate: false,
         description: `Define a repository by extending <code>LitebridgeRepository&lt;T, ID&gt;</code>. 
 It is automatically detected and registered as a Spring bean.`,
-        code: `import org.litebridge.spring.repository.LitebridgeRepository;
+        code: `import org.springframework.stereotype.Repository;
+import org.litebridge.spring.repository.LitebridgeRepository;
 
 import org.example.entity.User;
 
