@@ -3,14 +3,21 @@ package org.litebridge.orm.api.select.sql;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
+import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.SqlQueryConditionBuilder;
+import org.litebridge.orm.api.select.SelectApiImpl;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.AbstractFromClauseTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
+import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.JoinNode;
+import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.SelectNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 /**
  * SQL-mode terminal clause for FROM clauses.
@@ -63,6 +70,15 @@ public final class SqlFromClauseTerminal<ReturnType> extends AbstractFromClauseT
     @Override
     public SqlWhereConditionClause<ReturnType> where(final ExpressionSpec expression) {
         return whereImpl(LogicOperator.NOOP, null, expression);
+    }
+
+    @Override
+    public SqlWhereConditionClauseTerminal<ReturnType> where(final ExistsExpressionSpec existsExpression) {
+        final SelectTerminal<?> selectTerminal = existsExpression.query().apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode subselectNode = SelectTerminalInspector.getNode(selectTerminal);
+        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, null, Operator.EXISTS, subselectNode);
+        node = new WhereNode(this.node, conditionNode);
+        return new SqlWhereConditionClauseTerminal<>(selectNode, node, selectEngineTerminal, litebridgeContext);
     }
 
     @Override

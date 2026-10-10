@@ -9,15 +9,20 @@ import org.litebridge.orm.api.condition.CbDtoConditionClauseTerminal;
 import org.litebridge.orm.api.condition.DtoConditionClauseStart;
 import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
 import org.litebridge.orm.api.select.JoinClauseTerminal;
+import org.litebridge.orm.api.select.SelectApiImpl;
+import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.AbstractJoinConditionClauseTerminal;
+import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngineTerminal;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
+import org.litebridge.orm.engine.ast.ConditionNode;
 import org.litebridge.orm.engine.ast.ConditionWithIdNode;
 import org.litebridge.orm.engine.ast.JoinNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -105,6 +110,15 @@ public final class DtoJoinConditionClauseTerminal<DTO>
     @Override
     public DtoWhereConditionClause<DTO> where(final ExpressionSpec expression) {
         return whereImpl(LogicOperator.NOOP, null, expression);
+    }
+
+    @Override
+    public DtoWhereConditionClauseTerminal<DTO> where(final ExistsExpressionSpec existsExpression) {
+        final SelectTerminal<?> selectTerminal = existsExpression.query().apply(new SelectApiImpl(litebridgeContext));
+        final QueryNode subselectNode = SelectTerminalInspector.getNode(selectTerminal);
+        final QueryNode conditionNode = new ConditionNode(null, LogicOperator.NOOP, null, null, Operator.EXISTS, subselectNode);
+        node = new WhereNode(this.node, conditionNode);
+        return new DtoWhereConditionClauseTerminal<>(node, selectEngineTerminal, litebridgeContext);
     }
 
     /**

@@ -1,7 +1,9 @@
 package org.litebridge.orm.api.select;
 
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
+import org.litebridge.orm.api.select.dto.DtoWhereConditionClauseTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 
 /**
  * Terminal clause in a fluent API for constructing SQL JOIN statements.
@@ -59,4 +61,12 @@ public interface JoinClauseTerminal<DTO,
      * @return an instance of {@code WCC} representing the next stage of the where condition clause
      */
     WCC where(final ExpressionSpec expression);
+
+    /**
+     * Starts a WHERE clause with an EXISTS expression.
+     *
+     * @param existsExpression the EXISTS expression specification
+     * @return step to specify the condition operator and value
+     */
+    WCCT where(final ExistsExpressionSpec existsExpression);
 }

@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -285,6 +284,18 @@ public class FunctionsE2eTest extends AbstractE2eTest {
         {
             final boolean result = litebridge.select(Fn.exists()).from(Person.class).withIdOrThrow(50L);
             assertFalse(result);
+        }
+
+        // Complex example using inner EXISTS calls
+        {
+            final boolean result = litebridge.select(Fn.exists())
+                    .from(Person.class)
+                    .where(Fn.exists(q -> q
+                            .select(Fn.exists()).from(Person.class)
+                            .where(PersonMeta.eyeColour).eq("blue")))
+                    .oneOrThrow();
+
+            assertTrue(result);
         }
     }
 

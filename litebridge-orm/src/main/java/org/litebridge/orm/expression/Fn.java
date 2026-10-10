@@ -830,10 +830,27 @@ public final class Fn {
         return new CurrentTimestampSpec();
     }
 
+    /**
+     * {@code EXISTS}: Checks if the provided query returned any results
+     *
+     * @return An {@code EXISTS} expression.
+     */
     public static ExistsExpressionSpec exists(final Function<SelectApi, SelectTerminal<?>> query) {
         return new ExistsExpressionSpec(query);
     }
 
+    /**
+     * Execute an existence check and return a true/false response to the query.
+     * <p>
+     * This should be used as the only expression in the query.
+     * <br/>
+     * <b>It alters the query return type to {@code Boolean}.</b>
+     * <p>
+     * The resulting expression causes the query to be optimised for a basic existence check, e.g.
+     * a variant of: {@code SELECT 1 FROM users WHERE user_id = ? LIMIT 1}
+     *
+     * @return A top-level existence-checking expression.
+     */
     public static QueryAlteringExpressionSpec<Boolean> exists() {
         return EXISTS_EXPRESSION_SPEC;
     }
