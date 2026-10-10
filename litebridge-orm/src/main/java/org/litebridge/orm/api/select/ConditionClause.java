@@ -23,7 +23,7 @@ public interface ConditionClause<DTO,
         QCB extends QueryConditionBuilder<DTO, ?, ?, ?, QCB>> {
 
     /**
-     * Equals
+     * Equals.
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
@@ -31,7 +31,7 @@ public interface ConditionClause<DTO,
     CCT eq(final @Nullable Object value);
 
     /**
-     * Not equals
+     * Not equals.
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
@@ -47,7 +47,7 @@ public interface ConditionClause<DTO,
     CCT lt(final Object value);
 
     /**
-     * Less than or equals
+     * Less than or equals.
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
@@ -55,7 +55,7 @@ public interface ConditionClause<DTO,
     CCT lte(final Object value);
 
     /**
-     * Greater than
+     * Greater than.
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
@@ -63,12 +63,21 @@ public interface ConditionClause<DTO,
     CCT gt(final Object value);
 
     /**
-     * Greater than or equals
+     * Greater than or equals.
      *
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
     CCT gte(final Object value);
+
+    /**
+     * Between start and end values.
+     *
+     * @param start Start value of the {@code BETWEEN} clause (inclusive).
+     * @param end   End value of the {@code BETWEEN} clause (inclusive).
+     * @return A {@link ConditionClauseTerminal} instance for further chaining.
+     */
+    CCT between(Object start, Object end);
 
     /**
      * Creates a condition terminal for a LIKE comparison with the specified value.

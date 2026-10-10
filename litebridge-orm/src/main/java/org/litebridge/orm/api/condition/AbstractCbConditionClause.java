@@ -16,6 +16,7 @@ import org.litebridge.orm.expression.ExpressionSpec;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -68,6 +69,7 @@ public abstract class AbstractCbConditionClause<DTO,
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
+    @Override
     public CCT eq(final @Nullable Object value) {
         return condition(Operator.EQ, value);
     }
@@ -88,6 +90,7 @@ public abstract class AbstractCbConditionClause<DTO,
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
+    @Override
     public CCT neq(final @Nullable Object value) {
         return condition(Operator.NEQ, value);
     }
@@ -108,6 +111,7 @@ public abstract class AbstractCbConditionClause<DTO,
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
+    @Override
     public CCT lt(final Object value) {
         return condition(Operator.LT, Objects.requireNonNull(value, "Operator LT requires a non-NULL RHS value"));
     }
@@ -128,6 +132,7 @@ public abstract class AbstractCbConditionClause<DTO,
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
+    @Override
     public CCT lte(final Object value) {
         return condition(Operator.LTE, value);
     }
@@ -148,6 +153,7 @@ public abstract class AbstractCbConditionClause<DTO,
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
+    @Override
     public CCT gt(final Object value) {
         return condition(Operator.GT, value);
     }
@@ -168,6 +174,7 @@ public abstract class AbstractCbConditionClause<DTO,
      * @param value The operand for the condition.
      * @return A {@link ConditionClauseTerminal} instance for further chaining.
      */
+    @Override
     public CCT gte(final Object value) {
         return condition(Operator.GTE, value);
     }
@@ -180,6 +187,11 @@ public abstract class AbstractCbConditionClause<DTO,
      */
     public CCT gte(final Function<SelectApi, SelectTerminal<?>> subselect) {
         return subselectImpl(Operator.GTE, subselect, false);
+    }
+
+    @Override
+    public CCT between(final Object start, final Object end) {
+        return condition(Operator.BETWEEN, List.of(start, end));
     }
 
     @Override

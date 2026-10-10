@@ -109,6 +109,9 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
                     }
                     case IS_NULL -> criteriaBuilder.add(q -> q.where(propertyPath).isNull());
                     case BETWEEN -> {
+                        final Object min = accessor.getBindableValue(paramIndex++);
+                        final Object max = accessor.getBindableValue(paramIndex++);
+                        criteriaBuilder.add(q -> q.where(propertyPath).between(min, max));
                     }
                     case IS_NOT_NULL -> criteriaBuilder.add(q -> q.where(propertyPath).isNotNull());
                     case IN -> {

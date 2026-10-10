@@ -8,7 +8,7 @@ class OperatorTest {
 
     @Test
     void enumValues() {
-        assertEquals(14, Operator.values().length);
+        assertEquals(15, Operator.values().length);
         assertEquals(Operator.EQ, Operator.valueOf("EQ"));
         assertEquals(Operator.NEQ, Operator.valueOf("NEQ"));
         assertEquals(Operator.GT, Operator.valueOf("GT"));
@@ -23,5 +23,6 @@ class OperatorTest {
         assertEquals(Operator.IS_NOT_NULL, Operator.valueOf("IS_NOT_NULL"));
         assertEquals(Operator.USING, Operator.valueOf("USING"));
         assertEquals(Operator.EXISTS, Operator.valueOf("EXISTS"));
+        assertEquals(Operator.BETWEEN, Operator.valueOf("BETWEEN"));
     }
 }

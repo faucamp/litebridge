@@ -76,4 +76,21 @@ class PersonControllerTest {
         assertThat(found).isNotEmpty();
         assertThat(count).isGreaterThanOrEqualTo(1);
     }
+
+    @Test
+    void personController_getPersonsByAgeBetween() {
+        // Given
+        final Person person = new Person();
+        person.setName("Charlie");
+        person.setSurname("Brown");
+        person.setAge(40);
+        person.setEyeColour("Green");
+        personRepository.save(person);
+
+        // When
+        final List<Person> found = personController.getPersonsByAgeBetween(30, 50);
+
+        // Then
+        assertThat(found).isNotEmpty();
+    }
 }

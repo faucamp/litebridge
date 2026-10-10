@@ -79,6 +79,13 @@ public class PersonController {
         return exampleService.getPersonsByNameOrSurname(name);
     }
 
+    @GetMapping(path = "/age-between")
+    @Operation(summary = "Get all Person records with ages between the the specified min and max")
+    public List<Person> getPersonsByAgeBetween(@Parameter(description = "Minimum age (inclusive)") @RequestParam final int minAge,
+                                               @Parameter(description = "Maximum age (inclusive)") @RequestParam final int maxAge) {
+        return exampleService.getPersonsByAgeBetween(minAge, maxAge);
+    }
+
     @GetMapping(path = "/count/name-startswith")
     @Operation(summary = "Count all Person records with names starting with the specified prefix")
     public int countPersonsNameStartingWith(@Parameter(description = "Name prefix") @RequestParam final String namePrefix) {

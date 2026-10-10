@@ -45,4 +45,13 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
      * @return True if a person with the specified age exists, false otherwise
      */
     boolean existsByAge(int age);
+
+    /**
+     * Retrieves all persons with age between minAge and maxAge.
+     *
+     * @param minAge Minimum age to search for.
+     * @param maxAge Maximum age to search for.
+     * @return List of persons matching the specified age range
+     */
+    List<Person> findAllByAgeBetween(int minAge, int maxAge);
 }

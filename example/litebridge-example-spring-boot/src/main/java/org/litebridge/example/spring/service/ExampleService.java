@@ -54,6 +54,10 @@ public class ExampleService {
         return personRepository.findAllByNameOrSurname(name, name);
     }
 
+    public List<Person> getPersonsByAgeBetween(final int minAge, final int maxAge) {
+        return personRepository.findAllByAgeBetween(minAge, maxAge);
+    }
+
     public int countPersonsNameStartingWith(final String namePrefix) {
         return personRepository.countAllByNameStartsWith(namePrefix);
     }

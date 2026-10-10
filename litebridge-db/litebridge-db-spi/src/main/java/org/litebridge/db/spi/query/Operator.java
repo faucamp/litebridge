@@ -49,6 +49,10 @@ public enum Operator {
      */
     LTE,
     /**
+     * Between
+     */
+    BETWEEN,
+    /**
      * Like
      */
     LIKE,
