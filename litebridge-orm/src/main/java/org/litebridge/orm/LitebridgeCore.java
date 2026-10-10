@@ -36,6 +36,7 @@ import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.engine.UpdateEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
+import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.nativesql.NativeSqlContext;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoEntityMapping;
@@ -60,7 +61,6 @@ import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -485,6 +485,16 @@ public class LitebridgeCore implements SelectApi {
     @Override
     public FromClauseStart select(final String... fieldsOrColumns) {
         return selectEngine.select(fieldsOrColumns, this::createLitebridgeContext);
+    }
+
+    @Override
+    public <T extends Number> FromClauseStartTypeOverride<T> select(final T literal) {
+        return selectEngine.select(new LiteralExpressionSpec<>(literal), this::createLitebridgeContext);
+    }
+
+    @Override
+    public FromClauseStartTypeOverride<Boolean> select(final boolean literal) {
+        return selectEngine.select(new LiteralExpressionSpec<>(literal), this::createLitebridgeContext);
     }
 
     @Override

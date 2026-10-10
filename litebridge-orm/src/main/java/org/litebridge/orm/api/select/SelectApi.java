@@ -64,6 +64,10 @@ public interface SelectApi {
      */
     FromClauseStart select(String... fieldsOrColumns);
 
+    <T extends Number> FromClauseStartTypeOverride<T> select(T literal);
+
+    FromClauseStartTypeOverride<Boolean> select(boolean literal);
+
     /**
      * Query data from the database, without mapping results to Data Transfer Objects (DTOs).
      * <p>

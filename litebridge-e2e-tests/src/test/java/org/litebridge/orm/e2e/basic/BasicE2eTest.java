@@ -1185,6 +1185,57 @@ public class BasicE2eTest extends AbstractE2eTest {
     }
 
     @TestTemplate
+    @DisplayName("Select existence check")
+    void select_exists(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+        litebridge.insert(Person.class, i -> i
+                .into(PersonMeta.id, PersonMeta.name, PersonMeta.surname)
+                .values(1L, "Alice", "Smith")
+                .values(2L, "Bob", "Jones"));
+        litebridge.insert(Account.class, i -> i
+                .into(AccountMeta.id, AccountMeta.name, AccountMeta.balance, AccountMeta.owner)
+                .values(1L, "Alice's Account", 1000L, 1L));
+
+        // Existence check
+        {
+            // SELECT 1 FROM your_table WHERE PERSON_ID = 1 LIMIT 1;
+            final int resultInt = litebridge.select(1).from(Person.class)
+                    .where(PersonMeta.id).eq(1)
+                    .limit(1)
+                    .oneOrThrow();
+
+            assertEquals(1, resultInt);
+
+            // SELECT 1 FROM your_table WHERE PERSON_ID = 1 LIMIT 1;
+            final boolean resultBoolean = litebridge.select(true).from(Person.class)
+                    .where(PersonMeta.id).eq(1)
+                    .limit(1)
+                    .oneOrThrow();
+
+            assertTrue(resultBoolean);
+        }
+
+        // Existence check (no matches)
+        {
+            // SELECT 1 FROM your_table WHERE PERSON_ID = 1 LIMIT 1;
+            final Optional<Integer> resultInteger = litebridge.select(1).from(Person.class)
+                    .where(PersonMeta.id).eq(500)
+                    .limit(1)
+                    .one();
+
+            assertTrue(resultInteger.isEmpty());
+
+            // SELECT 1 FROM your_table WHERE PERSON_ID = 1 LIMIT 1;
+            final Optional<Boolean> resultBoolean = litebridge.select(true).from(Person.class)
+                    .where(PersonMeta.id).eq(500)
+                    .limit(1)
+                    .one();
+
+            assertTrue(resultBoolean.isEmpty());
+        }
+    }
+
+    @TestTemplate
     @DisplayName("Save: merge/upsert DTO with PK if not tracked yet")
     void save_upsertIfNotTracked(final DbEnvDtoTableMapper tableMapper) throws Exception {
         final String personTableName = tableMapper.qualifyName("PERSON");

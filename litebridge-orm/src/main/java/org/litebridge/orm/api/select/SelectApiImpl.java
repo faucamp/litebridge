@@ -6,6 +6,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.SelectEngine;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.TypeOverride;
+import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 
 /**
  * Implementation of {@link SelectApi} providing entry points for SELECT queries.
@@ -59,6 +60,16 @@ public final class SelectApiImpl implements SelectApi {
     @Override
     public FromClauseStart select(final String... fieldsOrColumns) {
         return selectEngine.select(fieldsOrColumns, mode -> litebridgeContext);
+    }
+
+    @Override
+    public <T extends Number> FromClauseStartTypeOverride<T> select(final T literal) {
+        return selectEngine.select(new LiteralExpressionSpec<>(literal), mode -> litebridgeContext);
+    }
+
+    @Override
+    public FromClauseStartTypeOverride<Boolean> select(final boolean literal) {
+        return selectEngine.select(new LiteralExpressionSpec<>(literal), mode -> litebridgeContext);
     }
 
     @Override

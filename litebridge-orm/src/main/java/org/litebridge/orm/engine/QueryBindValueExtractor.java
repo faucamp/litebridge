@@ -10,6 +10,7 @@ import org.litebridge.orm.api.select.SelectTerminal;
 import org.litebridge.orm.api.select.impl.SelectTerminalInspector;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.ConditionNode;
+import org.litebridge.orm.engine.ast.ConditionQueryNode;
 import org.litebridge.orm.engine.ast.ConditionWithIdNode;
 import org.litebridge.orm.engine.ast.HavingNode;
 import org.litebridge.orm.engine.ast.InsertDtoValuesNode;
@@ -60,13 +61,35 @@ public final class QueryBindValueExtractor {
     private static void extractBindValues(final QueryNode node,
                                           final List<@Nullable Object> bindValues,
                                           final LitebridgeContext litebridgeContext) {
+        if (node instanceof ConditionQueryNode) {
+            extractBindValuesAtLevel(node, bindValues, litebridgeContext);
+            return;
+        }
+
         final List<QueryNode> nodes = chainInSourceOrder(node);
 
         for (final QueryNode currentNode : nodes) {
 
             switch (currentNode) {
                 // Select
+                case SelectNode selectNode -> {
+                    if (selectNode.fromQueryNode() != null) {
+                        extractBindValues(selectNode.fromQueryNode(), bindValues, litebridgeContext);
+                    }
+
+                    if (selectNode.expressions() != null) {
+                        for (final ExpressionSpec expressionSpec : selectNode.expressions()) {
+                            if (expressionSpec instanceof LiteralExpressionSpec<?> literalExpressionSpec) {
+                                bindValues.add(literalExpressionSpec.value());
+                            }
+                        }
+                    }
+                }
                 case JoinNode joinNode -> {
+                    if (joinNode.queryNode() != null) {
+                        extractBindValues(joinNode.queryNode(), bindValues, litebridgeContext);
+                    }
+
                     if (joinNode.condition() != null) {
                         extractBindValuesAtLevel(joinNode.condition(), bindValues, litebridgeContext);
                     }
@@ -87,7 +110,7 @@ public final class QueryBindValueExtractor {
                 case UsingNode usingNode -> {
                     // Extract bind variables from a USING query
                     if (usingNode.query() != null) {
-                        extractBindValuesAtLevel(usingNode.query(), bindValues, litebridgeContext);
+                        extractBindValues(usingNode.query(), bindValues, litebridgeContext);
                     }
 
                     // Extract bind variables from a USING VALUES clause
@@ -241,19 +264,6 @@ public final class QueryBindValueExtractor {
                         bindValues.addAll(collection);
                     } else {
                         bindValues.add(id);
-                    }
-                }
-                case SelectNode selectNode -> {
-                    final ExpressionSpec[] expressionSpecs = selectNode.expressions();
-
-                    if (expressionSpecs == null) {
-                        continue;
-                    }
-
-                    for (final ExpressionSpec expressionSpec : expressionSpecs) {
-                        if (expressionSpec instanceof LiteralExpressionSpec<?> literalExpressionSpec) {
-                            bindValues.add(literalExpressionSpec.value());
-                        }
                     }
                 }
                 default -> { /* Ignore */ }

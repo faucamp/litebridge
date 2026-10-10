@@ -32,6 +32,7 @@
       and clauses.
     - Add `Fn.exists()` helper method for referencing subqueries in query conditions and clauses.
     - Add `DtoWhereCriteriaBuilder` for programmatic and conditional `WHERE` clause construction.
+    - Add top-level API shortcut `select()` methods to make selecting literal numbers/booleans easier; this helps with existence checks.
 - Spring Integration:
     - Add Spring Data repository integration (`LitebridgeRepository`) with `ListCrudRepository` and `ListPagingAndSortingRepository` support.
     - Add support for Spring Data Derived Query Methods via `LitebridgePartTreeQuery`.

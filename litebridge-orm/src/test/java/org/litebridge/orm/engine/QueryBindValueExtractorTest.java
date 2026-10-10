@@ -515,6 +515,65 @@ class QueryBindValueExtractorTest {
     }
 
     @Test
+    void extractBindValues_selectNodeWithLiteralsAndFromQueryNode() {
+        // Given
+        final ConditionNode fromCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, 10);
+        final WhereNode fromQuery = new WhereNode(null, fromCondition);
+
+        final ExpressionSpec[] expressions = new ExpressionSpec[]{
+                new LiteralExpressionSpec<>(1),
+                new LiteralExpressionSpec<>("active")
+        };
+        final SelectNode selectNode = new SelectNode(fromQuery, "sub", null, expressions, null);
+        final ConditionNode outerCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "outer");
+        final WhereNode outerWhere = new WhereNode(selectNode, outerCondition);
+
+        // When
+        final List<Object> result = QueryBindValueExtractor.extractBindValues(outerWhere, mock(LitebridgeContext.class));
+
+        // Then
+        assertEquals(List.of(10, 1, "active", "outer"), result);
+    }
+
+    @Test
+    void extractBindValues_joinNodeWithQueryNodeAndCondition() {
+        // Given
+        final ConditionNode subqueryCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "subValue");
+        final WhereNode subquery = new WhereNode(null, subqueryCondition);
+
+        final ConditionNode joinCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "joinValue");
+        final JoinNode joinNode = new JoinNode(null, Join.JoinType.INNER, null, null, null, subquery, "sub");
+        joinNode.setCondition(joinCondition);
+
+        // When
+        final List<Object> result = QueryBindValueExtractor.extractBindValues(joinNode, mock(LitebridgeContext.class));
+
+        // Then
+        assertEquals(List.of("subValue", "joinValue"), result);
+    }
+
+    @Test
+    void extractBindValues_existsSubqueryWithLiteralsAndConditions() {
+        // Given
+        final ExpressionSpec[] subqueryExpressions = new ExpressionSpec[]{
+                new LiteralExpressionSpec<>(1)
+        };
+        final SelectNode subquerySelect = new SelectNode(null, subqueryExpressions, null);
+        final ConditionNode subqueryCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EQ, "account-123");
+        final WhereNode subqueryWhere = new WhereNode(subquerySelect, subqueryCondition);
+
+        final ConditionNode existsCondition = new ConditionNode(null, LogicOperator.AND, null, null, Operator.EXISTS, subqueryWhere);
+        final ConditionNode otherCondition = new ConditionNode(existsCondition, LogicOperator.AND, null, null, Operator.EQ, 42);
+        final WhereNode mainWhere = new WhereNode(null, otherCondition);
+
+        // When
+        final List<Object> result = QueryBindValueExtractor.extractBindValues(mainWhere, mock(LitebridgeContext.class));
+
+        // Then
+        assertEquals(List.of(1, "account-123", 42), result);
+    }
+
+    @Test
     void testPrivateConstructor() throws Exception {
         // Given
         final Constructor<QueryBindValueExtractor> constructor = QueryBindValueExtractor.class.getDeclaredConstructor();
