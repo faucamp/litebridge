@@ -134,9 +134,6 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
                     }
                     case TRUE -> criteriaBuilder.add(q -> q.where(propertyPath).eq(true));
                     case FALSE -> criteriaBuilder.add(q -> q.where(propertyPath).eq(false));
-                    case EXISTS -> {
-                        System.out.println("here");
-                    }
                     default -> throw new UnsupportedOperationException("Unsupported query part type: " + type);
                 }
 

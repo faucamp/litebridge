@@ -8,7 +8,6 @@ import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.expression.AliasedExpression;
-import org.litebridge.db.spi.expression.BindValueExpression;
 import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.expression.ConnectionProviderExpression;
 import org.litebridge.db.spi.expression.LiteralExpression;
@@ -117,10 +116,7 @@ public abstract class AbstractSqlGenerator {
                         .toSql(operation, ClauseType.JOIN);
                 yield "%s (%s)".formatted(mapOperator(operator), valueSql);
             }
-            case BETWEEN -> {
-                final BindValueExpression bindValueExpression = (BindValueExpression) condition.rhs();
-                yield "%s %s ? AND ?".formatted(lhs, mapOperator(operator));
-            }
+            case BETWEEN -> "%s %s ? AND ?".formatted(lhs, mapOperator(operator));
             default -> {
                 {
                     if (condition.rhs() instanceof SubselectExpression subselectExpression) {
