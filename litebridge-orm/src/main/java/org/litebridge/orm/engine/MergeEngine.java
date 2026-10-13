@@ -37,7 +37,7 @@ public final class MergeEngine extends AbstractInsertEngine {
         final DtoMergeUsingStep<DTO> mergeUsingStep = new DtoMergeUsingStep<>(dtoClass, contextDtoClass, litebridgeContext);
         final MergeTerminal mergeTerminal = merge.apply(mergeUsingStep);
         return execute(mergeTerminal,
-                () -> litebridgeContext.tableRegistry().getOrmTableOrThrow(dtoClass).getMetaData().table(),
+                () -> litebridgeContext.tableRegistry().getOrmTableOrThrow(dtoClass).metaData().table(),
                 litebridgeContext);
     }
 

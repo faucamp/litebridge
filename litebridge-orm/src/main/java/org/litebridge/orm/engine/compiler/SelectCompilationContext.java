@@ -45,6 +45,7 @@ import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.MappedManyToMany;
 import org.litebridge.orm.persistence.MappedOneToMany;
 import org.litebridge.orm.persistence.OrmTable;
+import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -387,7 +388,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
     private void processWhereConditionWithIdNode(final ConditionWithIdNode conditionWithIdNode, final SelectTarget selectTarget) {
         final Table table = getTable(selectTarget);
         final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(table);
-        final TableMetaData tableMetaData = ormTable.getMetaData();
+        final TableMetaData tableMetaData = ormTable.metaData();
         final ConditionGroupSpec conditionGroupSpec = Objects.requireNonNull(whereConditionGroupSpecStack).current();
 
         final String[] primaryKeyFieldNames = tableMetaData.primaryKey().stream()
@@ -405,7 +406,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
             switch (id) {
                 case List<?> idList -> {
                     if (idList.size() != primaryKeyFieldNames.length) {
-                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idList.size()));
+                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.metaData().name(), primaryKeyFieldNames.length, idList.size()));
                     }
 
                     for (int i = 0; i < primaryKeyFieldNames.length; i++) {
@@ -415,7 +416,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 }
                 case Object[] idArray -> {
                     if (idArray.length != primaryKeyFieldNames.length) {
-                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idArray.length));
+                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.metaData().name(), primaryKeyFieldNames.length, idArray.length));
                     }
 
                     for (int i = 0; i < primaryKeyFieldNames.length; i++) {
@@ -425,7 +426,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                 }
                 case Map<?, ?> idMap -> {
                     if (idMap.size() != primaryKeyFieldNames.length) {
-                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.getMetaData().name(), primaryKeyFieldNames.length, idMap.size()));
+                        throw new IllegalArgumentException("Invalid number of primary key values for table %s; expected: %d, actual: %d".formatted(ormTable.metaData().name(), primaryKeyFieldNames.length, idMap.size()));
                     }
 
                     for (int i = 0; i < primaryKeyFieldNames.length; i++) {
@@ -433,8 +434,19 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                         conditionGroupSpec.newCondition(logicOperator, primaryKeyFieldNames[i], null, conditionWithIdNode.operator(), idMap.get(primaryKeyFieldNames[i]));
                     }
                 }
-                case null, default ->
-                        throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>");
+                case Object object -> {
+                    // Composite key mapped to a specific type
+                    final List<FieldAccessor> pkFieldAccessor = ormTable.primaryKeyFields();
+
+                    for (int i = 0; i < primaryKeyFieldNames.length; i++) {
+                        final FieldAccessor fieldAccessor = pkFieldAccessor.get(i);
+                        final Object value = fieldAccessor.get(object);
+                        final LogicOperator logicOperator = i == 0 ? LogicOperator.NOOP : LogicOperator.AND;
+                        conditionGroupSpec.newCondition(logicOperator, primaryKeyFieldNames[i], null, conditionWithIdNode.operator(), value);
+                    }
+                }
+                case null ->
+                        throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>; got: " + id);
             }
         }
     }
@@ -813,7 +825,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final Table leftTable = getTable(leftSelectTarget);
         final String leftTableAlias = getAlias(leftSelectTarget);
         final OrmTable leftOrmTable = tableRegistry.getOrmTableOrThrow(leftTable);
-        final TableMetaData leftTableMetaData = leftOrmTable.getMetaData();
+        final TableMetaData leftTableMetaData = leftOrmTable.metaData();
 
         if (leftTableMetaData.primaryKey().isEmpty()) {
             throw new IllegalArgumentException("Left table " + leftTableMetaData.name() + " does not have a primary key; cannot map one-to-many join: " + leftMappedCompositeKey);
@@ -858,7 +870,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final Table leftTable = getTable(leftSelectTarget);
         final String leftTableAlias = getAlias(leftSelectTarget);
         final OrmTable leftOrmTable = tableRegistry.getOrmTableOrThrow(leftTable);
-        final TableMetaData leftTableMetaData = leftOrmTable.getMetaData();
+        final TableMetaData leftTableMetaData = leftOrmTable.metaData();
 
         if (leftTableMetaData.primaryKey().isEmpty()) {
             throw new IllegalArgumentException("Left table " + leftTableMetaData.name() + " does not have a primary key; cannot map many-to-many join: " + mappedManyToMany);
@@ -878,14 +890,14 @@ final class SelectCompilationContext extends AbstractCompilationContext {
 
             // Join table & column - alias it directly in order to support self-references
             final OrmTable joinOrmTable = mappedManyToMany.joinOrmTable();
-            final Table joinTable = joinOrmTable.getMetaData().table();
+            final Table joinTable = joinOrmTable.metaData().table();
 
             if (joinTableAlias == null) {
                 joinTableAlias = aliasGenerator.newTableAlias(joinTable);
             }
 
             final String joinColumnName = joinColumns[i];
-            final Column joinColumn = joinOrmTable.getMetaData().column(joinColumnName).column();
+            final Column joinColumn = joinOrmTable.metaData().column(joinColumnName).column();
             final String joinColumnAlias = aliasGenerator.newColumnAlias(joinColumn);
             rightSelectColumnSpecs[i] = new SelectColumnSpec(joinColumn, joinColumnAlias, joinTableAlias);
         }
@@ -902,7 +914,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final String[] joinTableColumns = mappedManyToMany.inverseJoinColumns();
 
         final OrmTable rightOrmTable = mappedManyToMany.targetOrmTable().get();
-        final TableMetaData rightTableMetaData = rightOrmTable.getMetaData();
+        final TableMetaData rightTableMetaData = rightOrmTable.metaData();
 
         if (rightTableMetaData.primaryKey().isEmpty()) {
             throw new IllegalArgumentException("Right table " + rightTableMetaData.name() + " does not have a primary key; cannot map many-to-many join: " + mappedManyToMany);

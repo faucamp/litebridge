@@ -44,7 +44,7 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
 
         if (updateNode.dtoClass() != null) {
             this.ormTable = getOrmTablePermissiveContext(updateNode.dtoClass(), updateNode.contextDtoClass());
-            this.tableMetaData = ormTable.getMetaData();
+            this.tableMetaData = ormTable.metaData();
             this.table = tableMetaData.table();
         } else {
             this.ormTable = null;

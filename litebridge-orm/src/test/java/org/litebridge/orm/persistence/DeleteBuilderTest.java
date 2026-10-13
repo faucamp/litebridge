@@ -31,7 +31,7 @@ class DeleteBuilderTest {
         final OrmTable ormTable = mock(OrmTable.class);
         final Table table = new Table("catalog", "schema", "table");
         final TableMetaData tableMetaData = new TableMetaData(table, Collections.emptyList(), Collections.emptyList());
-        when(ormTable.getMetaData()).thenReturn(tableMetaData);
+        when(ormTable.metaData()).thenReturn(tableMetaData);
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);

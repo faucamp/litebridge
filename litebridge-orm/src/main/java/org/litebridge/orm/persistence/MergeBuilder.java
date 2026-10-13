@@ -51,7 +51,7 @@ final class MergeBuilder extends InsertBuilder {
     private <DTO> QueryNode createMerge(final LinkedHashMap<String, @Nullable Object> row) {
         final Class<DTO> dtoClass = (Class<DTO>) ormTable.dtoClass();
         final String tableAlias = "upsert" + dtoClass.getSimpleName();
-        final List<FieldAccessor> pkFields = ormTable.getPrimaryKeyFields();
+        final List<FieldAccessor> pkFields = ormTable.primaryKeyFields();
         final LinkedHashMap<String, @Nullable Object> pkValues = new LinkedHashMap<>(pkFields.size());
 
         for (FieldAccessor pkField : pkFields) {

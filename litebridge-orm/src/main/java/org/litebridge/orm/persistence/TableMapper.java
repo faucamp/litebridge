@@ -245,13 +245,13 @@ public final class TableMapper {
 
             if (nestedTable != null) {
                 final OrmTable inlineTargetOrmTable = nestedTable.ormTable();
-                columnMetaData.setJoinColumnSupplier(() -> inlineTargetOrmTable.getMetaData().column(columnSpec.joinColumn()));
+                columnMetaData.setJoinColumnSupplier(() -> inlineTargetOrmTable.metaData().column(columnSpec.joinColumn()));
             } else {
-                columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
+                columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).metaData().column(columnSpec.joinColumn()));
             }
         } else if (columnSpec.joinColumn() != null) {
             final Class<?> targetDtoClass = fieldAccessor instanceof NoOpFieldAccessor ? dtoClass : fieldAccessor.type();
-            columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).getMetaData().column(columnSpec.joinColumn()));
+            columnMetaData.setJoinColumnSupplier(() -> tableRegistry.getOrmTableOrThrow(targetDtoClass).metaData().column(columnSpec.joinColumn()));
         }
 
         final MappedFieldTarget mappedFieldTarget;

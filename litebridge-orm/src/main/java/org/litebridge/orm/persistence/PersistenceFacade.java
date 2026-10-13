@@ -392,7 +392,7 @@ public class PersistenceFacade {
             }
 
             // Check if the nested DTO's PK is set
-            final boolean dtoPkSet = isDtoPkSet(value, nestedDtoTable);
+            final boolean dtoPkSet = DtoInspector.isDtoPkSet(value, nestedDtoTable);
 
             final List<ColumnMetaData> columnMetaDatas = switch (target) {
                 case ColumnAndInlineTable columnAndInlineTable ->
@@ -471,7 +471,7 @@ public class PersistenceFacade {
             }
         } else {
             // Get the primary key
-            nestedDtoTable.getMetaData().primaryKey().forEach(pkColumn -> {
+            nestedDtoTable.metaData().primaryKey().forEach(pkColumn -> {
                 final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                 final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
@@ -491,7 +491,7 @@ public class PersistenceFacade {
                                               final @Nullable LinkedHashMap<String, @Nullable Object> insertValues,
                                               final ColumnMetaData columnMetaData,
                                               final OrmTable nestedDtoTable) {
-        final List<ColumnMetaData> pkColumns = nestedDtoTable.getMetaData().primaryKey();
+        final List<ColumnMetaData> pkColumns = nestedDtoTable.metaData().primaryKey();
 
         if (pkColumns.size() == 1) {
             // Simple PK
@@ -511,7 +511,7 @@ public class PersistenceFacade {
             // Composite PK
             final LinkedHashMap<String, Object> compositePk = new LinkedHashMap<>();
 
-            for (ColumnMetaData pkColumn : nestedDtoTable.getMetaData().primaryKey()) {
+            for (ColumnMetaData pkColumn : nestedDtoTable.metaData().primaryKey()) {
                 final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
                 final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                 compositePk.put(embeddedDtoPkAccessor.name(), Objects.requireNonNull(embeddedDtoPkValue, "Composite PK value null"));
@@ -557,11 +557,11 @@ public class PersistenceFacade {
                         if (existingStatement == null) {
                             final StatementBuilder dependantStatementBuilder = createStatementBuilder(value, inProgressDtos, tableProvider);
                             statementChain.addDependant(value, new PipedStatement(dependantStatementBuilder, value, parentUpdateResult -> {
-                                final List<ColumnMetaData> primaryKeyColumns = table.getMetaData().primaryKey();
+                                final List<ColumnMetaData> primaryKeyColumns = table.metaData().primaryKey();
 
                                 if (primaryKeyColumns.size() != 1) {
                                     //TODO: add support for composite primary keys in one-to-many relationships
-                                    throw new UnsupportedOperationException("Composite primary keys are not yet supported for one-to-many relationships; table: " + table.getMetaData().name());
+                                    throw new UnsupportedOperationException("Composite primary keys are not yet supported for one-to-many relationships; table: " + table.metaData().name());
                                 }
 
                                 if (parentUpdateResult instanceof InsertResult insertResult
@@ -702,7 +702,7 @@ public class PersistenceFacade {
 
     private void addManyToManyJoinValue(final Object dto, final String[] joinColumnNames, final LinkedHashMap<String, @Nullable Object> rowValues, final TableProvider tableProvider) {
         final OrmTable ormTable = tableProvider.getTableOrThrow(dto.getClass());
-        final List<ColumnMetaData> primaryKeyColumns = ormTable.getMetaData().primaryKey();
+        final List<ColumnMetaData> primaryKeyColumns = ormTable.metaData().primaryKey();
 
         for (int i = 0; i < joinColumnNames.length; i++) {
             final ColumnMetaData pkColumn = primaryKeyColumns.get(i);
@@ -771,7 +771,7 @@ public class PersistenceFacade {
             return createUpdateBuilder(dto, ormTable, inProgressDtos, tableProvider);
         } else {
             // Untracked DTO instance; check if its primary key is set to determine whether to do an upsert or insert
-            final boolean dtoPkSet = isDtoPkSet(dto, tableProvider.getTableOrThrow(dto.getClass()));
+            final boolean dtoPkSet = DtoInspector.isDtoPkSet(dto, tableProvider.getTableOrThrow(dto.getClass()));
 
             if (dtoPkSet) {
                 if (mergeSupported) {
@@ -957,7 +957,7 @@ public class PersistenceFacade {
         QueryNode conditionNode = null;
         boolean first = true;
 
-        for (ColumnMetaData columnMetaData : ormTable.getMetaData().primaryKey()) {
+        for (ColumnMetaData columnMetaData : ormTable.metaData().primaryKey()) {
             final Column pkColumn = columnMetaData.column();
             final FieldAccessor field = ormTable.getFieldForColumnName(pkColumn.name());
             final Object pkValue = field.get(dto);
@@ -973,7 +973,7 @@ public class PersistenceFacade {
                     tableProvider.pushContext(ormTable);
                     final OrmTable relatedDtoTable = tableProvider.getTableOrThrow(pkValue.getClass());
 
-                    for (ColumnMetaData relatedDtoPkColumn : relatedDtoTable.getMetaData().primaryKey()) {
+                    for (ColumnMetaData relatedDtoPkColumn : relatedDtoTable.metaData().primaryKey()) {
                         final FieldAccessor embeddedDtoPkAccessor = relatedDtoTable.getFieldForColumnName(relatedDtoPkColumn.name());
                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(pkValue);
                         conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, embeddedDtoPkValue);
@@ -989,13 +989,5 @@ public class PersistenceFacade {
         if (conditionNode != null) {
             statementBuilder.where(conditionNode);
         }
-    }
-
-    private static boolean isDtoPkSet(final Object dto, final OrmTable dtoTable) {
-        return dtoTable.getMetaData().primaryKey().stream().allMatch(pkColumn -> {
-            final FieldAccessor embeddedDtoPkAccessor = dtoTable.getFieldForColumnName(pkColumn.name());
-            final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(dto);
-            return !Objects.equals(embeddedDtoPkValue, ClassUtils.getDefaultValue(embeddedDtoPkAccessor.type()));
-        });
     }
 }

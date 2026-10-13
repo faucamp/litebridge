@@ -55,7 +55,7 @@ final class InsertCompilationContext implements CompilationContext {
                 ormTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(insertNode.dtoClass());
             }
 
-            tableMetaData = ormTable.getMetaData();
+            tableMetaData = ormTable.metaData();
             this.table = tableMetaData.table();
         } else {
             this.table = litebridgeContext.tableRegistry().getOrCreateSpiTable(Objects.requireNonNull(insertNode.table()));

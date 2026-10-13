@@ -1,6 +1,6 @@
 package org.litebridge.spring.boot.autoconfigure;
 
-import org.litebridge.spring.repository.EnableLitebridgeRepositories;
+import org.litebridge.spring.annotation.EnableLitebridgeRepositories;
 import org.litebridge.spring.repository.LitebridgeRepositoryConfigurationExtension;
 import org.springframework.boot.autoconfigure.data.AbstractRepositoryConfigurationSourceSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;

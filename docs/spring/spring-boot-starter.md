@@ -2,18 +2,29 @@
 
 ← [Spring Integration](index.md)
 
-The `litebridge-spring-boot-starter` provides a convenient way to integrate Litebridge into a Spring Boot application with minimal configuration.
+The `litebridge-spring-boot-starter` (Spring Boot 4) and `litebridge-spring-boot3-starter` (Spring Boot 3) provide convenient ways to integrate Litebridge into a Spring Boot application with minimal configuration.
 
 ## Dependency
 
-Add the following dependency to the `pom.xml`:
+Add the corresponding starter dependency to the `pom.xml`:
+
+### Spring Boot 4 / Spring Framework 7
 
 ```xml
-
 <dependency>
-    <groupId>org.litebridge</groupId>
+    <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
-    <version>0.4.0</version> <!-- Replace with latest version -->
+    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+</dependency>
+```
+
+### Spring Boot 3 / Spring Framework 6
+
+```xml
+<dependency>
+    <groupId>org.litebridgedb.spring</groupId>
+    <artifactId>litebridge-spring-boot3-starter</artifactId>
+    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
 </dependency>
 ```
 

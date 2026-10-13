@@ -949,6 +949,7 @@ class DtoMapperTest {
         when(context.tableRegistry()).thenReturn(tableRegistry);
         when(context.typeConverter()).thenReturn(typeConverter);
         when(context.mappingPlanCache()).thenReturn(cache);
+        when(context.classFieldAccessorCache()).thenReturn(new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
         return new DtoMapper(dtoConstructor, context);
@@ -1261,6 +1262,162 @@ class DtoMapperTest {
 
         // When / Then - PK has 2 parts but OrmTable has 1 PK column
         assertThrows(IllegalStateException.class, () -> dtoMapper.createDtoPrimaryKeyOnly(TestPersonDto.class, null, new DtoMapper.CompositePk(new Object[]{1L, 2L})));
+    }
+
+    @Test
+    void createDtoPrimaryKeyOnly_forTypedRecordCompositePk() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table canonicalTable = new Table("", "public", "typed_record_pk");
+        final ColumnMetaData pk1Col = new ColumnMetaData(canonicalTable, "pk1", false, Types.BIGINT);
+        final ColumnMetaData pk2Col = new ColumnMetaData(canonicalTable, "pk2", false, Types.BIGINT);
+        final ColumnMetaData descCol = new ColumnMetaData(canonicalTable, "description", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("pk1", "pk2"), List.of(pk1Col, pk2Col, descCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idPk1Field = cache.fieldAccessorOrThrow(TypedRecordPkDto.class, "id.pk1");
+        final FieldAccessor idPk2Field = cache.fieldAccessorOrThrow(TypedRecordPkDto.class, "id.pk2");
+        final FieldAccessor descField = cache.fieldAccessorOrThrow(TypedRecordPkDto.class, "description");
+        final OrmTable ormTable = new OrmTable(
+                TypedRecordPkDto.class,
+                metaData,
+                Map.of(idPk1Field, pk1Col, idPk2Field, pk2Col, descField, descCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(TypedRecordPkDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        // When
+        final TypedRecordPkDto dto = (TypedRecordPkDto) dtoMapper.createDtoPrimaryKeyOnly(
+                TypedRecordPkDto.class, null, new DtoMapper.CompositePk(new Object[]{10L, 20L}));
+
+        // Then
+        assertNotNull(dto);
+        assertNotNull(dto.getId());
+        assertEquals(10L, dto.getId().pk1());
+        assertEquals(20L, dto.getId().pk2());
+        assertNull(dto.getDescription());
+    }
+
+    @Test
+    void createDtoPrimaryKeyOnly_forTypedClassCompositePk() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table canonicalTable = new Table("", "public", "typed_class_pk");
+        final ColumnMetaData pk1Col = new ColumnMetaData(canonicalTable, "pk1", false, Types.BIGINT);
+        final ColumnMetaData pk2Col = new ColumnMetaData(canonicalTable, "pk2", false, Types.BIGINT);
+        final ColumnMetaData descCol = new ColumnMetaData(canonicalTable, "description", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("pk1", "pk2"), List.of(pk1Col, pk2Col, descCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idPk1Field = cache.fieldAccessorOrThrow(TypedClassPkDto.class, "id.pk1");
+        final FieldAccessor idPk2Field = cache.fieldAccessorOrThrow(TypedClassPkDto.class, "id.pk2");
+        final FieldAccessor descField = cache.fieldAccessorOrThrow(TypedClassPkDto.class, "description");
+        final OrmTable ormTable = new OrmTable(
+                TypedClassPkDto.class,
+                metaData,
+                Map.of(idPk1Field, pk1Col, idPk2Field, pk2Col, descField, descCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(TypedClassPkDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        // When
+        final TypedClassPkDto dto = (TypedClassPkDto) dtoMapper.createDtoPrimaryKeyOnly(
+                TypedClassPkDto.class, null, new DtoMapper.CompositePk(new Object[]{100L, 200L}));
+
+        // Then
+        assertNotNull(dto);
+        assertNotNull(dto.getId());
+        assertEquals(100L, dto.getId().getPk1());
+        assertEquals(200L, dto.getId().getPk2());
+        assertNull(dto.getDescription());
+    }
+
+    @Test
+    void toDtos_withTypedRecordCompositePk() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table canonicalTable = new Table("", "public", "typed_record_pk");
+        final ColumnMetaData pk1Col = new ColumnMetaData(canonicalTable, "pk1", false, Types.BIGINT);
+        final ColumnMetaData pk2Col = new ColumnMetaData(canonicalTable, "pk2", false, Types.BIGINT);
+        final ColumnMetaData descCol = new ColumnMetaData(canonicalTable, "description", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("pk1", "pk2"), List.of(pk1Col, pk2Col, descCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idPk1Field = cache.fieldAccessorOrThrow(TypedRecordPkDto.class, "id.pk1");
+        final FieldAccessor idPk2Field = cache.fieldAccessorOrThrow(TypedRecordPkDto.class, "id.pk2");
+        final FieldAccessor descField = cache.fieldAccessorOrThrow(TypedRecordPkDto.class, "description");
+        final OrmTable ormTable = new OrmTable(
+                TypedRecordPkDto.class,
+                metaData,
+                Map.of(idPk1Field, pk1Col, idPk2Field, pk2Col, descField, descCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(TypedRecordPkDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        final Row row = new Row(List.of(
+                new RowColumn("pk1", 1L, new Column(canonicalTable, "pk1")),
+                new RowColumn("pk2", 2L, new Column(canonicalTable, "pk2")),
+                new RowColumn("description", "Sample record PK", new Column(canonicalTable, "description"))
+        ));
+
+        // When
+        final List<TypedRecordPkDto> result = dtoMapper.toDtos(TypedRecordPkDto.class, null, List.of(row));
+
+        // Then
+        assertEquals(1, result.size());
+        final TypedRecordPkDto dto = result.getFirst();
+        assertNotNull(dto.getId());
+        assertEquals(1L, dto.getId().pk1());
+        assertEquals(2L, dto.getId().pk2());
+        assertEquals("Sample record PK", dto.getDescription());
+    }
+
+    @Test
+    void toDtos_withTypedClassCompositePk() {
+        // Given
+        final TableRegistry tableRegistry = new TableRegistry();
+        final Table canonicalTable = new Table("", "public", "typed_class_pk");
+        final ColumnMetaData pk1Col = new ColumnMetaData(canonicalTable, "pk1", false, Types.BIGINT);
+        final ColumnMetaData pk2Col = new ColumnMetaData(canonicalTable, "pk2", false, Types.BIGINT);
+        final ColumnMetaData descCol = new ColumnMetaData(canonicalTable, "description", true, Types.VARCHAR);
+        final TableMetaData metaData = new TableMetaData(canonicalTable, List.of("pk1", "pk2"), List.of(pk1Col, pk2Col, descCol));
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
+        final FieldAccessor idPk1Field = cache.fieldAccessorOrThrow(TypedClassPkDto.class, "id.pk1");
+        final FieldAccessor idPk2Field = cache.fieldAccessorOrThrow(TypedClassPkDto.class, "id.pk2");
+        final FieldAccessor descField = cache.fieldAccessorOrThrow(TypedClassPkDto.class, "description");
+        final OrmTable ormTable = new OrmTable(
+                TypedClassPkDto.class,
+                metaData,
+                Map.of(idPk1Field, pk1Col, idPk2Field, pk2Col, descField, descCol),
+                new ChangeTracker(lookup),
+                cache);
+        tableRegistry.addTable(TypedClassPkDto.class, ormTable);
+
+        final DtoMapper dtoMapper = createDtoMapper(tableRegistry);
+
+        final Row row = new Row(List.of(
+                new RowColumn("pk1", 5L, new Column(canonicalTable, "pk1")),
+                new RowColumn("pk2", 6L, new Column(canonicalTable, "pk2")),
+                new RowColumn("description", "Sample class PK", new Column(canonicalTable, "description"))
+        ));
+
+        // When
+        final List<TypedClassPkDto> result = dtoMapper.toDtos(TypedClassPkDto.class, null, List.of(row));
+
+        // Then
+        assertEquals(1, result.size());
+        final TypedClassPkDto dto = result.getFirst();
+        assertNotNull(dto.getId());
+        assertEquals(5L, dto.getId().getPk1());
+        assertEquals(6L, dto.getId().getPk2());
+        assertEquals("Sample class PK", dto.getDescription());
     }
 
     @Test
@@ -1753,6 +1910,80 @@ class DtoMapperTest {
 
         public void setName(final String name) {
             this.name = name;
+        }
+    }
+
+    public record TypedRecordPk(Long pk1, Long pk2) {
+    }
+
+    public static class TypedRecordPkDto {
+        private TypedRecordPk id;
+        private String description;
+
+        public TypedRecordPk getId() {
+            return id;
+        }
+
+        public void setId(final TypedRecordPk id) {
+            this.id = id;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(final String description) {
+            this.description = description;
+        }
+    }
+
+    public static class TypedClassPk {
+        private Long pk1;
+        private Long pk2;
+
+        public TypedClassPk() {
+        }
+
+        public TypedClassPk(final Long pk1, final Long pk2) {
+            this.pk1 = pk1;
+            this.pk2 = pk2;
+        }
+
+        public Long getPk1() {
+            return pk1;
+        }
+
+        public void setPk1(final Long pk1) {
+            this.pk1 = pk1;
+        }
+
+        public Long getPk2() {
+            return pk2;
+        }
+
+        public void setPk2(final Long pk2) {
+            this.pk2 = pk2;
+        }
+    }
+
+    public static class TypedClassPkDto {
+        private TypedClassPk id;
+        private String description;
+
+        public TypedClassPk getId() {
+            return id;
+        }
+
+        public void setId(final TypedClassPk id) {
+            this.id = id;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(final String description) {
+            this.description = description;
         }
     }
 }

@@ -2,11 +2,11 @@ package org.litebridge.spring.boot3.test;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.orm.Litebridge;
+import org.litebridge.spring.annotation.EnableLitebridgeRepositories;
 import org.litebridge.spring.boot.autoconfigure.LitebridgeAutoConfiguration;
 import org.litebridge.spring.boot.autoconfigure.LitebridgeRepositoriesAutoConfiguration;
 import org.litebridge.spring.boot3.test.repository.SpringBoot3PersonRepository;
 import org.litebridge.spring.boot3.test.repository.SpringBoot3RepositoryConfig;
-import org.litebridge.spring.repository.EnableLitebridgeRepositories;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;

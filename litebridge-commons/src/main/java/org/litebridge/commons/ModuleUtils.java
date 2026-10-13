@@ -41,10 +41,10 @@ public class ModuleUtils {
         final String packageName = dtoClass.getPackageName();
 
         if (!clientModule.isOpen(packageName, targetModule)) {
-            throw new IllegalArgumentException(String.format("Module '%s' does not open package '%s' to '%s'. " +
-                            "Please use the register(Lookup, Class, TableSpec) method " +
+            throw new IllegalArgumentException(String.format("Cannot access DTO class '%s'. Module '%s' does not open package '%s' to '%s'. " +
+                            "Please ensure a valid MethodHandles.lookup() was passed during Litebridge initialisation, " +
                             "or add 'opens %s to %s;' to your module-info.java",
-                    clientModule.getName(), packageName, targetModule.getName(), packageName, targetModule.getName()));
+                    dtoClass.getName(), clientModule.getName(), packageName, targetModule.getName(), packageName, targetModule.getName()));
         }
 
         return dtoClass;

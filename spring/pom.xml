@@ -23,9 +23,12 @@
     </properties>
 
     <modules>
+        <module>litebridge-spring-common</module>
         <module>litebridge-spring</module>
+        <module>litebridge-spring6</module>
         <module>litebridge-spring-boot-autoconfigure</module>
         <module>litebridge-spring-boot-starter</module>
+        <module>litebridge-spring-boot3-starter</module>
     </modules>
 
     <profiles>

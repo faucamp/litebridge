@@ -67,14 +67,25 @@ For applications using Spring or Spring Boot, Litebridge provides dedicated inte
 
 ### Spring Boot Starter
 
-The easiest way to integrate Litebridge into a Spring Boot application is using the starter:
+The easiest way to integrate Litebridge into a Spring Boot application is using the appropriate starter:
+
+For **Spring Boot 4 / Spring Framework 7**:
 
 ```xml
-
 <dependency>
-    <groupId>org.litebridge</groupId>
+    <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
-    <version>0.4.0</version> <!-- Replace with latest version -->
+    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+</dependency>
+```
+
+For **Spring Boot 3 / Spring Framework 6**:
+
+```xml
+<dependency>
+    <groupId>org.litebridgedb.spring</groupId>
+    <artifactId>litebridge-spring-boot3-starter</artifactId>
+    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
 </dependency>
 ```
 

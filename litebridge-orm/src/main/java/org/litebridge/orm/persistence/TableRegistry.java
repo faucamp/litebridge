@@ -113,7 +113,7 @@ public final class TableRegistry {
 
         if (!table.contains(".")) {
             for (final OrmTable ormTable : ormTableMap.values()) {
-                if (ormTable.getMetaData().table().name().equalsIgnoreCase(table)) {
+                if (ormTable.metaData().table().name().equalsIgnoreCase(table)) {
                     // Store the lookup to allow a direct match later
                     ormTableMap.put(table, ormTable);
                     return ormTable;
@@ -156,7 +156,7 @@ public final class TableRegistry {
             final String tableName = table.name();
 
             for (final OrmTable ormTable : ormTableMap.values()) {
-                if (ormTable.getMetaData().table().name().equalsIgnoreCase(tableName)) {
+                if (ormTable.metaData().table().name().equalsIgnoreCase(tableName)) {
                     // Store the lookup to allow a direct match later
                     ormTableMap.put(tableName, ormTable);
                     return ormTable;
@@ -211,7 +211,7 @@ public final class TableRegistry {
      * @param ormTable the table to register
      */
     public void addTable(final OrmTable ormTable) {
-        ormTableMap.put(ormTable.getMetaData().table().qualifiedName(), ormTable);
+        ormTableMap.put(ormTable.metaData().table().qualifiedName(), ormTable);
     }
 
     /**
@@ -227,7 +227,7 @@ public final class TableRegistry {
             final OrmTable ormTable = getOrmTable(tableName);
 
             if (ormTable != null) {
-                spiTable = ormTable.getMetaData().table();
+                spiTable = ormTable.metaData().table();
             } else {
                 spiTable = new Table(tableName);
             }

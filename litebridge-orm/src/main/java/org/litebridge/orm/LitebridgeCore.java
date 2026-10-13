@@ -40,6 +40,7 @@ import org.litebridge.orm.expression.select.LiteralExpressionSpec;
 import org.litebridge.orm.nativesql.NativeSqlContext;
 import org.litebridge.orm.persistence.DtoConstructor;
 import org.litebridge.orm.persistence.DtoEntityMapping;
+import org.litebridge.orm.persistence.DtoInspector;
 import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.MappingPlanCache;
@@ -103,6 +104,7 @@ public class LitebridgeCore implements SelectApi {
     private final DeleteEngine deleteEngine = new DeleteEngine();
     private final QueryPlanCache queryPlanCache = new QueryPlanCache();
     private final MappingPlanCache mappingPlanCache = new MappingPlanCache();
+    private final DtoInspector dtoInspector = new DtoInspector(tableRegistry);
     private final LitebridgeConfig litebridgeConfig;
     private final TableMetaDataCache tableMetaDataCache;
 
@@ -329,6 +331,17 @@ public class LitebridgeCore implements SelectApi {
 
         table.trackDto(dto);
         return dto;
+    }
+
+    /**
+     * Provides access to entity/mapped DTO inspection utilities.
+     * <p>
+     * The returned {@link DtoInspector} instance is used to check the persistence state of an entity/DTO.
+     *
+     * @return Inspector class providing access to entity state metadata.
+     */
+    public DtoInspector inspect() {
+        return dtoInspector;
     }
 
     /**

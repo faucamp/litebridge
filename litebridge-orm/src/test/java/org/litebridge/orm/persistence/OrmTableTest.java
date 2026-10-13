@@ -47,7 +47,7 @@ class OrmTableTest {
 
         // Then
         assertEquals(TestDto.class, ormTable.dtoClass());
-        assertEquals(tableMetaData("test_table", idColumn, nameColumn), ormTable.getMetaData());
+        assertEquals(tableMetaData("test_table", idColumn, nameColumn), ormTable.metaData());
         assertSame(idColumn, ormTable.columnMetaDataForField("id"));
         assertSame(nameColumn, ormTable.columnMetaDataForField("name"));
         assertSame(idColumn, ormTable.getColumnMetaData("id"));

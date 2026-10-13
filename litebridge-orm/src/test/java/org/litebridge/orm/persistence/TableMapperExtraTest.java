@@ -338,7 +338,7 @@ class TableMapperExtraTest {
         ));
 
         final OrmTable ormTableMock = mock(OrmTable.class);
-        when(ormTableMock.getMetaData()).thenReturn(metaData);
+        when(ormTableMock.metaData()).thenReturn(metaData);
         when(tableRegistry.getOrmTableOrThrow(SelfRefDto.class)).thenReturn(ormTableMock);
 
         // When
@@ -448,7 +448,7 @@ class TableMapperExtraTest {
         final TableMetaData refMetaData = new TableMetaData(refTable, List.of("PK_A", "PK_B"), List.of(pk1Col, pk2Col));
 
         final OrmTable refOrmTable = mock(OrmTable.class);
-        when(refOrmTable.getMetaData()).thenReturn(refMetaData);
+        when(refOrmTable.metaData()).thenReturn(refMetaData);
         when(tableRegistry.getOrmTableOrThrow(ReferencedDto.class)).thenReturn(refOrmTable);
         when(tableRegistry.containsOrmTable(ReferencedDto.class)).thenReturn(true);
 
@@ -516,7 +516,7 @@ class TableMapperExtraTest {
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(metaData);
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(tableRegistry.getOrmTableOrThrow(TestDto.class)).thenReturn(ormTable);
 
         final TableSpec tableSpec = new TableSpec("TEST", Map.of(
@@ -650,7 +650,7 @@ class TableMapperExtraTest {
         when(databaseProvider.tableMetaData(any(), any())).thenReturn(metaData);
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(tableRegistry.getOrmTableOrThrow(Long.class)).thenReturn(ormTable);
 
         final TableSpec tableSpec = new TableSpec("TEST", Map.of(
@@ -688,7 +688,7 @@ class TableMapperExtraTest {
         final TableMetaData refMetaData = new TableMetaData(refTable, List.of("PK_A", "PK_B"), List.of(pk1Col, pk2Col));
 
         final OrmTable refOrmTable = mock(OrmTable.class);
-        when(refOrmTable.getMetaData()).thenReturn(refMetaData);
+        when(refOrmTable.metaData()).thenReturn(refMetaData);
         when(tableRegistry.getOrmTableOrThrow(ReferencedDto.class)).thenReturn(refOrmTable);
         when(tableRegistry.containsOrmTable(ReferencedDto.class)).thenReturn(true);
 

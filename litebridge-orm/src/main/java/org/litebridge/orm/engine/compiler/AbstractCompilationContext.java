@@ -311,7 +311,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                                                     final @Nullable List<Class<?>> fallbackContextDtoClasses,
                                                     final @Nullable String alias) {
         final OrmTable ormTable = getOrmTable(dtoClass, contextDtoClass, fallbackContextDtoClasses);
-        final Table table = ormTable.getMetaData().table();
+        final Table table = ormTable.metaData().table();
         final String tableAlias = alias != null ? alias : aliasGenerator.newTableAlias(table);
         return new AliasedTable(tableAlias, table);
     }
@@ -389,7 +389,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             SelectTarget foundSelectTarget = null;
 
             if (foundOrmTable != null) {
-                final Table t = foundOrmTable.getMetaData().table();
+                final Table t = foundOrmTable.metaData().table();
                 foundSelectTarget = selectTargets.stream()
                         .filter(st -> getTable(st).equals(t))
                         .findFirst()
@@ -411,7 +411,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
             }
 
             ormTable = foundOrmTable;
-            table = ormTable.getMetaData().table();
+            table = ormTable.metaData().table();
             selectTarget = foundSelectTarget;
         } else {
             selectTarget = selectTargets.getFirst();
@@ -442,7 +442,7 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
                 final OrmTable ormTable = tableRegistry.getOrmTable(dtoClass);
 
                 if (ormTable != null) {
-                    final Table table = ormTable.getMetaData().table();
+                    final Table table = ormTable.metaData().table();
                     yield selectTargets.stream()
                             .filter(selectTarget -> table.equals(getTable(selectTarget)))
                             .findFirst()

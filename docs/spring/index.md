@@ -19,9 +19,17 @@ There are two primary ways to integrate Litebridge with Spring:
 1.  **[Spring Boot Starter](spring-boot-starter.md)**: The recommended approach for Spring Boot applications. It provides autoconfiguration for `Litebridge` and `LitebridgeTransactionManager` beans, and Spring Data repositories.
 2.  **[Manual Configuration](manual-configuration.md)**: For non-Boot Spring applications or when full control over bean instantiation is required.
 
-## Core Components
+## Core Modules & Components
 
-The following components are provided by the `litebridge-spring` module:
+Litebridge Spring integration is organised across dedicated modules:
+
+- `litebridge-spring-common`: Houses version-agnostic integration classes such as `LitebridgeEntityScanner` and `LitebridgeTransactionManager`.
+- `litebridge-spring`: Native integration for Spring Framework 7 / Spring Boot 4 using Spring Data 4 APIs.
+- `litebridge-spring6`: Native integration for Spring Framework 6 / Spring Boot 3 using Spring Data 3 APIs.
+- `litebridge-spring-boot-starter`: Starter for Spring Boot 4 applications.
+- `litebridge-spring-boot3-starter`: Starter for Spring Boot 3 applications.
+
+The key components include:
 
 - `LitebridgeTransactionManager`: A Spring `PlatformTransactionManager` implementation that integrates Litebridge with Spring's `@Transactional` support.
 - `Litebridge`: The main entry point, which can be easily defined as a Spring bean.

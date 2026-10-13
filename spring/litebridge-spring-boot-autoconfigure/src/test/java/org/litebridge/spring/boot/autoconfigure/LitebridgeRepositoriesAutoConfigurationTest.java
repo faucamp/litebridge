@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.boot.autoconfigure.test.repository.TestPersonRepository;
 import org.litebridge.spring.boot.autoconfigure.test.repository.TestRepositoryConfiguration;
-import org.litebridge.spring.repository.EnableLitebridgeRepositories;
+import org.litebridge.spring.annotation.EnableLitebridgeRepositories;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;

@@ -70,7 +70,7 @@ class MergeEngineTest {
         when(tableMetaDataCache.ensureTableMetaData(table)).thenReturn(tableMetaData);
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(tableMetaData);
+        when(ormTable.metaData()).thenReturn(tableMetaData);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final Insert operation = mock(Insert.class);

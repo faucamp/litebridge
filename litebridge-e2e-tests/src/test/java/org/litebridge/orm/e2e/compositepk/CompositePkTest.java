@@ -11,6 +11,8 @@ import org.litebridge.orm.e2e.compositepk.dto.CompositePkLookup;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkParent;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimple;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimpleM2M;
+import org.litebridge.orm.e2e.compositepk.dto.CompositePkTyped;
+import org.litebridge.orm.e2e.compositepk.dto.CompositePkTypedClass;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -313,5 +315,32 @@ class CompositePkTest extends AbstractE2eTest {
             assertEquals(200L, resultChild.pk2());
             assertEquals(result, resultChild.parent());
         }
+    }
+
+    @TestTemplate
+    @DisplayName("Composite typed PK using POJO class")
+    void compositePk_typedPkClass(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        litebridge.register(CompositePkTypedClass.class, rc -> rc
+                .mapToTable(tableMapper.qualifyName("COMP_PK_SIMPLE"))
+                .with(spec -> spec.mapField("id.pk1").toColumn(tableMapper.transformColumnName("PK1")))
+                .with(spec -> spec.mapField("id.pk2").toColumn(tableMapper.transformColumnName("PK2")))
+                .with(spec -> spec.mapField("description").toColumn(tableMapper.transformColumnName("TEST_DESC"))));
+
+        final CompositePkTypedClass.PrimaryKey id = new CompositePkTypedClass.PrimaryKey(1L, 1L);
+
+        final CompositePkTypedClass compositePkTyped = new CompositePkTypedClass();
+        compositePkTyped.setId(id);
+        compositePkTyped.setDescription("Class-based description");
+
+        // When
+        litebridge.save(compositePkTyped);
+
+        // Then
+        final CompositePkTypedClass result = litebridge.select(CompositePkTypedClass.class)
+                .withIdOrThrow(id);
+
+        assertEquals(id, result.getId());
+        assertEquals("Class-based description", result.getDescription());
     }
 }

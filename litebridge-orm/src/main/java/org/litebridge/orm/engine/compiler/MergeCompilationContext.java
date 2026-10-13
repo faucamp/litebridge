@@ -65,7 +65,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
         if (mergeNode.dtoClass() != null) {
             final OrmTable targetOrmTable = getOrmTablePermissiveContext(mergeNode.dtoClass(), mergeNode.contextDtoClass());
-            targetTable = targetOrmTable.getMetaData().table();
+            targetTable = targetOrmTable.metaData().table();
         } else {
             targetTable = tableRegistry.getOrCreateSpiTable(Objects.requireNonNull(mergeNode.table()));
         }
@@ -131,7 +131,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             // Using table identified by mapped DTO class
             final Class<?> dtoClass = Objects.requireNonNull(usingNode.dtoClass(), "No USING <table>/<DTO class>/<subquery>/<values> specified");
             final OrmTable usingOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
-            usingTable = usingOrmTable.getMetaData().table();
+            usingTable = usingOrmTable.metaData().table();
         }
 
         final String usingTableAlias = aliasGenerator.newTableAlias(usingTable);

@@ -41,7 +41,11 @@ public class OrmTable {
 
     private final Class<?> dtoClass;
     private final @Nullable Class<?> contextDtoClass;
+    private final Class<?> dtoPkClass;
+
     private final TableMetaData metaData;
+
+    private final List<FieldAccessor> primaryKeyFields;
     private final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap;
     private final Map<String, MappedFieldTarget> fieldNameTargetMap;
     private final List<Map.Entry<FieldAccessor, MappedFieldTarget>> fieldTargetEntries;
@@ -185,6 +189,24 @@ public class OrmTable {
         this.fieldNameTargetMap = Collections.unmodifiableMap(fieldNameTargetMap);
         this.nestedDtoClasses = nestedDtoClasses.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(nestedDtoClasses);
         this.fieldTargetEntries = Collections.unmodifiableList(orderedFieldTargetEntries);
+        this.primaryKeyFields = createPrimaryKeyFields();
+
+        final int pkSize = primaryKeyFields.size();
+
+        if (pkSize == 1) {
+            this.dtoPkClass = primaryKeyFields.getFirst().type();
+        } else if (pkSize > 1) {
+            if (primaryKeyFields.stream().allMatch(field -> field instanceof FieldAccessorChain)) {
+                // "Classic ORM style"; Composite key mapped to a specific type (e.g. a separate class/record)
+                this.dtoPkClass = primaryKeyFields.getFirst().dtoClass();
+            } else {
+                // Standard multi-column or custom sub-DTO mix
+                this.dtoPkClass = List.class;
+            }
+        } else {
+            // No primary key
+            this.dtoPkClass = Void.class;
+        }
     }
 
     /**
@@ -200,23 +222,17 @@ public class OrmTable {
         return contextDtoClass;
     }
 
+    public Class<?> dtoPkClass() {
+        return dtoPkClass;
+    }
+
     /**
-     * Get the primary key field accessors for this table.
+     * Returns the primary key field accessors for this table.
      *
-     * @return the list of primary key field accessors
-     * @throws IllegalStateException if the table has no primary key
+     * @return The list of primary key field accessors, or an empty list if the table has no primary key.
      */
-    public List<FieldAccessor> getPrimaryKeyFields() {
-        final List<ColumnMetaData> pkColumns = getMetaData().primaryKey();
-
-        if (pkColumns.isEmpty()) {
-            throw new IllegalStateException("Table '%s' has no primary key".formatted(getMetaData().name()));
-        }
-
-        return pkColumns.stream()
-                .map(ColumnMetaData::name)
-                .map(this::getFieldForColumnName)
-                .toList();
+    public List<FieldAccessor> primaryKeyFields() {
+        return primaryKeyFields;
     }
 
     /**
@@ -224,7 +240,7 @@ public class OrmTable {
      *
      * @return the table metadata
      */
-    public TableMetaData getMetaData() {
+    public TableMetaData metaData() {
         return metaData;
     }
 
@@ -589,5 +605,15 @@ public class OrmTable {
      */
     public boolean isManyToManyJoinTable() {
         return manyToManyJoinTable;
+    }
+
+    private List<FieldAccessor> createPrimaryKeyFields() {
+        final List<ColumnMetaData> pkColumns = metaData.primaryKey();
+
+        return pkColumns.stream()
+                .map(ColumnMetaData::name)
+                .map(columnNameFieldMap::get)
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

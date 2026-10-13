@@ -25,7 +25,7 @@ class InsertBuilderTest {
         // Given
         final OrmTable table = mock(OrmTable.class);
         final TableMetaData metaData = mock(TableMetaData.class);
-        when(table.getMetaData()).thenReturn(metaData);
+        when(table.metaData()).thenReturn(metaData);
         when(metaData.table()).thenReturn(new Table("TEST_TABLE"));
         when(metaData.primaryKey()).thenReturn(Collections.emptyList());
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);

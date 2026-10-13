@@ -406,7 +406,17 @@
             </dependency>
             <dependency>
                 <groupId>org.litebridgedb.spring</groupId>
+                <artifactId>litebridge-spring-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridgedb.spring</groupId>
                 <artifactId>litebridge-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridgedb.spring</groupId>
+                <artifactId>litebridge-spring6</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -417,6 +427,11 @@
             <dependency>
                 <groupId>org.litebridgedb.spring</groupId>
                 <artifactId>litebridge-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.litebridgedb.spring</groupId>
+                <artifactId>litebridge-spring-boot3-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

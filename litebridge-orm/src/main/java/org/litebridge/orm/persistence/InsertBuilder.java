@@ -61,7 +61,7 @@ sealed class InsertBuilder extends AbstractStatementBuilder permits MergeBuilder
             final String[] insertFields = rows.getFirst()
                     .sequencedKeySet()
                     .toArray(String[]::new);
-            node = new InsertNode(ormTable.getMetaData().qualifiedName(), ormTable.dtoClass(), contextDtoClass, insertFields, null);
+            node = new InsertNode(ormTable.metaData().qualifiedName(), ormTable.dtoClass(), contextDtoClass, insertFields, null);
 
             for (LinkedHashMap<String, @Nullable Object> fieldValues : rows) {
                 final Object[] values = fieldValues.sequencedValues().toArray(Object[]::new);

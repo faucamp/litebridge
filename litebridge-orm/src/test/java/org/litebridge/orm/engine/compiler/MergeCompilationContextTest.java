@@ -108,7 +108,7 @@ class MergeCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(table)).thenReturn(ormTable);
@@ -149,7 +149,7 @@ class MergeCompilationContextTest {
         // When using DTO class
         final OrmTable usingOrmTable = mock(OrmTable.class);
         final TableMetaData usingMeta = new TableMetaData(new Table("users"), List.of("id"), List.of(idCol));
-        when(usingOrmTable.getMetaData()).thenReturn(usingMeta);
+        when(usingOrmTable.metaData()).thenReturn(usingMeta);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(usingOrmTable);
 
         compilationContext.setUsingNode(new UsingNode(null, null, UserDto.class, null, null, null, conditionNode));
@@ -202,7 +202,7 @@ class MergeCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("user_name"), List.of(nameCol, ageCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
         when(litebridgeContext.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
@@ -247,7 +247,7 @@ class MergeCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("user_name"), List.of(nameCol, ageCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
         when(ormTable.columnMetaDataForField("unknown")).thenThrow(new IllegalArgumentException());
@@ -333,7 +333,7 @@ class MergeCompilationContextTest {
         final TableMetaData userMetaData = new TableMetaData(userTable, List.of("id"), List.of(userIdCol, userNameCol, userRoleCol));
 
         final OrmTable userOrmTable = mock(OrmTable.class);
-        when(userOrmTable.getMetaData()).thenReturn(userMetaData);
+        when(userOrmTable.metaData()).thenReturn(userMetaData);
         when(userOrmTable.mappedColumns()).thenReturn(List.of(userIdCol, userNameCol, userRoleCol));
 
         final FieldAccessor idAccessor = mock(FieldAccessor.class);
@@ -382,7 +382,7 @@ class MergeCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(litebridgeContext.tableMetaDataCache().ensureTableMetaData(table)).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
 
@@ -486,13 +486,13 @@ class MergeCompilationContextTest {
         final TableMetaData sourceMeta = new TableMetaData(sourceTable, List.of("person_id"), List.of(sourceIdCol));
 
         final OrmTable targetOrmTable = mock(OrmTable.class);
-        when(targetOrmTable.getMetaData()).thenReturn(targetMeta);
+        when(targetOrmTable.metaData()).thenReturn(targetMeta);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(targetOrmTable);
         when(context.tableRegistry().getOrmTable(UserDto.class)).thenReturn(targetOrmTable);
         when(context.tableRegistry().getOrmTable(targetTable)).thenReturn(targetOrmTable);
 
         final OrmTable sourceOrmTable = mock(OrmTable.class);
-        when(sourceOrmTable.getMetaData()).thenReturn(sourceMeta);
+        when(sourceOrmTable.metaData()).thenReturn(sourceMeta);
         when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(sourceOrmTable);
         when(context.tableRegistry().getOrmTable(RoleDto.class)).thenReturn(sourceOrmTable);
         when(context.tableRegistry().getOrmTable(sourceTable)).thenReturn(sourceOrmTable);

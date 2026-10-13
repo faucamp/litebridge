@@ -90,7 +90,7 @@ class InsertCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(col));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(col);
         when(ormTable.isManyToManyJoinTable()).thenReturn(false);
 
@@ -114,7 +114,7 @@ class InsertCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(col));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(col);
 
         when(context.tableRegistry().getOrmTableInContext(UserDto.class, ContextDto.class)).thenReturn(null);
@@ -138,7 +138,7 @@ class InsertCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(col));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.isManyToManyJoinTable()).thenReturn(true);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
@@ -232,7 +232,7 @@ class InsertCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(idCol, nameCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 

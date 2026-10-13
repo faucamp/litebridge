@@ -78,7 +78,7 @@ class SelectCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("user_id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
         when(context.tableRegistry().getOrmTableOrThrow(any(Table.class))).thenReturn(ormTable);
@@ -104,7 +104,7 @@ class SelectCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("user_id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("id")).thenReturn(idCol);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
@@ -128,7 +128,7 @@ class SelectCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("user_id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
         when(context.tableRegistry().getOrmTableInContextOrThrow(UserDto.class, ContextDto.class)).thenReturn(ormTable);
 
@@ -175,7 +175,7 @@ class SelectCompilationContextTest {
 
         final TableRegistry tableRegistry = context.tableRegistry();
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
         when(ormTable.getContextTableRegistry()).thenReturn(tableRegistry);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
@@ -187,7 +187,7 @@ class SelectCompilationContextTest {
         final OrmTable roleOrmTable = mock(OrmTable.class);
         final Table roleTable = new Table("roles");
         final TableMetaData roleMeta = new TableMetaData(roleTable, List.of("id"), List.of(new ColumnMetaData(roleTable, "id", true, Types.INTEGER, 0)));
-        when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
+        when(roleOrmTable.metaData()).thenReturn(roleMeta);
         when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
         when(context.tableRegistry().getOrmTable(RoleDto.class)).thenReturn(roleOrmTable);
 
@@ -215,7 +215,7 @@ class SelectCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("id"), List.of(idCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
         when(ormTable.columnMetaDataForField("id")).thenReturn(idCol);
 
@@ -315,7 +315,7 @@ class SelectCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of("user_name"), List.of(nameCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(nameCol));
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
@@ -345,7 +345,7 @@ class SelectCompilationContextTest {
 
         final TableRegistry tableRegistry = context.tableRegistry();
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.mappedColumns()).thenReturn(List.of(idCol));
         when(ormTable.getContextTableRegistry()).thenReturn(tableRegistry);
 
@@ -381,7 +381,7 @@ class SelectCompilationContextTest {
 
         final TableRegistry tableRegistry = context.tableRegistry();
         final OrmTable userOrmTable = mock(OrmTable.class);
-        when(userOrmTable.getMetaData()).thenReturn(userMeta);
+        when(userOrmTable.metaData()).thenReturn(userMeta);
         when(userOrmTable.mappedColumns()).thenReturn(List.of(idCol, roleIdCol));
         when(userOrmTable.mappedFieldTargetForField("role")).thenReturn(roleIdCol);
         when(userOrmTable.mappedFieldTargetForFieldOrNull("role")).thenReturn(roleIdCol);
@@ -392,7 +392,7 @@ class SelectCompilationContextTest {
         final ColumnMetaData rolePkCol = new ColumnMetaData(roleTable, "id", true, Types.INTEGER, 0);
         final TableMetaData roleMeta = new TableMetaData(roleTable, List.of("id"), List.of(rolePkCol));
         final OrmTable roleOrmTable = mock(OrmTable.class);
-        when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
+        when(roleOrmTable.metaData()).thenReturn(roleMeta);
         when(roleOrmTable.mappedColumns()).thenReturn(List.of(rolePkCol));
         when(context.tableRegistry().getOrmTable(RoleDto.class)).thenReturn(roleOrmTable);
 
@@ -417,7 +417,7 @@ class SelectCompilationContextTest {
 
         final TableRegistry tableRegistry = context.tableRegistry();
         final OrmTable userOrmTable = mock(OrmTable.class);
-        when(userOrmTable.getMetaData()).thenReturn(userMeta);
+        when(userOrmTable.metaData()).thenReturn(userMeta);
         when(userOrmTable.mappedColumns()).thenReturn(List.of(idCol));
         when(userOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(userOrmTable);
@@ -427,7 +427,7 @@ class SelectCompilationContextTest {
         final ColumnMetaData orderUserIdCol = new ColumnMetaData(ordersTable, "user_id", true, Types.INTEGER, 0);
         final TableMetaData orderMeta = new TableMetaData(ordersTable, List.of("id"), List.of(orderIdCol, orderUserIdCol));
         final OrmTable orderOrmTable = mock(OrmTable.class);
-        when(orderOrmTable.getMetaData()).thenReturn(orderMeta);
+        when(orderOrmTable.metaData()).thenReturn(orderMeta);
         when(orderOrmTable.mappedColumns()).thenReturn(List.of(orderIdCol, orderUserIdCol));
         when(orderOrmTable.columnMetaDataForField("userId")).thenReturn(orderUserIdCol);
         when(tableRegistry.getOrmTableOrThrow(OrderDto.class)).thenReturn(orderOrmTable);
@@ -488,7 +488,7 @@ class SelectCompilationContextTest {
 
         final TableRegistry tableRegistry = context.tableRegistry();
         final OrmTable parentOrmTable = mock(OrmTable.class);
-        when(parentOrmTable.getMetaData()).thenReturn(parentMeta);
+        when(parentOrmTable.metaData()).thenReturn(parentMeta);
         when(parentOrmTable.mappedColumns()).thenReturn(List.of(parentTenantIdCol, parentIdCol));
         when(parentOrmTable.dtoClass()).thenReturn((Class) UserDto.class);
         when(parentOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
@@ -499,7 +499,7 @@ class SelectCompilationContextTest {
         when(context.tableMetaDataCache().ensureTableMetaData(parentTable)).thenReturn(parentMeta);
 
         final OrmTable childOrmTable = mock(OrmTable.class);
-        when(childOrmTable.getMetaData()).thenReturn(childMeta);
+        when(childOrmTable.metaData()).thenReturn(childMeta);
         when(childOrmTable.mappedColumns()).thenReturn(List.of(childIdCol, childTenantIdCol, childParentIdCol));
         when(childOrmTable.dtoClass()).thenReturn((Class) OrderDto.class);
         when(childOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
@@ -575,20 +575,20 @@ class SelectCompilationContextTest {
         final ColumnMetaData joinRoleCol = new ColumnMetaData(joinTable, "role_id", true, Types.INTEGER, 0);
         final TableMetaData joinMeta = new TableMetaData(joinTable, List.of("user_id", "role_id"), List.of(joinUserCol, joinRoleCol));
         final OrmTable joinOrmTable = mock(OrmTable.class);
-        when(joinOrmTable.getMetaData()).thenReturn(joinMeta);
+        when(joinOrmTable.metaData()).thenReturn(joinMeta);
         when(joinOrmTable.dtoClass()).thenReturn((Class) RoleDto.class);
 
         final Table roleTable = new Table("roles");
         final ColumnMetaData rolePkCol = new ColumnMetaData(roleTable, "id", true, Types.INTEGER, 0);
         final TableMetaData roleMeta = new TableMetaData(roleTable, List.of("id"), List.of(rolePkCol));
         final OrmTable roleOrmTable = mock(OrmTable.class);
-        when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
+        when(roleOrmTable.metaData()).thenReturn(roleMeta);
         when(roleOrmTable.mappedColumns()).thenReturn(List.of(rolePkCol));
         when(roleOrmTable.dtoClass()).thenReturn((Class) RoleDto.class);
 
         final TableRegistry tableRegistry = context.tableRegistry();
         final OrmTable userOrmTable = mock(OrmTable.class);
-        when(userOrmTable.getMetaData()).thenReturn(userMeta);
+        when(userOrmTable.metaData()).thenReturn(userMeta);
         when(userOrmTable.mappedColumns()).thenReturn(List.of(idCol));
         when(userOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(userOrmTable);
@@ -662,7 +662,7 @@ class SelectCompilationContextTest {
         final ColumnMetaData joinRightPk2 = new ColumnMetaData(joinTable, "right_pk2", true, Types.INTEGER, 3);
         final TableMetaData joinMeta = new TableMetaData(joinTable, List.of("left_pk1", "left_pk2", "right_pk1", "right_pk2"), List.of(joinLeftPk1, joinLeftPk2, joinRightPk1, joinRightPk2));
         final OrmTable joinOrmTable = mock(OrmTable.class);
-        when(joinOrmTable.getMetaData()).thenReturn(joinMeta);
+        when(joinOrmTable.metaData()).thenReturn(joinMeta);
         when(joinOrmTable.dtoClass()).thenReturn((Class) RoleDto.class);
 
         final Table roleTable = new Table("comp_roles");
@@ -670,13 +670,13 @@ class SelectCompilationContextTest {
         final ColumnMetaData rolePk2 = new ColumnMetaData(roleTable, "rpk2", true, Types.INTEGER, 1);
         final TableMetaData roleMeta = new TableMetaData(roleTable, List.of("rpk1", "rpk2"), List.of(rolePk1, rolePk2));
         final OrmTable roleOrmTable = mock(OrmTable.class);
-        when(roleOrmTable.getMetaData()).thenReturn(roleMeta);
+        when(roleOrmTable.metaData()).thenReturn(roleMeta);
         when(roleOrmTable.mappedColumns()).thenReturn(List.of(rolePk1, rolePk2));
         when(roleOrmTable.dtoClass()).thenReturn((Class) RoleDto.class);
 
         final TableRegistry tableRegistry = context.tableRegistry();
         final OrmTable userOrmTable = mock(OrmTable.class);
-        when(userOrmTable.getMetaData()).thenReturn(userMeta);
+        when(userOrmTable.metaData()).thenReturn(userMeta);
         when(userOrmTable.mappedColumns()).thenReturn(List.of(userPk1, userPk2));
         when(userOrmTable.getContextTableRegistry()).thenReturn(tableRegistry);
         when(tableRegistry.getOrmTableOrThrow(UserDto.class)).thenReturn(userOrmTable);
@@ -759,7 +759,7 @@ class SelectCompilationContextTest {
         final ColumnMetaData tenantSettingPkCol = new ColumnMetaData(tenantSettingTable, "id", true, Types.INTEGER, 0);
         final TableMetaData tenantSettingMeta = new TableMetaData(tenantSettingTable, List.of("id"), List.of(tenantSettingPkCol));
         final OrmTable tenantSettingOrmTable = mock(OrmTable.class);
-        when(tenantSettingOrmTable.getMetaData()).thenReturn(tenantSettingMeta);
+        when(tenantSettingOrmTable.metaData()).thenReturn(tenantSettingMeta);
         when(tenantSettingOrmTable.mappedColumns()).thenReturn(List.of(tenantSettingPkCol));
         when(tenantSettingOrmTable.dtoClass()).thenReturn((Class) SettingDto.class);
 
@@ -769,7 +769,7 @@ class SelectCompilationContextTest {
         tenantSettingIdCol.setJoinColumnSupplier(() -> tenantSettingPkCol);
         final TableMetaData tenantMeta = new TableMetaData(tenantTable, List.of("id"), List.of(tenantIdCol, tenantSettingIdCol));
         final OrmTable tenantOrmTable = mock(OrmTable.class);
-        when(tenantOrmTable.getMetaData()).thenReturn(tenantMeta);
+        when(tenantOrmTable.metaData()).thenReturn(tenantMeta);
         when(tenantOrmTable.mappedColumns()).thenReturn(List.of(tenantIdCol, tenantSettingIdCol));
         when(tenantOrmTable.dtoClass()).thenReturn((Class) TenantDto.class);
         when(tenantOrmTable.hasField("setting")).thenReturn(true);
@@ -792,7 +792,7 @@ class SelectCompilationContextTest {
 
         final TableMetaData accountMeta = new TableMetaData(accountTable, List.of("id"), List.of(accountIdCol, accountTenantIdCol, accountSettingIdCol));
         final OrmTable accountOrmTable = mock(OrmTable.class);
-        when(accountOrmTable.getMetaData()).thenReturn(accountMeta);
+        when(accountOrmTable.metaData()).thenReturn(accountMeta);
         when(accountOrmTable.mappedColumns()).thenReturn(List.of(accountIdCol, accountTenantIdCol, accountSettingIdCol));
         when(accountOrmTable.dtoClass()).thenReturn((Class) AccountDto.class);
         when(accountOrmTable.hasField("setting")).thenReturn(true);
@@ -809,7 +809,7 @@ class SelectCompilationContextTest {
         final ColumnMetaData accountSettingPkCol = new ColumnMetaData(accountSettingTable, "id", true, Types.INTEGER, 0);
         final TableMetaData accountSettingMeta = new TableMetaData(accountSettingTable, List.of("id"), List.of(accountSettingPkCol));
         final OrmTable accountSettingOrmTable = mock(OrmTable.class);
-        when(accountSettingOrmTable.getMetaData()).thenReturn(accountSettingMeta);
+        when(accountSettingOrmTable.metaData()).thenReturn(accountSettingMeta);
         when(accountSettingOrmTable.mappedColumns()).thenReturn(List.of(accountSettingPkCol));
         when(accountSettingOrmTable.dtoClass()).thenReturn((Class) SettingDto.class);
         accountSettingIdCol.setJoinColumnSupplier(() -> accountSettingPkCol);

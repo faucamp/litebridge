@@ -187,7 +187,7 @@ class PersistenceFacadeTest {
 
         final OrmTable table = createOrmTable(changeTracker, PersonRecord.class, "persons", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(tableRegistry.getOrmTableOrThrow(PersonRecord.class)).thenReturn(table);
-        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 123L)));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1, Map.of(table.metaData().column("ID"), 123L)));
 
         // When
         persistenceFacade.save(person);
@@ -223,7 +223,7 @@ class PersistenceFacadeTest {
 
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(tableRegistry.getOrmTableOrThrow(CustomerDto.class)).thenReturn(table);
-        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 1L)));
+        when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenReturn(new InsertResult(1, Map.of(table.metaData().column("ID"), 1L)));
 
         final List<Runnable> rollbackCallbacks = new ArrayList<>();
         org.mockito.Mockito.doAnswer(invocation -> {
@@ -262,7 +262,7 @@ class PersistenceFacadeTest {
             final PreparedSql preparedSql = invocation.getArgument(0);
 
             if (preparedSql.sql().contains("customers")) {
-                return new InsertResult(1, Map.of(customerTable.getMetaData().column("ID"), 1L));
+                return new InsertResult(1, Map.of(customerTable.metaData().column("ID"), 1L));
             }
             return new InsertResult(1);
         });
@@ -310,7 +310,7 @@ class PersistenceFacadeTest {
             final PreparedSql preparedSql = invocation.getArgument(0);
 
             if (preparedSql.sql().contains("categories")) {
-                return new InsertResult(1, Map.of(categoryTable.getMetaData().column("ID"), 1L));
+                return new InsertResult(1, Map.of(categoryTable.metaData().column("ID"), 1L));
             }
             return new InsertResult(1);
         });
@@ -700,9 +700,9 @@ class PersistenceFacadeTest {
         when(databaseProvider.executeUpdate(any(), eq(InsertResult.class), any())).thenAnswer(invocation -> {
             final PreparedSql preparedSql = invocation.getArgument(0);
             if (preparedSql.sql().contains("categories")) {
-                return new InsertResult(1, Map.of(categoryTable.getMetaData().column("ID"), 10L));
+                return new InsertResult(1, Map.of(categoryTable.metaData().column("ID"), 10L));
             } else if (preparedSql.sql().contains("products")) {
-                return new InsertResult(1, Map.of(productTable.getMetaData().column("ID"), 20L));
+                return new InsertResult(1, Map.of(productTable.metaData().column("ID"), 20L));
             }
             return new InsertResult(1);
         });
@@ -724,7 +724,7 @@ class PersistenceFacadeTest {
         final OrmTable table = createOrmTable(changeTracker, CustomerDto.class, "customers", Map.of("id", numeric("ID"), "name", varchar("NAME")), List.of("ID"));
         when(databaseProvider.transactionManager()).thenReturn(transactionManager);
         when(databaseProvider.executeUpdate(any(), eq(UpdateResult.class), any()))
-                .thenReturn(new InsertResult(1, Map.of(table.getMetaData().column("ID"), 99L)));
+                .thenReturn(new InsertResult(1, Map.of(table.metaData().column("ID"), 99L)));
 
         // When
         persistenceFacade.merge(dto);

@@ -40,6 +40,9 @@
     - Add Spring Data repository integration (`LitebridgeRepository`) with `ListCrudRepository` and `ListPagingAndSortingRepository` support.
     - Add support for Spring Data Derived Query Methods via `LitebridgePartTreeQuery`.
     - Add `@EnableLitebridgeRepositories` and auto-configuration for Spring Data repositories via `LitebridgeRepositoriesAutoConfiguration`.
+    - Add `litebridge-spring-common` module containing the bulk of the version-agnostic Spring integration components.
+    - Add `litebridge-spring6` module targeting Spring Framework 6 / Spring Boot 3 natively with Spring Data 3 APIs.
+    - Add `litebridge-spring-boot3-starter` combining `litebridge-spring6` and `litebridge-spring-boot-autoconfigure`.
 - Database Provider SPI
     - New APIs for retrieving database and database provider metadata.
     - New `executeBatch()` method for explicit batch update operations.
@@ -80,6 +83,10 @@
       referencing in `WHERE`, `GROUP BY`, `HAVING`, and `ORDER BY` clauses.
     - `SqlMergeUsingStep.using()` now accepts `FromTargetSpec`.
     - SQL mode now handles type override expressions the same way as DTO mode, resulting in a more user-friendly API. 
+- Spring Integration:
+    - Split `litebridge-spring` integration into dedicated modules: `litebridge-spring` for Spring Framework 7 / Spring Boot 4 and `litebridge-spring6` for Spring Framework 6 / Spring Boot 3.
+    - Most of what was in `litebridge-spring` is now in `litebridge-spring-common`.
+    - Update `litebridge-spring-boot-starter` to explicitly bundle Spring Boot 4 integration (`litebridge-spring`).
 - Database Provider SPI:
     - Standardised and simplified the `DatabaseProvider` SPI interface. This breaks backward compatibility.
     - Massive refactor of `AbstractDatabaseProvider` to separate concerns make it more modular

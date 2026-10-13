@@ -25,7 +25,7 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
                          final @Nullable Class<?> contextDtoClass,
                          final LitebridgeContext litebridgeContext) {
         super(table, contextDtoClass, litebridgeContext);
-        this.node = new DeleteNode(null, table.getMetaData().qualifiedName(), table.dtoClass());
+        this.node = new DeleteNode(null, table.metaData().qualifiedName(), table.dtoClass());
     }
 
     @Override

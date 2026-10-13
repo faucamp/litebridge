@@ -5,7 +5,7 @@ import org.litebridge.orm.e2e.basic.dto.Account;
 import org.litebridge.orm.e2e.basic.dto.Person;
 
 /**
- * Default DTO-table regisration mapping
+ * Default DTO-table regist mapping
  */
 public class DefaultDtoTableMapper implements DbEnvDtoTableMapper {
 

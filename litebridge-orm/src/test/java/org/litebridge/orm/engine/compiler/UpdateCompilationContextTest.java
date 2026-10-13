@@ -97,7 +97,7 @@ class UpdateCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(col));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(col);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
@@ -128,7 +128,7 @@ class UpdateCompilationContextTest {
         final TableMetaData metaData = new TableMetaData(table, List.of(), List.of(nameCol, ageCol));
 
         final OrmTable ormTable = mock(OrmTable.class);
-        when(ormTable.getMetaData()).thenReturn(metaData);
+        when(ormTable.metaData()).thenReturn(metaData);
         when(ormTable.columnMetaDataForField("name")).thenReturn(nameCol);
         when(ormTable.columnMetaDataForField("age")).thenReturn(ageCol);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
