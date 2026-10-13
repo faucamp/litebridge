@@ -7,6 +7,7 @@
 - Commons:
     - `ConcurrentLazyFunction` class for lazy functional initialisation of values in a thread-safe manner.
     - `BooleanUtils.requireTrue` and `BooleanUtils.requireFalse` methods for asserting boolean conditions.
+    - `ModuleUtils` extended to be more versatile with MethodHandles.Lookup instances.
 - ORM:
     - `MERGE INTO` support: Implement `Litebridge.mergeInto()` method for performing SQL `MERGE` operations.
     - Implement `Litebridge.merge()` method for upserting entities/DTOs.
@@ -106,6 +107,8 @@
 
 ### Fixed
 
+- ORM:
+    - MethodHandles.Lookup not being honoured in `DtoConstructor`
 - Spring Integration:
     - Resolved Spring Data derived query lookup strategy compatibility across both Spring Boot 3.2.x and Spring Boot 4.x runtimes in `LitebridgeRepositoryFactory`.
     - Support cross-version property path extraction between Spring Data Commons 3.x and 4.x in `LitebridgePartTreeQuery`.

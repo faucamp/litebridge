@@ -452,7 +452,7 @@ class DtoMapperTest {
         when(context.typeConverter()).thenReturn(typeConverter);
         when(context.getRelatedDtoStrategy()).thenReturn(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, lookup);
         final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, context);
 
         final Row row = new Row(List.of(
@@ -557,7 +557,7 @@ class DtoMapperTest {
         final TableRegistry tableRegistry = new TableRegistry();
         final MethodHandles.Lookup lookup = MethodHandles.lookup();
         final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(lookup);
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, lookup);
 
         final FieldAccessor idField = cache.fieldAccessorOrThrow(TestPersonDto.class, "id");
         final FieldAccessor nameField = cache.fieldAccessorOrThrow(TestPersonDto.class, "name");
@@ -779,7 +779,7 @@ class DtoMapperTest {
         when(context.typeConverter()).thenReturn(typeConverter);
         when(context.getRelatedDtoStrategy()).thenReturn(null);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, lookup);
         final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, context);
 
         final Row row = new Row(List.of(
@@ -951,7 +951,7 @@ class DtoMapperTest {
         when(context.mappingPlanCache()).thenReturn(cache);
         when(context.classFieldAccessorCache()).thenReturn(new ClassFieldAccessorCache(MethodHandles.lookup()));
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
         return new DtoMapper(dtoConstructor, context);
     }
 

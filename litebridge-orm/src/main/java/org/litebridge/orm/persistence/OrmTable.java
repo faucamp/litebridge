@@ -607,6 +607,15 @@ public class OrmTable {
         return manyToManyJoinTable;
     }
 
+    /**
+     * Gets the class field accessor cache for this table.
+     *
+     * @return The class field accessor cache.
+     */
+    ClassFieldAccessorCache classFieldAccessorCache() {
+        return classFieldAccessorCache;
+    }
+
     private List<FieldAccessor> createPrimaryKeyFields() {
         final List<ColumnMetaData> pkColumns = metaData.primaryKey();
 

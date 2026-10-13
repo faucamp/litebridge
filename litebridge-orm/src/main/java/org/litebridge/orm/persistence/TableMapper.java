@@ -94,7 +94,7 @@ public final class TableMapper {
 
         // HiddenJoinEntity is used for intermediate join tables and is a JDK proxy - don't check module accessiblity for those
         if (!HiddenJoinEntity.class.isAssignableFrom(dtoClass)) {
-            ModuleUtils.requireAccessible(dtoClass, Litebridge.class.getModule());
+            ModuleUtils.requireAccessible(dtoClass, lookup, Litebridge.class.getModule());
         }
 
         if (ClassUtils.isBasicType(dtoClass)) {

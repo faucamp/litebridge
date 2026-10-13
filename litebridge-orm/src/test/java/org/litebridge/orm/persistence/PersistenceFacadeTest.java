@@ -76,7 +76,7 @@ class PersistenceFacadeTest {
     @BeforeEach
     void beforeEach() {
         changeTracker = new ChangeTracker(MethodHandles.lookup());
-        dtoConstructor = new DtoConstructor(tableRegistry);
+        dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
         persistenceFacade = createFacade(tableRegistry, databaseProvider, changeTracker, dtoConstructor);
     }
 

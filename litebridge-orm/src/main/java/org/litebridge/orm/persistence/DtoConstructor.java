@@ -44,6 +44,7 @@ public final class DtoConstructor {
     static final Object NO_CONSTRUCTOR = new Object();
 
     private final TableRegistry tableRegistry;
+    private final MethodHandles.Lookup lookup;
     private final Map<Class<?>, Object> defaultConstructorHandleCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, Object> canonicalConstructorHandleCache = new ConcurrentHashMap<>();
     private final Map<Class<?>, List<FieldAccessor>> canonicalConstructorFieldAccessorCache = new ConcurrentHashMap<>();
@@ -53,8 +54,10 @@ public final class DtoConstructor {
      *
      * @param tableRegistry the table registry to use for dependency resolution
      */
-    public DtoConstructor(final TableRegistry tableRegistry) {
+    public DtoConstructor(final TableRegistry tableRegistry,
+                          final MethodHandles.Lookup lookup) {
         this.tableRegistry = tableRegistry;
+        this.lookup = lookup;
     }
 
     /**
@@ -74,6 +77,7 @@ public final class DtoConstructor {
 
         final MethodHandle canonicalHandle = canonicalConstructor(dtoClass)
                 .orElseThrow(() -> new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass));
+
         return new MappingInfo(canonicalHandle, false, canonicalConstructorFieldAccessorCache.get(dtoClass));
     }
 
@@ -86,11 +90,13 @@ public final class DtoConstructor {
      */
     public MappingInfo getMappingInfo(final Class<?> dtoClass, final @Nullable Class<?> contextDtoClass) {
         final OrmTable ormTable;
+
         if (contextDtoClass != null) {
             ormTable = Objects.requireNonNullElseGet(tableRegistry.getOrmTableInContext(dtoClass, contextDtoClass), () -> tableRegistry.getOrmTableOrThrow(dtoClass));
         } else {
             ormTable = tableRegistry.getOrmTableOrThrow(dtoClass);
         }
+
         return getMappingInfo(ormTable);
     }
 
@@ -303,19 +309,34 @@ public final class DtoConstructor {
             throw new IllegalArgumentException("No suitable constructor found for DTO class: " + dtoClass);
         }
 
-        final MethodHandles.Lookup lookup = MethodHandles.lookup();
         try {
             if (defaultConstructor != null) {
-                defaultConstructor.setAccessible(true);
+                try {
+                    defaultConstructor.setAccessible(true);
+                } catch (final Exception ignored) {
+                    // Ignored in modular environments where lookup handles private access
+                }
+
+                defaultConstructorHandleCache.put(dtoClass, lookup.unreflectConstructor(defaultConstructor));
+            } else {
+                defaultConstructorHandleCache.put(dtoClass, NO_CONSTRUCTOR);
             }
+
             if (canonicalConstructor != null) {
-                canonicalConstructor.setAccessible(true);
+                try {
+                    canonicalConstructor.setAccessible(true);
+                } catch (final Exception ignored) {
+                    // Ignored in modular environments where lookup handles private access
+                }
+
+                canonicalConstructorHandleCache.put(dtoClass, lookup.unreflectConstructor(canonicalConstructor));
+            } else {
+                canonicalConstructorHandleCache.put(dtoClass, NO_CONSTRUCTOR);
             }
-            defaultConstructorHandleCache.put(dtoClass, defaultConstructor != null ? lookup.unreflectConstructor(defaultConstructor) : NO_CONSTRUCTOR);
-            canonicalConstructorHandleCache.put(dtoClass, canonicalConstructor != null ? lookup.unreflectConstructor(canonicalConstructor) : NO_CONSTRUCTOR);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException("Failed to unreflect constructor for DTO class: " + dtoClass, e);
+        } catch (final IllegalAccessException ex) {
+            throw new RuntimeException("Failed to unreflect constructor for DTO class: " + dtoClass, ex);
         }
+
         canonicalConstructorFieldAccessorCache.put(dtoClass, canonicalConstructorFieldAccessors != null ? canonicalConstructorFieldAccessors : Collections.emptyList());
 
         // Cache related DTO constructors

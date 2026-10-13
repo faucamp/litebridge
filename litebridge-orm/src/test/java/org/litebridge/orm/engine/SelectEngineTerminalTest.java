@@ -529,7 +529,7 @@ class SelectEngineTerminalTest {
         final TableRegistry tableRegistry = new TableRegistry();
         tableRegistry.addTable(UserDto.class, ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, lookup);
         final SelectEngineTerminal terminal = new SelectEngineTerminal(dtoConstructor);
         final LitebridgeContext context = mock(LitebridgeContext.class);
         final QueryPlanCache queryPlanCache = mock(QueryPlanCache.class);

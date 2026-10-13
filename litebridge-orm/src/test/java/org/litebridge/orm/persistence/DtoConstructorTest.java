@@ -1,8 +1,10 @@
 package org.litebridge.orm.persistence;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.tracking.ClassFieldAccessorCache;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -29,7 +31,7 @@ class DtoConstructorTest {
         final OrmTable ormTable = ormTable(DefaultConstructorDto.class);
         when(tableRegistry.getOrmTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.ConstructionResult<DefaultConstructorDto> result =
@@ -42,13 +44,34 @@ class DtoConstructorTest {
     }
 
     @Test
+    void newInstanceUsesElevatedLookupWhenRegistered() {
+        // Given
+        final TableRegistry tableRegistry = mock(TableRegistry.class);
+        final OrmTable ormTable = ormTable(DefaultConstructorDto.class);
+        final ClassFieldAccessorCache cache = new ClassFieldAccessorCache(MethodHandles.lookup());
+        cache.registerElevatedLookup(DefaultConstructorDto.class, MethodHandles.lookup());
+        when(ormTable.classFieldAccessorCache()).thenReturn(cache);
+        when(tableRegistry.getOrmTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
+
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
+
+        // When
+        final DtoConstructor.ConstructionResult<DefaultConstructorDto> result =
+                dtoConstructor.newInstance(DefaultConstructorDto.class, List.of());
+
+        // Then
+        assertTrue(result.defaultConstructorUsed());
+        assertEquals("default", result.dto().value);
+    }
+
+    @Test
     void newInstanceUsesCachedConstructorsAfterFirstLookup() {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final OrmTable ormTable = ormTable(DefaultConstructorDto.class);
         when(tableRegistry.getOrmTableOrThrow(DefaultConstructorDto.class)).thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         dtoConstructor.newInstance(DefaultConstructorDto.class, List.of());
@@ -69,7 +92,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.ConstructionResult<PojoCanonicalDto> result =
@@ -100,7 +123,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(PojoWithDependencyDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.ConstructionResult<PojoWithDependencyDto> result =
@@ -130,7 +153,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.ConstructionResult<RecordDto> result =
@@ -159,7 +182,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(ParentWithDefaultConstructorDto.class)).thenReturn(parentTable);
         when(tableRegistry.getOrmTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(relatedContextTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.ConstructionResult<ParentWithDefaultConstructorDto> result =
@@ -183,7 +206,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableInContext(DependencyDto.class, ParentWithDefaultConstructorDto.class)).thenReturn(null);
         when(tableRegistry.getOrmTableOrThrow(DependencyDto.class)).thenReturn(relatedGlobalTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         dtoConstructor.newInstance(ParentWithDefaultConstructorDto.class, List.of());
@@ -202,7 +225,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(NoSuitableConstructorDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final IllegalArgumentException exception = assertThrows(
@@ -225,7 +248,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(DuplicateTypePojoDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final IllegalStateException exception = assertThrows(
@@ -254,7 +277,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When / Then
         assertThrows(
@@ -280,7 +303,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When / Then
         assertThrows(
@@ -309,7 +332,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(RecordDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When / Then
         assertThrows(
@@ -337,7 +360,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When / Then
         assertThrows(
@@ -364,7 +387,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableOrThrow(PojoCanonicalDto.class))
                 .thenReturn(ormTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When / Then
         assertThrows(
@@ -385,7 +408,7 @@ class DtoConstructorTest {
         // Given
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         final OrmTable ormTable = ormTable(DefaultConstructorDto.class);
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(ormTable);
@@ -403,7 +426,7 @@ class DtoConstructorTest {
         final FieldAccessor name = field("name", String.class);
         final OrmTable ormTable = ormTable(RecordDto.class, id, name);
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(ormTable);
@@ -421,7 +444,7 @@ class DtoConstructorTest {
         final FieldAccessor name = field("name", String.class);
         final OrmTable ormTable = ormTable(PojoCanonicalDto.class, id, name);
         final TableRegistry tableRegistry = mock(TableRegistry.class);
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.MappingInfo mappingInfo = dtoConstructor.getMappingInfo(ormTable);
@@ -443,7 +466,7 @@ class DtoConstructorTest {
         when(tableRegistry.getOrmTableInContext(PojoCanonicalDto.class, ParentWithDefaultConstructorDto.class))
                 .thenReturn(contextualOrmTable);
 
-        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+        final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
 
         // When
         final DtoConstructor.MappingInfo mappingInfo =

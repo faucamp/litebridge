@@ -96,9 +96,9 @@ public class LitebridgeCore implements SelectApi {
     private final TransactionContext transactionContext;
     private final NativeSqlContext nativeSqlContext;
     private final ChangeTracker changeTracker;
-    private final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry);
+    private final DtoConstructor dtoConstructor;
     private final RegistrationEngine registrationEngine;
-    private final SelectEngine selectEngine = new SelectEngine(dtoConstructor);
+    private final SelectEngine selectEngine;
     private final InsertEngine insertEngine = new InsertEngine(tableRegistry);
     private final UpdateEngine updateEngine = new UpdateEngine();
     private final DeleteEngine deleteEngine = new DeleteEngine();
@@ -251,6 +251,8 @@ public class LitebridgeCore implements SelectApi {
         this.changeTracker = new ChangeTracker(lookup);
         this.tableMetaDataCache = new TableMetaDataCache(this.databaseProvider, transactionManager);
         final TableMapper tableMapper = new TableMapper(tableRegistry, changeTracker, tableMetaDataCache);
+        this.dtoConstructor = new DtoConstructor(tableRegistry, lookup);
+        this.selectEngine = new SelectEngine(dtoConstructor);
         this.registrationEngine = new RegistrationEngine(this.databaseProvider, tableRegistry, tableMapper, changeTracker, lookup);
         this.persistenceFacade = new PersistenceFacade(tableRegistry, this.databaseProvider, changeTracker, dtoConstructor, createLitebridgeContext(LitebridgeContext.Mode.DTO));
 
