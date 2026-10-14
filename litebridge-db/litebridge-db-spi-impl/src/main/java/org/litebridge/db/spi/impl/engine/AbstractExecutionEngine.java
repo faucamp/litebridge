@@ -101,15 +101,13 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
     }
 
     @Override
-    public BatchUpdateResult executeBatch(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
-        try (final PreparedStatement preparedStatement = prepareStatement(preparedSql, connectionProvider)) {
-            final UpdateMetaData updateMetaData = Objects.requireNonNull(preparedSql.updateMetaData());
-            final int bindValueColumns = updateMetaData.bindValueColumns();
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSqls, final ConnectionProvider connectionProvider) throws SQLException {
+        final PreparedSql first = preparedSqls.getFirst();
 
-            for (int i = 0; i < updateMetaData.rows(); i++) {
-                final int offset = i * bindValueColumns;
-                final List<BindValue> rowBindValues = preparedSql.bindValues().subList(offset, offset + bindValueColumns);
-                addPreparedStatementBindValues(preparedStatement, rowBindValues);
+        try (final PreparedStatement preparedStatement = prepareStatement(first, connectionProvider)) {
+
+            for (PreparedSql preparedSql : preparedSqls) {
+                addPreparedStatementBindValues(preparedStatement, preparedSql.bindValues());
                 preparedStatement.addBatch();
             }
 

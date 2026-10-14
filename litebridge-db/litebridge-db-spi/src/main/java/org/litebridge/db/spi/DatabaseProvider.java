@@ -60,13 +60,15 @@ public interface DatabaseProvider {
 
     /**
      * Execute a batch of modifying SQL operations in the database using the provided statement.
+     * <p>
+     * The statements must all have the same generated SQL.
      *
-     * @param preparedSql        the {@link PreparedSql} for the statement.
+     * @param preparedSqls       the list of {@link PreparedSql} statements to batch.
      * @param connectionProvider the {@link ConnectionProvider} used to get a database connection.
      * @return an {@link Result} containing e.g. the number of rows affected and any generated keys.
      * @throws SQLException if any SQL error occurs during the execution of the SELECT operation.
      */
-    BatchUpdateResult executeBatch(List<PreparedSql> preparedSql, ConnectionProvider connectionProvider) throws SQLException;
+    BatchUpdateResult executeBatch(List<PreparedSql> preparedSqls, ConnectionProvider connectionProvider) throws SQLException;
 
     /**
      * Executes a SELECT operation in the database using a pre-prepared {@link PreparedSql} object.

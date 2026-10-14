@@ -33,12 +33,14 @@ import java.util.List;
 public abstract class AbstractDatabaseProvider implements DatabaseProvider {
 
     protected final DatabaseProviderContext context;
+    protected final ExecutionEngine executionEngine;
 
     /**
      * Constructs a new {@code AbstractDatabaseProvider}.
      */
     protected AbstractDatabaseProvider(final DatabaseProviderContext context) {
         this.context = context;
+        this.executionEngine = context.executionEngine();
     }
 
     @Override
@@ -59,8 +61,6 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Result> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
-        final ExecutionEngine executionEngine = context.executionEngine();
-
         if (resultType == InsertResult.class) {
             return (T) executionEngine.executeInsert(preparedSql, connectionProvider);
         } else {
@@ -69,8 +69,8 @@ public abstract class AbstractDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) {
-        return null;
+    public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSqls, final ConnectionProvider connectionProvider) throws SQLException {
+        return executionEngine.executeBatch(preparedSqls, connectionProvider);
     }
 
     @Override

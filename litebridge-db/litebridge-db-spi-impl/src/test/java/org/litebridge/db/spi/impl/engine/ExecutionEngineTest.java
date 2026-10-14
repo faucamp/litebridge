@@ -13,8 +13,10 @@ import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.tx.ManagedConnection;
+import org.litebridge.db.spi.update.BatchUpdateResult;
 import org.litebridge.db.spi.update.InsertResult;
 import org.litebridge.db.spi.update.UpdateResult;
+import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -37,6 +39,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -194,7 +197,7 @@ class ExecutionEngineTest {
         verify(statement).setBoolean(7, true);
         verify(statement).setString(8, "text");
         verify(statement).setTimestamp(9, timestamp);
-        final var blobStream = org.mockito.ArgumentCaptor.forClass(java.io.InputStream.class);
+        final var blobStream = ArgumentCaptor.forClass(java.io.InputStream.class);
         verify(statement).setBinaryStream(eq(10), blobStream.capture());
         assertArrayEquals(blob, blobStream.getValue().readAllBytes());
         verify(statement).setBytes(11, bytes);
@@ -279,12 +282,12 @@ class ExecutionEngineTest {
                 new UpdateMetaData(false, null, null, 2, 1));
 
         // When
-        final org.litebridge.db.spi.update.BatchUpdateResult result = engine.executeBatch(preparedSql, provider(connection(statement)));
+        final BatchUpdateResult result = engine.executeBatch(List.of(preparedSql), provider(connection(statement)));
 
         // Then
         assertNotNull(result);
         assertArrayEquals(new int[]{1, 1}, result.rowsAffected());
-        verify(statement, org.mockito.Mockito.times(2)).addBatch();
+        verify(statement, times(1)).addBatch();
     }
 
     @Test

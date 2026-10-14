@@ -3,6 +3,7 @@ package org.litebridge.orm.e2e.sql;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
+import org.litebridge.db.spi.update.BatchUpdateResult;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.e2e.AbstractE2eTest;
 import org.litebridge.orm.e2e.basic.dto.Person;
@@ -13,12 +14,12 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -638,42 +639,93 @@ class SqlE2eTest extends AbstractE2eTest {
         final String surnameColumn = tableMapper.transformColumnName("SURNAME");
 
         // Insert data using native SQL
-        final UpdateResult updateResult = litebridge.nativeSql().execute(
-                "INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?)".formatted(tableName, personIdColumn, firstNameColumn, surnameColumn),
-                123L, "Name1", "Surname1");
+        {
+            final UpdateResult result = litebridge.nativeSql().execute(
+                    "INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?)".formatted(tableName, personIdColumn, firstNameColumn, surnameColumn),
+                    123L, "Name1", "Surname1");
 
-        assertEquals(1, updateResult.rowsAffected());
+            assertEquals(1, result.rowsAffected());
+        }
 
         // Query using a native SQL query, positional bind parameters
-        final List<Row> rows = litebridge.nativeSql().query(
-                "SELECT * FROM %s WHERE %s LIKE ?".formatted(tableName, firstNameColumn),
-                "%me1");
+        {
+            final List<Row> result = litebridge.nativeSql().query(
+                    "SELECT * FROM %s WHERE %s LIKE ?".formatted(tableName, firstNameColumn),
+                    "%me1");
 
-        assertEquals(1, rows.size());
+            assertEquals(1, result.size());
+        }
 
         // Query using a native SQL query, named bind parameters
-        final List<Row> rows2 = litebridge.nativeSql().query(
-                "SELECT * FROM %s WHERE %s LIKE :firstName AND %s = :surname AND %s <> :firstName".formatted(tableName, firstNameColumn, surnameColumn, surnameColumn),
-                Map.of("firstName", "%me1",
-                        "surname", "Surname1"));
+        {
+            final List<Row> result = litebridge.nativeSql().query(
+                    "SELECT * FROM %s WHERE %s LIKE :firstName AND %s = :surname AND %s <> :firstName".formatted(tableName, firstNameColumn, surnameColumn, surnameColumn),
+                    Map.of("firstName", "%me1",
+                            "surname", "Surname1"));
 
-        assertEquals(1, rows2.size());
+            assertEquals(1, result.size());
+        }
 
         // Query without bind parameters
-        final List<Row> rows3 = litebridge.nativeSql().query("SELECT COUNT(*) FROM %s".formatted(tableName));
-        assertEquals(1, rows3.size());
+        {
+            final List<Row> result = litebridge.nativeSql().query("SELECT COUNT(*) FROM %s".formatted(tableName));
+            assertEquals(1, result.size());
+        }
 
         // Native query and map result back to a DTO
-        tableMapper.registerPersonDtoTableMapping(litebridge);
+        {
+            tableMapper.registerPersonDtoTableMapping(litebridge);
 
-        final Person person = litebridge.nativeSql().query(
-                        "SELECT * FROM %s WHERE %s = ?".formatted(tableName, personIdColumn),
-                        123L)
-                .stream()
-                .map(row -> litebridge.toDto(row, Person.class))
-                .findFirst().orElseThrow();
+            final Person person = litebridge.nativeSql().query(
+                            "SELECT * FROM %s WHERE %s = ?".formatted(tableName, personIdColumn),
+                            123L)
+                    .stream()
+                    .map(row -> litebridge.toDto(row, Person.class))
+                    .findFirst().orElseThrow();
 
-        assertEquals("Name1", person.getName());
+            assertEquals("Name1", person.getName());
+        }
+
+        // Batch inserts
+        {
+            final String insertSql = "INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?)".formatted(tableName, personIdColumn, firstNameColumn, surnameColumn);
+
+            final List<List<Object>> rows = new ArrayList<>();
+
+            for (int i = 0; i < 10; i++) {
+                final List<Object> row = List.of(500 + i, "Name" + i, "Surname" + i);
+                rows.add(row);
+            }
+
+            final BatchUpdateResult batchUpdateResult = litebridge.nativeSql().executeBatch(insertSql, rows);
+            assertEquals(10, batchUpdateResult.rowsAffected().length);
+
+            for (int insertRowsAffect : batchUpdateResult.rowsAffected()) {
+                assertEquals(1, insertRowsAffect);
+            }
+        }
+
+        // Batch inserts, named parameters
+        {
+            final String insertSql = "INSERT INTO %s (%s, %s, %s) VALUES (:id, :name, :surname)".formatted(tableName, personIdColumn, firstNameColumn, surnameColumn);
+
+            final List<Map<String, Object>> rows = new ArrayList<>();
+
+            for (int i = 0; i < 10; i++) {
+                final Map<String, Object> row = Map.of(
+                        "id", 600 + i,
+                        "name", "Name" + i,
+                        "surname", "Surname" + i);
+                rows.add(row);
+            }
+
+            final BatchUpdateResult batchUpdateResult = litebridge.nativeSql().executeNamedBatch(insertSql, rows);
+            assertEquals(10, batchUpdateResult.rowsAffected().length);
+
+            for (int insertRowsAffect : batchUpdateResult.rowsAffected()) {
+                assertEquals(1, insertRowsAffect);
+            }
+        }
     }
 
     @TestTemplate
