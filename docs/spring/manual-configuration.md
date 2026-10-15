@@ -13,20 +13,20 @@ Add `litebridge-spring` (for Spring Framework 7 / Spring Boot 4) or `litebridge-
 <dependency>
     <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 
 <!-- OR for Spring Framework 6 / Spring Boot 3 -->
 <dependency>
     <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring6</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 
 <dependency>
     <groupId>org.litebridgedb.db</groupId>
     <artifactId>litebridge-db-h2</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 

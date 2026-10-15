@@ -14,7 +14,7 @@ Add the corresponding starter dependency to the `pom.xml`:
 <dependency>
     <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
@@ -24,7 +24,7 @@ Add the corresponding starter dependency to the `pom.xml`:
 <dependency>
     <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring-boot3-starter</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
