@@ -5,19 +5,10 @@ import org.jspecify.annotations.NullMarked;
  */
 @NullMarked
 module litebridge.spring {
-    requires java.sql;
     requires org.jspecify;
-    requires org.slf4j;
-    requires spring.jdbc;
-    requires spring.tx;
-    requires spring.context;
-    requires spring.core;
-    requires spring.beans;
     requires spring.data.commons;
 
     requires transitive litebridge.spring.common;
-    requires litebridge.annotations;
-    requires litebridge.db.spi;
     requires litebridge.orm;
 
     exports org.litebridge.spring.impl;

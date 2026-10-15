@@ -47,7 +47,7 @@ public class LitebridgeFactoryBean implements FactoryBean<Litebridge> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Litebridge getObject() throws Exception {
+    public Litebridge getObject() {
         LOGGER.trace("Creating Litebridge instance with database provider: {}, transaction manager: {}", databaseProvider.getClass().getName(), transactionManager.getClass().getName());
         final LitebridgeConfig litebridgeConfig = new LitebridgeConfig(properties.getRelatedDtoStrategy());
 

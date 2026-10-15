@@ -6,7 +6,6 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 module litebridge.spring.common {
     requires java.sql;
-    requires litebridge.db.spi;
     requires org.jspecify;
     requires org.slf4j;
     requires spring.jdbc;
@@ -15,7 +14,9 @@ module litebridge.spring.common {
     requires spring.core;
     requires spring.beans;
     requires spring.data.commons;
+
     requires litebridge.annotations;
+    requires litebridge.db.spi;
     requires litebridge.orm;
     requires litebridge.commons;
 

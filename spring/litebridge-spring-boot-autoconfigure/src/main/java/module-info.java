@@ -6,9 +6,8 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 module litebridge.spring.boot.autoconfigure {
     requires java.sql;
-    requires litebridge.orm;
-    requires litebridge.spring;
-    requires litebridge.db.spi;
+    requires org.jspecify;
+    requires org.slf4j;
     requires spring.beans;
     requires spring.context;
     requires spring.core;
@@ -17,9 +16,11 @@ module litebridge.spring.boot.autoconfigure {
     requires spring.boot.autoconfigure;
     requires spring.boot.sql;
     requires spring.data.commons;
-    requires org.jspecify;
-    requires org.slf4j;
+
     requires litebridge.commons;
+    requires litebridge.db.spi;
+    requires litebridge.orm;
+    requires litebridge.spring;
 
     opens org.litebridge.spring.boot.autoconfigure to spring.core, spring.beans, spring.context;
     exports org.litebridge.spring.boot.autoconfigure;

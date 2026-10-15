@@ -15,10 +15,9 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 module litebridge.orm.support {
     requires io.github.classgraph;
-    requires litebridge.annotations;
-    requires litebridge.commons;
-    requires litebridge.orm;
     requires org.jspecify;
+    requires litebridge.annotations;
+    requires litebridge.orm;
 
     exports org.litebridge.orm.support;
 }
