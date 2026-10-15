@@ -73,7 +73,7 @@
 
         <!-- Library versions -->
         <classgraph.version>4.8.196</classgraph.version>
-        <flyway.version>13.9.0</flyway.version>
+        <flyway.version>13.10.0</flyway.version>
         <h2.version>2.5.252</h2.version>
         <jackson-annotations.version>2.22</jackson-annotations.version>
         <jspecify.version>1.0.1</jspecify.version>
