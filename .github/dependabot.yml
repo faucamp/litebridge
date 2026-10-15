@@ -4,6 +4,8 @@ updates:
     directory: "/"
     exclude-paths:
       - "example" # Ignore example projects
+      - "litebridge-spring-boot3-starter" # Spring Boot 3 compatibility
+      - "litebridge-spring6" # Spring Framework 6 compatibility
     schedule:
       interval: "weekly"
     ignore:
