@@ -47,6 +47,7 @@ sealed class InsertBuilder extends AbstractStatementBuilder permits MergeBuilder
 
     @Override
     public PreparedOperation build() {
+        litebridgeContext.aliasGenerator().clear();
         return litebridgeContext.createQueryCompiler().compile(node());
     }
 

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.RowColumn;
-import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.sql.PreparedSql;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.Litebridge;
@@ -21,7 +20,6 @@ import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.expression.Fn;
 import org.litebridge.orm.persistence.DtoEntityMapping;
-import org.litebridge.orm.persistence.DtoMapper;
 import org.litebridge.orm.persistence.EntityDtoMapper;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.tx.Transaction;
@@ -714,6 +712,32 @@ public class BasicE2eTest extends AbstractE2eTest {
             final Person resultPerson = litebridge.select(PersonMeta.name).from(Person.class).where(PersonMeta.id).eq(1).oneOrThrow();
             assertEquals("James", resultPerson.getName());
         }
+    }
+
+    @TestTemplate
+    @DisplayName("Insert DTOs in batch/multi-row")
+    void insert_batch(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        // Given
+        tableMapper.registerPersonAndAccountDtoTableMappings(litebridge);
+
+        final Person[] persons = new Person[50];
+
+        for (int i = 0; i < persons.length; i++) {
+            final long id = 1L + i;
+            final Person person = new Person();
+            person.setId(id);
+            person.setName("Name" + id);
+            person.setSurname("Surname" + id);
+            person.setAge(15 + i);
+            persons[i] = person;
+        }
+
+        // Since these inserts all have a similar structure, the inserts should be converted
+        // to a multi-row insert, or batched inserts if multi-row inserts are not supported by the database
+        litebridge.saveAll(persons);
+
+        final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        assertEquals(1, queryPlanCache.size());
     }
 
     @TestTemplate

@@ -8,6 +8,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertValuesNode;
 import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -29,6 +30,7 @@ class InsertBuilderTest {
         when(metaData.table()).thenReturn(new Table("TEST_TABLE"));
         when(metaData.primaryKey()).thenReturn(Collections.emptyList());
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        when(litebridgeContext.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
         when(queryCompiler.compile(any(QueryNode.class))).thenReturn(mock(PreparedOperation.class));

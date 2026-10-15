@@ -7,7 +7,7 @@ import org.litebridge.db.spi.Table;
 /**
  * Interface for generating aliases for tables and columns.
  */
-public sealed interface AliasGenerator permits DefaultAliasGenerator, NoOpAliasGenerator {
+public interface AliasGenerator {
 
     @Nullable String columnAlias(Column column);
 
@@ -24,4 +24,9 @@ public sealed interface AliasGenerator permits DefaultAliasGenerator, NoOpAliasG
     void pushScope();
 
     void popScope();
+
+    /**
+     * Clears internal alias maps and usage counts.
+     */
+    void clear();
 }

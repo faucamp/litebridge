@@ -49,4 +49,9 @@ public final class NoOpAliasGenerator implements AliasGenerator {
     public void popScope() {
         /* Ignored */
     }
+
+    @Override
+    public void clear() {
+        /* Ignored */
+    }
 }

@@ -2,8 +2,8 @@ package org.litebridge.orm.persistence;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.PreparedOperation;
-import org.litebridge.orm.engine.ast.DeleteNode;
 import org.litebridge.orm.engine.LitebridgeContext;
+import org.litebridge.orm.engine.ast.DeleteNode;
 
 import java.util.Objects;
 
@@ -35,6 +35,7 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
 
     @Override
     public PreparedOperation build() {
+        litebridgeContext.aliasGenerator().clear();
         return litebridgeContext.createQueryCompiler().compile(Objects.requireNonNull(node));
     }
 }

@@ -89,6 +89,13 @@ public final class DefaultAliasGenerator implements AliasGenerator {
         scope.pop();
     }
 
+    @Override
+    public void clear() {
+        aliasMap.clear();
+        aliasCount.clear();
+        scope.clear();
+    }
+
     /**
      * @param tableAliasMap  Tables that have been aliased for the current operation; the value is the alias.
      * @param columnAliasMap Columns that have been aliased for the current operation; the value is the alias.

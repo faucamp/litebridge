@@ -16,6 +16,7 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 import org.litebridge.tracking.ChangeTracker;
 import org.litebridge.tracking.ClassFieldAccessorCache;
 
@@ -53,6 +54,7 @@ class UpdateBuilderTest {
         // Given
         final OrmTable ormTable = ormTable();
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
+        when(litebridgeContext.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
         when(queryCompiler.compile(any(QueryNode.class))).thenReturn(mock(PreparedOperation.class));

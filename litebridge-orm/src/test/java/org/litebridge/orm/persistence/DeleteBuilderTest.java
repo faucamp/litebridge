@@ -12,6 +12,7 @@ import org.litebridge.orm.engine.ast.QueryNode;
 import org.litebridge.orm.engine.ast.WhereNode;
 import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.compiler.QueryCompiler;
+import org.litebridge.orm.persistence.alias.DefaultAliasGenerator;
 
 import java.util.Collections;
 
@@ -35,6 +36,7 @@ class DeleteBuilderTest {
         final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final QueryCompiler queryCompiler = mock(QueryCompiler.class);
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
+        when(litebridgeContext.aliasGenerator()).thenReturn(new DefaultAliasGenerator());
 
         final PreparedOperation preparedOperation = mock(PreparedOperation.class);
         final Delete deleteOp = new Delete(tableMetaData.table(), null);

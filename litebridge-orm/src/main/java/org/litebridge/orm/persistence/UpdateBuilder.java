@@ -49,6 +49,7 @@ final class UpdateBuilder extends AbstractConditionalStatementBuilder {
 
     @Override
     public PreparedOperation build() {
+        litebridgeContext.aliasGenerator().clear();
         return litebridgeContext.createQueryCompiler().compile(Objects.requireNonNull(node));
     }
 }

@@ -5,6 +5,7 @@
 ### Fixed
 - ORM:
     - Fix `ValueSpec.hashCode()`, which caused `MERGE INTO` using `VALUES` operations to not be properly cached.
+    - Fix alias over-generation when using `Litebridge.saveAll()`
 
 ## [0.5.0] - 2026-10-15
 

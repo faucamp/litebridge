@@ -114,8 +114,12 @@ public class PersistenceFacade {
      * @throws SQLException if a database access error occurs during any of the save operations.
      */
     public <DTO> void save(final Iterable<DTO> dtos) throws SQLException {
+        final TableProvider tableProvider = new TableProvider(tableRegistry);
+        final Set<Object> inProgressDtos = new HashSet<>();
+
         for (DTO dto : dtos) {
-            save(dto);
+            final StatementBuilder statementBuilder = createStatementBuilder(dto, inProgressDtos, tableProvider);
+            save(dto, statementBuilder, tableProvider);
         }
     }
 
@@ -130,9 +134,13 @@ public class PersistenceFacade {
      * @param <DTO> the type of the DTO
      * @throws SQLException if a database access error occurs during the save operation.
      */
-    public <DTO> void save(DTO dto) throws SQLException {
+    public <DTO> void save(final DTO dto) throws SQLException {
         final TableProvider tableProvider = new TableProvider(tableRegistry);
         final StatementBuilder statementBuilder = createStatementBuilder(dto, new HashSet<>(), tableProvider);
+        save(dto, statementBuilder, tableProvider);
+    }
+
+    private <DTO> void save(final DTO dto, final StatementBuilder statementBuilder, final TableProvider tableProvider) throws SQLException {
         final CompositeUpdateResult compositeUpdateResult = new CompositeUpdateResult();
         executeUpdateStatement(dto, null, statementBuilder, compositeUpdateResult);
 
