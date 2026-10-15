@@ -18,7 +18,7 @@ To use Litebridge, add the `litebridge-orm` dependency to the `pom.xml`:
 <dependency>
     <groupId>org.litebridge</groupId>
     <artifactId>litebridge-orm</artifactId>
-    <version>0.4.0</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ Example for H2:
 <dependency>
     <groupId>org.litebridge.db</groupId>
     <artifactId>litebridge-db-h2</artifactId>
-    <version>0.4.0</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
@@ -55,7 +55,7 @@ The Litebridge Maven Plugin can automate the creation of entity classes from an 
 <plugin>
     <groupId>org.litebridge.maven</groupId>
     <artifactId>litebridge-maven-plugin</artifactId>
-    <version>0.4.0</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </plugin>
 ```
 
@@ -75,7 +75,7 @@ For **Spring Boot 4 / Spring Framework 7**:
 <dependency>
     <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring-boot-starter</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
@@ -85,7 +85,7 @@ For **Spring Boot 3 / Spring Framework 6**:
 <dependency>
     <groupId>org.litebridgedb.spring</groupId>
     <artifactId>litebridge-spring-boot3-starter</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Replace with latest version -->
+    <version>0.5.0</version> <!-- Replace with latest version -->
 </dependency>
 ```
 
