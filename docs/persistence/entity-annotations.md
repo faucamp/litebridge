@@ -15,7 +15,7 @@ To use Litebridge annotations, the `litebridge-annotations` module must be inclu
 <dependency>
     <groupId>org.litebridge</groupId>
     <artifactId>litebridge-annotations</artifactId>
-    <version>${litebridge.version}</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 
@@ -95,7 +95,7 @@ Include the `litebridge-orm-support` module:
 <dependency>
     <groupId>org.litebridge</groupId>
     <artifactId>litebridge-orm-support</artifactId>
-    <version>${litebridge.version}</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 
@@ -213,7 +213,7 @@ To use the registration support, include the `litebridge-orm-support` module:
 <dependency>
     <groupId>org.litebridge</groupId>
     <artifactId>litebridge-orm-support</artifactId>
-    <version>${litebridge.version}</version>
+    <version>0.5.0</version>
 </dependency>
 ```
 
