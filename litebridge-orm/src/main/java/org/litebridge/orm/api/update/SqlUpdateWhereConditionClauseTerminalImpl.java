@@ -50,7 +50,7 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
     }
 
     @Override
-    public SqlUpdateWhereConditionClauseTerminal and(final SqlQueryConditionBuilder query) {
+    public SqlUpdateWhereConditionClauseTerminal and(final SqlQueryConditionBuilder<Row> query) {
         return whereImpl(LogicOperator.AND, query);
     }
 
@@ -65,7 +65,7 @@ public final class SqlUpdateWhereConditionClauseTerminalImpl implements SqlUpdat
     }
 
     @Override
-    public SqlUpdateWhereConditionClauseTerminal or(final SqlQueryConditionBuilder query) {
+    public SqlUpdateWhereConditionClauseTerminal or(final SqlQueryConditionBuilder<Row> query) {
         return whereImpl(LogicOperator.OR, query);
     }
 

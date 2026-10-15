@@ -1,5 +1,6 @@
 package org.litebridge.orm.api.select;
 
+import org.litebridge.db.spi.Row;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.config.RelatedDtoStrategy;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -58,7 +59,7 @@ public final class SelectApiImpl implements SelectApi {
     }
 
     @Override
-    public FromClauseStart select(final String... fieldsOrColumns) {
+    public FromClauseStart<Row> select(final String... fieldsOrColumns) {
         return selectEngine.select(fieldsOrColumns, mode -> litebridgeContext);
     }
 
@@ -73,7 +74,7 @@ public final class SelectApiImpl implements SelectApi {
     }
 
     @Override
-    public FromClauseStart select(final ExpressionSpec... expressions) {
+    public FromClauseStart<Row> select(final ExpressionSpec... expressions) {
         return selectEngine.select(expressions, mode -> litebridgeContext);
     }
 
@@ -83,7 +84,7 @@ public final class SelectApiImpl implements SelectApi {
     }
 
     @Override
-    public FromClauseStart select() {
+    public FromClauseStart<Row> select() {
         return selectEngine.select(mode -> litebridgeContext);
     }
 }

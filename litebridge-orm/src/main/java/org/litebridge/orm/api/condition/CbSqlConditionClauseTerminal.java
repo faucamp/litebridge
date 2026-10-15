@@ -33,20 +33,20 @@ public final class CbSqlConditionClauseTerminal<ReturnType>
     }
 
     @Override
-    protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final String column) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, column, null, node);
+    protected CbSqlConditionClause<ReturnType> whereImpl(final LogicOperator logicOperator, final String column) {
+        return new CbSqlConditionClause<>(selectNode, litebridgeContext, logicOperator, column, null, node);
     }
 
     @Override
-    protected CbSqlConditionClause whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
-        return new CbSqlConditionClause(selectNode, litebridgeContext, logicOperator, null, expression, node);
+    protected CbSqlConditionClause<ReturnType> whereImpl(final LogicOperator logicOperator, final ExpressionSpec expression) {
+        return new CbSqlConditionClause<>(selectNode, litebridgeContext, logicOperator, null, expression, node);
     }
 
     @Override
     protected CbSqlConditionClauseTerminal<ReturnType> whereImpl(final LogicOperator logicOperator, final SqlQueryConditionBuilder<ReturnType> query) {
         final SqlConditionClauseStart<ReturnType> conditionClauseStart = new SqlConditionClauseStart<>(selectNode, null, litebridgeContext);
         final CbSqlConditionClauseTerminal<ReturnType> terminal = query.apply(conditionClauseStart);
-        return new CbSqlConditionClauseTerminal(selectNode,
+        return new CbSqlConditionClauseTerminal<>(selectNode,
                 new ConditionGroupNode(node, logicOperator, terminal.node()),
                 litebridgeContext);
     }

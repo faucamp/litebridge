@@ -44,6 +44,7 @@ public final class DtoInspector {
         return ormTable.dtoPkClass();
     }
 
+    @SuppressWarnings("unchecked")
     public <PkType> @Nullable PkType getPrimaryKey(final Object dto) {
         final OrmTable ormTable = tableRegistry.getOrmTableOrThrow(dto.getClass());
         final List<FieldAccessor> primaryKeyFields = ormTable.primaryKeyFields();

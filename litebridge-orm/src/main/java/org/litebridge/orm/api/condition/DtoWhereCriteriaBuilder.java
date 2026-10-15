@@ -116,6 +116,7 @@ public class DtoWhereCriteriaBuilder<DTO> {
      *
      * @return new {@link DtoWhereConditionClauseTerminal} instance, or the original {@code select} if no conditions were added.
      */
+    @SuppressWarnings("unchecked")
     public OrderByClauseTerminal<DTO> build() {
         if (node == null) {
             return (OrderByClauseTerminal<DTO>) select;

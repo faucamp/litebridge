@@ -39,7 +39,7 @@ public class CbSqlConditionClause<ReturnType>
     }
 
     @Override
-    protected CbSqlConditionClauseTerminal createCbConditionClauseTerminal(final QueryNode conditionNode) {
-        return new CbSqlConditionClauseTerminal(selectNode, conditionNode, litebridgeContext);
+    protected CbSqlConditionClauseTerminal<ReturnType> createCbConditionClauseTerminal(final QueryNode conditionNode) {
+        return new CbSqlConditionClauseTerminal<>(selectNode, conditionNode, litebridgeContext);
     }
 }

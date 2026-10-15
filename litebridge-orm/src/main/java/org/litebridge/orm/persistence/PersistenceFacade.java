@@ -272,6 +272,7 @@ public class PersistenceFacade {
         return deleteBuilder;
     }
 
+    @SuppressWarnings("unchecked")
     private <DTO> @Nullable StatementChain prepareUpdateStatement(final DTO dto,
                                                                   final OrmTable ormTable,
                                                                   final AbstractStatementBuilder statementBuilder,
