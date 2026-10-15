@@ -1,4 +1,4 @@
-package org.litebridge.db.spi.impl.function;
+package org.litebridge.db.spi.impl.expression;
 
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.expression.SubselectExpression;

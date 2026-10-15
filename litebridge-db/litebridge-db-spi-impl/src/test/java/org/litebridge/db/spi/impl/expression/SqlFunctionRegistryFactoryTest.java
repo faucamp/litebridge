@@ -19,7 +19,6 @@ import org.litebridge.db.spi.impl.expression.function.scalar.Abs;
 import org.litebridge.db.spi.impl.expression.function.scalar.Lower;
 import org.litebridge.db.spi.impl.expression.function.scalar.Substring;
 import org.litebridge.db.spi.impl.expression.function.scalar.Upper;
-import org.litebridge.db.spi.impl.function.Subselect;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.SelectSqlGenerator;
 import org.litebridge.db.spi.query.Select;
