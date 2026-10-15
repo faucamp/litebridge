@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ColumnTest {
@@ -183,16 +182,5 @@ class ColumnTest {
 
         // Then
         assertEquals("testName", result);
-    }
-
-    @Test
-    @SuppressWarnings("removal")
-    void equalsColumnOnlyIgnoreAlias_throwsException() {
-        // Given
-        final Column column1 = new Column(table, "testName");
-        final Column column2 = new Column(table, "testName");
-
-        // When & Then
-        assertThrows(UnsupportedOperationException.class, () -> column1.equalsColumnOnlyIgnoreAlias(column2));
     }
 }

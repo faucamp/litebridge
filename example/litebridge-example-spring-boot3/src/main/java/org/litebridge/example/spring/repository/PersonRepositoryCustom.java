@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface PersonRepositoryCustom {
 
-    public List<Person> getPersonsInAgeRage(final int age);
+    List<Person> getPersonsInAgeRage(final int age);
 }

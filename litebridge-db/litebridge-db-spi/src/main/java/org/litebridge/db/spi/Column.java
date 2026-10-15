@@ -52,18 +52,6 @@ public record Column(String name, Table table) {
         }
     }
 
-    /**
-     * Compares this column with another column, ignoring the alias and the table.
-     * Only the column name is compared.
-     *
-     * @param column the column to compare with
-     * @return {@code true} if the column names are equal; {@code false} otherwise
-     */
-    @Deprecated(forRemoval = true)
-    public boolean equalsColumnOnlyIgnoreAlias(final Column column) {
-        throw new UnsupportedOperationException("Deprecated");
-    }
-
     @Override
     public String toString() {
         return new StringJoiner(", ", Column.class.getSimpleName() + "[", "]")

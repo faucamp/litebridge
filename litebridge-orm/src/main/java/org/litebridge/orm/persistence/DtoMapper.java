@@ -1131,7 +1131,7 @@ public class DtoMapper {
         return dto;
     }
 
-    record MappingPlan(Map<String, MappingData> mappingDataMap, @Nullable MappingData rootMappingData) {
+    public record MappingPlan(Map<String, MappingData> mappingDataMap, @Nullable MappingData rootMappingData) {
     }
 
     static final class DtoData {

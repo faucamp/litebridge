@@ -54,9 +54,9 @@ public final class SqlMergeOnStep extends MergeOnStep<Row,
      * @param mergeNode         the root merge node
      * @param litebridgeContext the Litebridge context
      */
-    protected SqlMergeOnStep(final ValuesSpec valuesSpec,
-                             final MergeNode mergeNode,
-                             final LitebridgeContext litebridgeContext) {
+    SqlMergeOnStep(final ValuesSpec valuesSpec,
+                   final MergeNode mergeNode,
+                   final LitebridgeContext litebridgeContext) {
         super(valuesSpec, mergeNode, litebridgeContext);
     }
 

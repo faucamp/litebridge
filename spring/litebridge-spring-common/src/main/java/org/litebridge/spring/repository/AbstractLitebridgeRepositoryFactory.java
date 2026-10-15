@@ -26,7 +26,7 @@ public abstract class AbstractLitebridgeRepositoryFactory extends RepositoryFact
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     public <T, ID> EntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
         return new AbstractEntityInformation<>(domainClass) {
             @Override
