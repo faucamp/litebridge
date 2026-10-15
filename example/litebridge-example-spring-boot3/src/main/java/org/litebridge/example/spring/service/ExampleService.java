@@ -97,4 +97,8 @@ public class ExampleService {
         person.setAge(age);
         return personRepository.save(person);
     }
+
+    public int updatePersonAgeNativeSql(final Long personId, final int age) {
+        return personRepository.updatePersonAge(personId, age);
+    }
 }

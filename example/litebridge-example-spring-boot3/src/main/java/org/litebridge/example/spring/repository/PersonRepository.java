@@ -75,4 +75,11 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
      */
     @Query("SELECT AVG(AGE) FROM LB.PERSON p")
     double getAverageAgeNativeQuery();
+
+    /**
+     * Modifying native SQL query with projected return type.
+     * Returns the number of rows affected by the update.
+     */
+    @Query(value = "UPDATE LB.PERSON SET AGE = :age WHERE PERSON_ID = :id", modifying = true)
+    int updatePersonAge(final Long id, final int age);
 }

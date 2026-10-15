@@ -12,7 +12,6 @@ import org.litebridge.orm.annotation.Table;
 import org.litebridge.spring.annotation.Query;
 import org.litebridge.spring.impl.LitebridgeRepositoryFactory;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -235,8 +233,7 @@ class LitebridgeStringQueryTest {
 
         // Then
         assertNotNull(result);
-        assertTrue(result instanceof UpdateResult);
-        assertEquals(1, ((UpdateResult) result).rowsAffected());
+        assertEquals(1, result);
 
         final LitebridgeStringQuery verifyQuery = createQuery("findByIdNamed", Long.class);
         final Person updated = (Person) verifyQuery.execute(new Object[]{2L});

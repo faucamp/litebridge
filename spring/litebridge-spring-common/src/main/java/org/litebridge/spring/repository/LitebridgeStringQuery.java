@@ -4,6 +4,7 @@ import org.jspecify.annotations.Nullable;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.LitebridgeCore;
 import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.nativesql.ParsedSql;
@@ -52,7 +53,8 @@ public class LitebridgeStringQuery implements RepositoryQuery {
             final Map<String, @Nullable Object> namedParametersMap = createNamedParametersMap(parameters);
 
             if (isModifying) {
-                return litebridge.nativeSql().execute(sql, namedParametersMap);
+                final UpdateResult updateResult = litebridge.nativeSql().execute(sql, namedParametersMap);
+                return updateResult.rowsAffected();
             }
 
             rows = litebridge.nativeSql().query(sql, namedParametersMap);

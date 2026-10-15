@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 class PersonControllerTest {
@@ -126,5 +127,39 @@ class PersonControllerTest {
 
         // Then
         assertThat(avgAge).isGreaterThan(0.0);
+    }
+
+    @Test
+    void updatePersonAge() {
+        // Given
+        final Person person = new Person();
+        person.setName("Edward");
+        person.setSurname("Norton");
+        person.setAge(50);
+        person.setEyeColour("Blue");
+        personRepository.save(person);
+
+        // When
+        final Person result = personController.updatePersonAge(person.getId(), 55);
+
+        // Then
+        assertEquals(55, result.getAge());
+    }
+
+    @Test
+    void updatePersonAgeNativeSql() {
+        // Given
+        final Person person = new Person();
+        person.setName("Edward");
+        person.setSurname("Norton");
+        person.setAge(50);
+        person.setEyeColour("Blue");
+        personRepository.save(person);
+
+        // When
+        final int result = personController.updatePersonAgeNativeSql(person.getId(), 55);
+
+        // Then
+        assertEquals(1, result);
     }
 }

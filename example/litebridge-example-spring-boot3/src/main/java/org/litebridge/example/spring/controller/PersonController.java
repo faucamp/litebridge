@@ -61,6 +61,12 @@ public class PersonController {
         return exampleService.updatePersonAge(personId, age);
     }
 
+    @PostMapping("/{personId}/age/{age}/native-sql")
+    @Operation(summary = "Update the age of a person by ID using a native SQL statement")
+    public int updatePersonAgeNativeSql(@Parameter(description = "Person ID") @PathVariable final Long personId, @Parameter(description = "Age to set") @PathVariable final int age) {
+        return exampleService.updatePersonAgeNativeSql(personId, age);
+    }
+
     @GetMapping
     @Operation(summary = "Get all Person records")
     public List<Person> getAllPersons() {

@@ -240,8 +240,8 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
     double getAverageAge();
 
     // Modifying query (INSERT, UPDATE, DELETE)
-    @Query(value = "UPDATE PERSON SET AGE = :age WHERE ID = :id", modifying = true)
-    int updatePersonAge(@Param("id") Long id, @Param("age") int age);
+    @Query(value = "UPDATE LB.PERSON SET AGE = :age WHERE PERSON_ID = :id", modifying = true)
+    int updatePersonAge(Long id, int age);
 }`
     },
     {
