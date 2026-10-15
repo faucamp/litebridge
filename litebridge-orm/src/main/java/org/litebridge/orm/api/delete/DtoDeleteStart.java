@@ -78,6 +78,7 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
             conditionWithIdNode = new ConditionWithIdNode(conditionWithIdNode, LogicOperator.NOOP, Operator.EQ, id);
         }
 
+        //noinspection DataFlowIssue
         final WhereNode whereNode = new WhereNode(deleteNode, conditionWithIdNode);
         return new DtoDeleteWhereConditionClauseTerminalImpl<>(whereNode, litebridgeContext);
     }

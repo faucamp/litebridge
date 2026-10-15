@@ -1,7 +1,5 @@
 package org.litebridge.orm.api.register;
 
-import org.litebridge.orm.api.spec.ColumnMapping;
-import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;
 import org.litebridge.orm.api.spec.FieldSpec;
 import org.litebridge.orm.api.spec.ManyToMany;

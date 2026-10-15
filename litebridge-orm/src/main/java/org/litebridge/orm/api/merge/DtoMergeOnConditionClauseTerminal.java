@@ -10,7 +10,6 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.ConditionGroupNode;
 import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.QueryNode;
-import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.ValuesSpec;
 
 public final class DtoMergeOnConditionClauseTerminal<DTO>

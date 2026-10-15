@@ -294,6 +294,7 @@ public class SelectEngineTerminal {
             final List<DTO> convertedResults = new ArrayList<>(rows.size());
 
             for (Row row : rows) {
+                //noinspection DataFlowIssue
                 convertedResults.add((DTO) unwrap(resultTypes[0], row.column(0), litebridgeContext.typeConverter()));
             }
 

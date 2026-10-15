@@ -115,7 +115,7 @@ public abstract sealed class MergeOnStep<DTO,
      */
     public abstract MCCT on(final QCB query);
 
-    protected abstract MCCT createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final String alias);
+    protected abstract MCCT createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final @Nullable String alias);
 
     private MergeConditionClause<DTO, MUS, MCCT, QCB> onImpl(final @Nullable String column, final @Nullable ExpressionSpec expression) {
         final String alias;

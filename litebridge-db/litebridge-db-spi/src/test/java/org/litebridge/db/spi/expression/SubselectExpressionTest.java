@@ -1,5 +1,6 @@
 package org.litebridge.db.spi.expression;
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Operation;
 import org.litebridge.db.spi.Table;
@@ -10,6 +11,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@NullMarked
 class SubselectExpressionTest {
 
     @Test

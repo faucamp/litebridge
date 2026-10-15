@@ -92,7 +92,7 @@ public final class DtoMergeOnStep<DTO> extends MergeOnStep<DTO,
 
     @Override
     @SuppressWarnings("ConstantConditions")
-    protected DtoMergeOnConditionClauseTerminal<DTO> createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final String alias) {
+    protected DtoMergeOnConditionClauseTerminal<DTO> createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final @Nullable String alias) {
         return new DtoMergeOnConditionClauseTerminal<>(usingDtoClass, usingQueryNode, usingValues, alias, conditionNode, mergeNode, litebridgeContext);
     }
 }

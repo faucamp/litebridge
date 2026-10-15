@@ -366,6 +366,7 @@ public class PersistenceFacade {
                 return null;
             }
 
+            //noinspection DataFlowIssue
             final UpdateBuilder updateBuilder = (UpdateBuilder) statementBuilder;
             addPrimaryKeyConditions(dto, ormTable, updateBuilder, tableProvider);
         }

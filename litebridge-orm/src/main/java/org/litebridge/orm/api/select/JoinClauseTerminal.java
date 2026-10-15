@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.select;
 
 import org.litebridge.orm.api.condition.QueryConditionBuilder;
-import org.litebridge.orm.api.select.dto.DtoWhereConditionClauseTerminal;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.select.ExistsExpressionSpec;
 

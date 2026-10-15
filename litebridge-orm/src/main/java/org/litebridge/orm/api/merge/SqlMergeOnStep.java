@@ -71,7 +71,7 @@ public final class SqlMergeOnStep extends MergeOnStep<Row,
 
     @Override
     @SuppressWarnings("ConstantConditions")
-    protected SqlMergeOnConditionClauseTerminal createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final String alias) {
+    protected SqlMergeOnConditionClauseTerminal createMergeOnConditionClauseTerminal(final QueryNode conditionNode, final @Nullable String alias) {
         return new SqlMergeOnConditionClauseTerminal(usingTable, usingQueryNode, usingValues, alias, conditionNode, mergeNode, litebridgeContext);
     }
 }

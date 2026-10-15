@@ -446,7 +446,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
                     }
                 }
                 case null ->
-                        throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>; got: " + id);
+                        throw new IllegalArgumentException("Invalid composite primary key value type provided; expected: List<?>, Object[], or Map<String, ?>; got null");
             }
         }
     }

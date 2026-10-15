@@ -1,7 +1,6 @@
 package org.litebridge.spring.repository;
 
 import org.litebridge.spring.annotation.EnableLitebridgeRepositories;
-import org.springframework.core.SpringVersion;
 import org.springframework.data.repository.config.RepositoryBeanDefinitionRegistrarSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 

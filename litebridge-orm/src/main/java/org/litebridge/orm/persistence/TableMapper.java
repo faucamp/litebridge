@@ -307,11 +307,14 @@ public final class TableMapper {
         }
 
         final Supplier<OrmTable> targetOrmTableSupplier;
+
         if (!(fieldAccessor instanceof NoOpFieldAccessor) && !ClassUtils.isBasicType(fieldAccessor.type())) {
             final Class<?> targetDtoClass = fieldAccessor.type();
             targetOrmTableSupplier = () -> tableRegistry.getOrmTableOrThrow(targetDtoClass);
         } else {
-            targetOrmTableSupplier = null;
+            targetOrmTableSupplier = () -> {
+                throw new UnsupportedOperationException("No associated ORM table");
+            };
         }
 
         final MappedCompositeKey mappedCompositeKey = new MappedCompositeKey(mappedFieldTargets, targetOrmTableSupplier, joinColumns);

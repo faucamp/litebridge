@@ -1,7 +1,6 @@
 package org.litebridge.orm.api.register;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.api.spec.ColumnMapping;
 import org.litebridge.orm.api.spec.ColumnSpec;
 import org.litebridge.orm.api.spec.DtoTableSpec;
 import org.litebridge.orm.api.spec.FieldColumnSpec;

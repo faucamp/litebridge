@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -498,7 +499,7 @@ public class DtoMapper {
 
     private void resolveDependencies(final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping, final DtoCache dtoCache) {
         final List<LateReverseCollectionUpdate> lateReverseUpdates = new ArrayList<>();
-        final List<PartiallyConstructedDto> allPartialDtos = new ArrayList<>(createdDtosByMapping.values().size());
+        final List<PartiallyConstructedDto> allPartialDtos = new ArrayList<>(createdDtosByMapping.size());
 
         for (final List<PartiallyConstructedDto> list : createdDtosByMapping.values()) {
             allPartialDtos.addAll(list);
@@ -659,14 +660,14 @@ public class DtoMapper {
         return instantiateIntermediateType(targetClass, directFields);
     }
 
-    private @Nullable Object instantiateIntermediateType(final Class<?> targetClass, final Map<FieldAccessor, @Nullable Object> fieldValues) {
+    private Object instantiateIntermediateType(final Class<?> targetClass, final Map<FieldAccessor, @Nullable Object> fieldValues) {
         if (targetClass.isRecord()) {
             final RecordComponent[] components = targetClass.getRecordComponents();
             if (components == null) {
                 throw new IllegalStateException("Failed to get record components for record class: " + targetClass.getName());
             }
 
-            final Object[] args = new Object[components.length];
+            final @Nullable Object[] args = new Object[components.length];
             final Constructor<?> constructor = intermediateConstructorCache.computeIfAbsent(targetClass, cls -> {
                 final Class<?>[] paramTypes = Arrays.stream(components)
                         .map(RecordComponent::getType)
@@ -700,6 +701,7 @@ public class DtoMapper {
                 } else if (val != null) {
                     val = typeConverter.convert(val, component.getType());
                 }
+
                 args[i] = val;
             }
 
@@ -742,11 +744,13 @@ public class DtoMapper {
                     if (c.getParameterCount() == fieldValues.size()) {
                         try {
                             c.setAccessible(true);
-                            final Object[] args = new Object[c.getParameterCount()];
-                            final java.lang.reflect.Parameter[] parameters = c.getParameters();
+                            final @Nullable Object[] args = new Object[c.getParameterCount()];
+                            final Parameter[] parameters = c.getParameters();
+
                             for (int idx = 0; idx < parameters.length; idx++) {
-                                final java.lang.reflect.Parameter p = parameters[idx];
+                                final Parameter p = parameters[idx];
                                 Object val = null;
+
                                 for (final Map.Entry<FieldAccessor, @Nullable Object> entry : fieldValues.entrySet()) {
                                     final FieldAccessor accessor = entry.getKey();
                                     final String leafName = accessor.name().contains(".")
@@ -757,6 +761,7 @@ public class DtoMapper {
                                         break;
                                     }
                                 }
+
                                 if (val == null && !fieldValues.isEmpty()) {
                                     // If parameter name not preserved, fallback to field by index
                                     final List<Object> vals = new ArrayList<>(fieldValues.values());
@@ -764,8 +769,10 @@ public class DtoMapper {
                                         val = vals.get(idx);
                                     }
                                 }
+
                                 args[idx] = val != null ? typeConverter.convert(val, p.getType()) : ClassUtils.getDefaultValue(p.getType());
                             }
+
                             return c.newInstance(args);
                         } catch (Exception ignored) {
                         }

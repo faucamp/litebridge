@@ -98,9 +98,4 @@ public class LitebridgeFactoryBean implements FactoryBean<Litebridge> {
 
         return Litebridge.class;
     }
-
-    @Override
-    public boolean isSingleton() {
-        return true;
-    }
 }

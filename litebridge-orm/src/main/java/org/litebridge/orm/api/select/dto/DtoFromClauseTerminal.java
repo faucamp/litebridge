@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.select.dto;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.query.Join;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
@@ -146,12 +147,17 @@ public final class DtoFromClauseTerminal<DTO> extends AbstractFromClauseTerminal
     }
 
     public DtoWhereConditionClauseTerminal<DTO> withIds(final Iterable<?> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            throw new IllegalArgumentException("No IDs provided");
+        }
+
         ConditionWithIdNode conditionWithIdNode = null;
 
         for (Object id : ids) {
             conditionWithIdNode = new ConditionWithIdNode(conditionWithIdNode, LogicOperator.NOOP, Operator.EQ, id);
         }
 
+        //noinspection DataFlowIssue
         final WhereNode whereNode = new WhereNode(this.node, conditionWithIdNode);
         return new DtoWhereConditionClauseTerminal<>(whereNode, selectEngineTerminal, litebridgeContext);
     }
