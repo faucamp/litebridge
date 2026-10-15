@@ -235,10 +235,7 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
 
         if (!CollectionUtils.isEmpty(bindValues)) {
             for (BindValue bindValue : bindValues) {
-                if (bindValue == null) {
-                    preparedStatement.setString(ordinal[0]++, null);
-                    continue;
-                } else if (bindValue.value() == null) {
+                if (bindValue.value() == null) {
                     preparedStatement.setNull(ordinal[0]++, bindValue.sqlDataType());
                     continue;
                 }

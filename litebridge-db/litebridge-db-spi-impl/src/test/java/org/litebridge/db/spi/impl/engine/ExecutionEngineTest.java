@@ -26,7 +26,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -148,16 +147,13 @@ class ExecutionEngineTest {
         // Given
         final PreparedStatement statement = mock(PreparedStatement.class);
         final ExecutionEngine engine = engine();
-        final PreparedSql preparedSql = new PreparedSql("update test", Arrays.asList(
-                null,
-                new BindValue(null, Types.INTEGER)));
+        final PreparedSql preparedSql = new PreparedSql("update test", List.of(new BindValue(null, Types.INTEGER)));
 
         // When
         engine.executeUpdate(preparedSql, provider(connection(statement)));
 
         // Then
-        verify(statement).setString(1, null);
-        verify(statement).setNull(2, Types.INTEGER);
+        verify(statement).setNull(1, Types.INTEGER);
     }
 
     @Test
@@ -389,7 +385,7 @@ class ExecutionEngineTest {
         when(statement.executeUpdate()).thenReturn(1);
         final ExecutionEngine engine = engine();
 
-        final List<BindValue> binds = Arrays.asList(null, new BindValue(null, Types.VARCHAR));
+        final List<BindValue> binds = List.of(new BindValue(null, Types.VARCHAR));
         final PreparedSql preparedSql = new PreparedSql("update test set a = ?, b = ?", binds, null, null);
 
         // When
@@ -397,8 +393,7 @@ class ExecutionEngineTest {
 
         // Then
         assertEquals(1, result.rowsAffected());
-        verify(statement).setString(1, null);
-        verify(statement).setNull(2, Types.VARCHAR);
+        verify(statement).setNull(1, Types.VARCHAR);
     }
 
     @Test

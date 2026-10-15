@@ -1,6 +1,7 @@
 package org.litebridge.orm.api.delete;
 
 import org.jspecify.annotations.Nullable;
+import org.litebridge.commons.CollectionUtils;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
 import org.litebridge.orm.api.condition.DtoQueryConditionBuilder;
@@ -67,6 +68,10 @@ public final class DtoDeleteStart<DTO> extends UpdateStepBase
     }
 
     public DeleteTerminal withIds(final Iterable<?> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            throw new IllegalArgumentException("No IDs provided");
+        }
+
         ConditionWithIdNode conditionWithIdNode = null;
 
         for (Object id : ids) {
