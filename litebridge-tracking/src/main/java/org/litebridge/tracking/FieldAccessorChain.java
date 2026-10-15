@@ -116,7 +116,7 @@ public final class FieldAccessorChain implements FieldAccessor {
                 return null;
             }
 
-            if (fieldAccessor.dtoClass() != null && !fieldAccessor.dtoClass().isInstance(value)) {
+            if (!fieldAccessor.dtoClass().isInstance(value)) {
                 // Skip to next field accessor if current value type does not match accessor's DTO class
                 continue;
             }

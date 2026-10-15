@@ -83,16 +83,17 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
                     .flatMap(setNode -> {
                         final String fieldName = getColumn(setNode);
                         final MappedFieldTarget target = ormTable.mappedFieldTargetForFieldOrNull(fieldName);
+
                         if (target instanceof MappedCompositeKey mappedCompositeKey) {
                             final List<UpdateColumn> result = new ArrayList<>();
+
                             for (MappedFieldTarget mft : mappedCompositeKey.columns()) {
                                 if (mft instanceof ColumnMetaData cmd) {
                                     final Object val;
+
                                     if (setNode.value() instanceof Map<?, ?> map) {
                                         final String joinColName = cmd.getJoinColumn() != null ? cmd.getJoinColumn().name() : null;
-                                        final String pkFieldName = (mappedCompositeKey.targetOrmTable() != null && joinColName != null)
-                                                ? mappedCompositeKey.targetOrmTable().get().getFieldForColumnName(joinColName).name()
-                                                : null;
+                                        final String pkFieldName = joinColName != null ? mappedCompositeKey.targetOrmTable().get().getFieldForColumnName(joinColName).name() : null;
 
                                         if (map.containsKey(cmd.name())) {
                                             val = map.get(cmd.name());
@@ -106,12 +107,14 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
                                     } else {
                                         val = setNode.value();
                                     }
+
                                     bindValues.add(new BindValue(val, cmd.getDataType()));
                                     result.add(new UpdateColumn(cmd.name(), null, setNode.mathOperator()));
                                 }
                             }
                             return result.stream();
                         }
+
                         final ColumnMetaData columnMetaData = ormTable.columnMetaDataForField(fieldName);
                         bindValues.add(new BindValue(setNode.value(), columnMetaData.getDataType()));
                         return Stream.of(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator()));

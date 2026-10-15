@@ -445,15 +445,17 @@ class DtoMapperTest {
                 cache);
         tableRegistry.addTable(OrderDto.class, orderOrmTable);
 
-        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final TypeConverter typeConverter = mock(TypeConverter.class);
+        final MappingPlanCache mappingPlanCache = new MappingPlanCache();
         when(typeConverter.convert(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(context.tableRegistry()).thenReturn(tableRegistry);
-        when(context.typeConverter()).thenReturn(typeConverter);
-        when(context.getRelatedDtoStrategy()).thenReturn(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+        when(litebridgeContext.tableRegistry()).thenReturn(tableRegistry);
+        when(litebridgeContext.typeConverter()).thenReturn(typeConverter);
+        when(litebridgeContext.getRelatedDtoStrategy()).thenReturn(RelatedDtoStrategy.PARTIAL_OBJECT_IF_NO_JOIN);
+        when(litebridgeContext.mappingPlanCache()).thenReturn(mappingPlanCache);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, lookup);
-        final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, context);
+        final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, litebridgeContext);
 
         final Row row = new Row(List.of(
                 new RowColumn("id", 100L, new Column(orderTable, "id")),
@@ -772,15 +774,17 @@ class DtoMapperTest {
                 cache);
         tableRegistry.addTable(OrderDto.class, orderOrmTable);
 
-        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final TypeConverter typeConverter = mock(TypeConverter.class);
+        final MappingPlanCache mappingPlanCache = new MappingPlanCache();
         when(typeConverter.convert(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(context.tableRegistry()).thenReturn(tableRegistry);
-        when(context.typeConverter()).thenReturn(typeConverter);
-        when(context.getRelatedDtoStrategy()).thenReturn(null);
+        when(litebridgeContext.tableRegistry()).thenReturn(tableRegistry);
+        when(litebridgeContext.typeConverter()).thenReturn(typeConverter);
+        when(litebridgeContext.getRelatedDtoStrategy()).thenReturn(null);
+        when(litebridgeContext.mappingPlanCache()).thenReturn(mappingPlanCache);
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, lookup);
-        final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, context);
+        final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, litebridgeContext);
 
         final Row row = new Row(List.of(
                 new RowColumn("id", 100L, new Column(orderTable, "id")),
@@ -939,20 +943,20 @@ class DtoMapperTest {
     }
 
     private static DtoMapper createDtoMapper(final TableRegistry tableRegistry) {
-        return createDtoMapperWithCache(tableRegistry, null);
+        return createDtoMapperWithCache(tableRegistry, new MappingPlanCache());
     }
 
     private static DtoMapper createDtoMapperWithCache(final TableRegistry tableRegistry, final MappingPlanCache cache) {
-        final LitebridgeContext context = mock(LitebridgeContext.class);
+        final LitebridgeContext litebridgeContext = mock(LitebridgeContext.class);
         final TypeConverter typeConverter = mock(TypeConverter.class);
         when(typeConverter.convert(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(context.tableRegistry()).thenReturn(tableRegistry);
-        when(context.typeConverter()).thenReturn(typeConverter);
-        when(context.mappingPlanCache()).thenReturn(cache);
-        when(context.classFieldAccessorCache()).thenReturn(new ClassFieldAccessorCache(MethodHandles.lookup()));
+        when(litebridgeContext.tableRegistry()).thenReturn(tableRegistry);
+        when(litebridgeContext.typeConverter()).thenReturn(typeConverter);
+        when(litebridgeContext.mappingPlanCache()).thenReturn(cache);
+        when(litebridgeContext.classFieldAccessorCache()).thenReturn(new ClassFieldAccessorCache(MethodHandles.lookup()));
 
         final DtoConstructor dtoConstructor = new DtoConstructor(tableRegistry, MethodHandles.lookup());
-        return new DtoMapper(dtoConstructor, context);
+        return new DtoMapper(dtoConstructor, litebridgeContext);
     }
 
     @Test

@@ -17,6 +17,7 @@ import java.io.Serializable;
 public abstract class AbstractLitebridgeRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
         extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
 
+    @SuppressWarnings("NotNullFieldNotInitialized")
     protected Litebridge litebridge;
 
     /**

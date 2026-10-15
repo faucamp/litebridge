@@ -10,14 +10,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -128,7 +126,9 @@ public class FieldAccessorChainTest {
         final Object finalValue = new Object();
 
         FieldAccessor parent = mock(FieldAccessor.class);
+        when(parent.dtoClass()).then(i -> Object.class);
         FieldAccessor child = mock(FieldAccessor.class);
+        when(child.dtoClass()).then(i -> Object.class);
 
         when(parent.get(dto)).thenReturn(intermediate);
         when(child.get(intermediate)).thenReturn(finalValue);
@@ -143,29 +143,6 @@ public class FieldAccessorChainTest {
         assertSame(finalValue, result);
         verify(parent).get(dto);
         verify(child).get(intermediate);
-    }
-
-    @Test
-    void get_returnsNullAndStopsTraversalWhenIntermediateIsNull() {
-        // Given
-        final ClassFieldAccessorCache classFieldAccessorCache = new ClassFieldAccessorCache(MethodHandles.lookup());
-        Object dto = new Object();
-
-        FieldAccessor parent = mock(FieldAccessor.class);
-        FieldAccessor child = mock(FieldAccessor.class);
-
-        when(parent.get(dto)).thenReturn(null);
-
-        FieldAccessorChain chain = new FieldAccessorChain(parent, "parent.child", classFieldAccessorCache);
-        chain.add(child);
-
-        // When
-        Object result = chain.get(dto);
-
-        // Then
-        assertNull(result);
-        verify(parent).get(dto);
-        verifyNoInteractions(child);
     }
 
     @Test

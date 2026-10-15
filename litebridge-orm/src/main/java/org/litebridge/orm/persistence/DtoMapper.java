@@ -92,23 +92,20 @@ public class DtoMapper {
         final MappingPlanKey key = new MappingPlanKey(dtoClass, contextDtoClass, rowHash);
         final MappingPlanCache mappingPlanCache = litebridgeContext.mappingPlanCache();
 
-        MappingPlan compilationResult = mappingPlanCache != null ? mappingPlanCache.get(key) : null;
+        MappingPlan mappingPlan = mappingPlanCache.get(key);
 
-        if (compilationResult == null) {
-            compilationResult = compileMappingPlan(dtoClass, contextDtoClass, firstRow);
-
-            if (mappingPlanCache != null) {
-                mappingPlanCache.put(key, compilationResult);
-            }
+        if (mappingPlan == null) {
+            mappingPlan = compileMappingPlan(dtoClass, contextDtoClass, firstRow);
+            mappingPlanCache.put(key, mappingPlan);
         }
 
-        if (compilationResult.rootMappingData() == null) {
+        if (mappingPlan.rootMappingData() == null) {
             return Collections.emptyList();
         }
 
         // Create DTOs and populate the cache
         final DtoCache dtoCache = new DtoCache();
-        final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping = cacheDtos(rows, compilationResult.mappingDataMap(), dtoCache);
+        final Map<MappingData, List<PartiallyConstructedDto>> createdDtosByMapping = cacheDtos(rows, mappingPlan.mappingDataMap(), dtoCache);
 
         // Resolve inter-DTO dependencies
         resolveDependencies(createdDtosByMapping, dtoCache);
@@ -116,7 +113,7 @@ public class DtoMapper {
         // Return all unique DTOs assignable to the requested type from the root mapping
         final List<DTO> result = new ArrayList<>();
         final Set<Object> seenDtos = Collections.newSetFromMap(new IdentityHashMap<>());
-        final MappingData rootMappingData = compilationResult.rootMappingData();
+        final MappingData rootMappingData = mappingPlan.rootMappingData();
 
         for (final Row row : rows) {
             final Pk pk = getPrimaryKey(rootMappingData, row);
@@ -722,13 +719,13 @@ public class DtoMapper {
                     final String accessorLeafName = accessor.name().contains(".")
                             ? accessor.name().substring(accessor.name().lastIndexOf('.') + 1)
                             : accessor.name();
-                    final FieldAccessor targetAccessor = cache != null ? cache.fieldAccessorOrNull(targetClass, accessorLeafName) : null;
+                    final FieldAccessor targetAccessor = cache.fieldAccessorOrNull(targetClass, accessorLeafName);
                     final Object rawVal = entry.getValue();
                     final Object val = rawVal != null ? typeConverter.convert(rawVal, accessor.type()) : null;
 
                     if (targetAccessor != null) {
                         targetAccessor.set(instance, val);
-                    } else if (accessor.dtoClass() != null && accessor.dtoClass().isAssignableFrom(targetClass)) {
+                    } else if (accessor.dtoClass().isAssignableFrom(targetClass)) {
                         accessor.set(instance, val);
                     } else {
                         final java.lang.reflect.Field field = ClassUtils.getField(targetClass, accessorLeafName);
@@ -1335,22 +1332,22 @@ public class DtoMapper {
     }
 
     record GenericDtoDependency(FieldAccessor field,
-                                       FieldMapping relatedFieldMapping) {
+                                FieldMapping relatedFieldMapping) {
     }
 
     record SpecificDtoDependency(FieldAccessor field,
-                                        Class<?> relatedDtoClass,
-                                        @Nullable MappingData targetMappingData,
-                                        Pk primaryKeyValue,
-                                        @Nullable FieldAccessor relatedCollectionField,
-                                        boolean reverseUpdateOnly) {
+                                 Class<?> relatedDtoClass,
+                                 @Nullable MappingData targetMappingData,
+                                 Pk primaryKeyValue,
+                                 @Nullable FieldAccessor relatedCollectionField,
+                                 boolean reverseUpdateOnly) {
     }
 
     record LateReverseCollectionUpdate(PartiallyConstructedDto hostPartialDto, Object relatedDto,
-                                              FieldAccessor relatedCollectionField) {
+                                       FieldAccessor relatedCollectionField) {
     }
 
     record DeferredCollectionAddition(Collection<Object> collection,
-                                             PartiallyConstructedDto itemPartialDto) {
+                                      PartiallyConstructedDto itemPartialDto) {
     }
 }

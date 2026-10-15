@@ -18,7 +18,7 @@ import java.util.stream.StreamSupport;
 public class LitebridgeRepositoryImpl<T, ID> implements LitebridgeRepository<T, ID> {
 
     private final Litebridge litebridge;
-    private Class<T> entityClass;
+    private final Class<T> entityClass;
 
     public LitebridgeRepositoryImpl(final Class<T> entityClass, final Litebridge litebridge) {
         this.litebridge = litebridge;

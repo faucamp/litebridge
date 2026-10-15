@@ -145,6 +145,6 @@ public class LitebridgeStringQuery implements RepositoryQuery {
             return ClassUtils.getDefaultValue(returnType);
         }
 
-        return rawValue;
+        return typeConverter.convert(rawValue, returnType);
     }
 }
