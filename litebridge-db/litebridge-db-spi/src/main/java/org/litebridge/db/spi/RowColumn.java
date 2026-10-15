@@ -37,6 +37,7 @@ public record RowColumn(String label, @Nullable Object value, @Nullable Column c
 
         if (column != null) {
             result = 31 * result + column.name().hashCode();
+
             if (column.hasTable()) {
                 result = 31 * result + column.table().hashCode();
             }

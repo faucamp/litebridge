@@ -166,9 +166,11 @@ public final class Row {
 
         if (hash == 0) {
             int result = 1;
+
             for (final RowColumn column : columns) {
                 result = 31 * result + column.structureHashCode();
             }
+
             hash = result;
             structureHash = hash;
         }

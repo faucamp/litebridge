@@ -33,4 +33,21 @@ class ValuesSpecTest {
         assertNotEquals(valuesSpec, valuesSpecDiffLabels);
         assertNotEquals(valuesSpec, valuesSpecDiffValues);
     }
+
+    @Test
+    void hashcode() {
+        // Given
+        final ValuesSpec valuesSpec = new ValuesSpec("tableAlias", new String[]{"label"}, new Object[]{1});
+        final ValuesSpec valuesSpecAlt = new ValuesSpec("tableAlias", new String[]{"label"}, new Object[]{1});
+        final ValuesSpec valuesSpecDiffTableAlias = new ValuesSpec("alias2", new String[]{"label"}, new Object[]{1});
+        final ValuesSpec valuesSpecDiffLabels = new ValuesSpec("tableAlias", new String[]{"other"}, new Object[]{1});
+        final ValuesSpec valuesSpecDiffValues = new ValuesSpec("tableAlias", new String[]{"label"}, new Object[]{3});
+
+        // Then
+        assertEquals(valuesSpec.hashCode(), valuesSpecAlt.hashCode());
+        assertEquals(valuesSpec.hashCode(), valuesSpecDiffValues.hashCode());
+
+        assertNotEquals(valuesSpec.hashCode(), valuesSpecDiffTableAlias.hashCode());
+        assertNotEquals(valuesSpec.hashCode(), valuesSpecDiffLabels.hashCode());
+    }
 }

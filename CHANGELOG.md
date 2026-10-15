@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- ORM:
+    - Fix `ValueSpec.hashCode()`, which caused `MERGE INTO` using `VALUES` operations to not be properly cached.
+
 ## [0.5.0] - 2026-10-15
 
 ### Added

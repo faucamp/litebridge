@@ -15,6 +15,6 @@ public record ValuesSpec(String tableAlias, String[] labels, @Nullable Object[] 
 
     @Override
     public int hashCode() {
-        return Objects.hash(tableAlias, Arrays.hashCode(labels), Arrays.hashCode(values));
+        return Objects.hash(tableAlias, Arrays.hashCode(labels), values.length);
     }
 }
