@@ -8,6 +8,7 @@ module litebridge.example.common {
     requires litebridge.annotations;
     requires litebridge.db.spi;
     requires litebridge.orm;
+    requires com.fasterxml.jackson.annotation;
 
     exports org.litebridge.example.common;
     exports org.litebridge.example.common.dto;

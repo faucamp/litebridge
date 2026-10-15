@@ -1,6 +1,7 @@
 package org.litebridge.example.spring.service;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.litebridge.db.spi.Row;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.spring.repository.PersonRepository;
 import org.springframework.stereotype.Service;
@@ -54,8 +55,28 @@ public class ExampleService {
         return personRepository.findAllByNameOrSurname(name, name);
     }
 
+    public List<Person> getPersonsByAgeBetween(final int minAge, final int maxAge) {
+        return personRepository.findAllByAgeBetween(minAge, maxAge);
+    }
+
+    public List<Person> getPersonWhereAgeBetweenExclusive(final int minAge, final int maxAge) {
+        return personRepository.getPersonWhereAgeBetweenExclusive(minAge, maxAge);
+    }
+
+    public List<Row> getPersonRowsWhereAgeBetweenExclusive(final int minAge, final int maxAge) {
+        return personRepository.getPersonRowsWhereAgeBetweenExclusive(minAge, maxAge);
+    }
+
+    public double getAverageAgeNativeQuery() {
+        return personRepository.getAverageAgeNativeQuery();
+    }
+
     public int countPersonsNameStartingWith(final String namePrefix) {
         return personRepository.countAllByNameStartsWith(namePrefix);
+    }
+
+    public boolean existsByAge(final int age) {
+        return personRepository.existsByAge(age);
     }
 
     public Person updatePerson(final Person person) {

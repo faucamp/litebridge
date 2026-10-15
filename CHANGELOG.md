@@ -36,10 +36,15 @@
     - Add top-level API shortcut `select()` methods to make selecting literal numbers/booleans easier; this helps with existence checks.
     - Query expression specs extended to allow them to alter the physical structure of the query (which allows for specific optimisations).
     - `Fn.exists()` added as a select expression spec, executing an efficient existence check for a query.
+    - Add `LitebridgeCore.toDtos()` for mapping collections of database rows directly to DTOs.
+    - Add `NativeSqlContext.parse()` and `ParsedSql.usesNamedBindParameters()` for native SQL inspection and parameter handling.
+    - Add `LitebridgeInspector` accessors for database provider and table registry.
 - Spring Integration:
     - Update to latest supported Spring Framework 7 and Spring Boot 4.1.x versions.
     - Add Spring Data repository integration (`LitebridgeRepository`) with `ListCrudRepository` and `ListPagingAndSortingRepository` support.
     - Add support for Spring Data Derived Query Methods via `LitebridgePartTreeQuery`.
+    - Add `@Query` annotation support for custom native SQL queries and mutating statements in repositories via `LitebridgeStringQuery`.
+    - Support positional and named parameter binding, entity and raw `Row` return types, scalar aggregations, and modifying queries in Spring Data repositories.
     - Add `@EnableLitebridgeRepositories` and auto-configuration for Spring Data repositories via `LitebridgeRepositoriesAutoConfiguration`.
     - Add `litebridge-spring-common` module containing the bulk of the version-agnostic Spring integration components.
     - Add `litebridge-spring6` module targeting Spring Framework 6 / Spring Boot 3 natively with Spring Data 3 APIs.

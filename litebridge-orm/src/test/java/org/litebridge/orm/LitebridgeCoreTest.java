@@ -1011,6 +1011,52 @@ class LitebridgeCoreTest {
     }
 
     @Test
+    void toDtos_multipleRows() throws Exception {
+        // Given
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
+        final DataSource dataSource = mock(DataSource.class);
+        final LitebridgeCore litebridge = new LitebridgeCore(databaseProvider, dataSource);
+        final FieldSpec fieldSpec = new FieldSpec("myVar", false);
+        final ColumnSpec columnSpec = new ColumnSpec("MY_VAR");
+        final Map<FieldMapping, ColumnMapping> fieldColumnMap = Map.of(fieldSpec, columnSpec);
+        final TableSpec tableSpec = new TableSpec("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE", fieldColumnMap);
+        final Table table = new Table("TEST_CATALOG", "TEST_SCHEMA", "TEST_TABLE");
+        final ColumnMetaData columnMetaData = new ColumnMetaData(table, "MY_VAR", false, Types.VARCHAR, 10);
+        when(databaseProvider.tableMetaData(eq(table), any(ConnectionProvider.class))).thenReturn(new TableMetaData(table, List.of("MY_VAR"), List.of(columnMetaData)));
+        final DtoTableSpec dtoTableSpec = new DtoTableSpec(TestDto.class, tableSpec);
+        litebridge.register(dtoTableSpec);
+        when(databaseProvider.typeConverter()).thenReturn(new DefaultTypeConverter());
+
+        final Row row1 = new Row(List.of(new RowColumn(columnMetaData.column().name(), "val1", columnMetaData.column())));
+        final Row row2 = new Row(List.of(new RowColumn(columnMetaData.column().name(), "val2", columnMetaData.column())));
+
+        // When
+        final List<TestDto> results = litebridge.toDtos(List.of(row1, row2), TestDto.class);
+
+        // Then
+        assertNotNull(results);
+        assertEquals(2, results.size());
+        assertEquals("val1", results.get(0).myVar);
+        assertEquals("val2", results.get(1).myVar);
+    }
+
+    @Test
+    void toDtos_rowClassReturnsRawRows() {
+        // Given
+        final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
+        final DataSource dataSource = mock(DataSource.class);
+        final LitebridgeCore litebridge = new LitebridgeCore(databaseProvider, dataSource);
+        final Row row = new Row(Collections.emptyList());
+        final List<Row> rows = List.of(row);
+
+        // When
+        final List<Row> results = litebridge.toDtos(rows, Row.class);
+
+        // Then
+        assertEquals(rows, results);
+    }
+
+    @Test
     void toDto_empty() throws Exception {
         // Given
         final DatabaseProvider databaseProvider = mockDatabaseProviderWithMetaData();
@@ -1072,6 +1118,8 @@ class LitebridgeCoreTest {
         // When / Then
         assertNotNull(litebridge.queryPlanCache());
         assertNotNull(litebridge.mappingPlanCache());
+        assertNotNull(litebridge.tableRegistry());
+        assertNotNull(litebridge.databaseProvider());
     }
 
     @Test

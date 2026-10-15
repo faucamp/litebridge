@@ -1,5 +1,6 @@
 package org.litebridge.example.common.entity;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.litebridge.orm.annotation.Column;
 import org.litebridge.orm.annotation.Table;
 
@@ -9,6 +10,7 @@ import java.util.StringJoiner;
 
 @Table("LB.ACCOUNT")
 @SuppressWarnings("unused")
+@JsonPropertyOrder({"id", "name", "balance", "owner"})
 public class Account {
 
     @Column(value = "ACCOUNT_ID", generateUsingSequence = "LB.ACCOUNT_SEQ")

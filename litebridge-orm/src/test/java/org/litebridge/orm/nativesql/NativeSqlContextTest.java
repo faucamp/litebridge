@@ -143,4 +143,59 @@ class NativeSqlContextTest {
         // When / Then
         assertThrows(IllegalStateException.class, () -> nativeSqlContext.execute(sql));
     }
+
+    @Test
+    void executeBatch_positionalParameters() throws SQLException {
+        // Given
+        final String sql = "UPDATE LB.PERSON SET SURNAME = ? WHERE PERSON_ID = ?";
+        final org.litebridge.db.spi.update.BatchUpdateResult expectedResult = mock(org.litebridge.db.spi.update.BatchUpdateResult.class);
+        when(databaseProvider.executeBatch(any(), any(ConnectionProvider.class))).thenReturn(expectedResult);
+
+        // When
+        final org.litebridge.db.spi.update.BatchUpdateResult result = nativeSqlContext.executeBatch(sql, List.of(List.of("Smith", 1), List.of("Jones", 2)));
+
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedResult, result);
+    }
+
+    @Test
+    void executeNamedBatch_namedParameters() throws SQLException {
+        // Given
+        final String sql = "UPDATE LB.PERSON SET SURNAME = :name WHERE PERSON_ID = :id";
+        final org.litebridge.db.spi.update.BatchUpdateResult expectedResult = mock(org.litebridge.db.spi.update.BatchUpdateResult.class);
+        when(databaseProvider.executeBatch(any(), any(ConnectionProvider.class))).thenReturn(expectedResult);
+
+        // When
+        final org.litebridge.db.spi.update.BatchUpdateResult result = nativeSqlContext.executeNamedBatch(sql, List.of(Map.of("name", "Smith", "id", 1), Map.of("name", "Jones", "id", 2)));
+
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedResult, result);
+    }
+
+    @Test
+    void executeBatch_exception() throws SQLException {
+        // Given
+        final String sql = "UPDATE INVALID SET NAME = ?";
+        when(databaseProvider.executeBatch(any(), any(ConnectionProvider.class))).thenThrow(new SQLException("Table not found"));
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> nativeSqlContext.executeBatch(sql, List.of(List.of("Test"))));
+    }
+
+    @Test
+    void parse_returnsParsedSql() {
+        // Given
+        final String sql = "SELECT * FROM LB.PERSON WHERE NAME = :name";
+
+        // When
+        final ParsedSql parsedSql = nativeSqlContext.parse(sql);
+
+        // Then
+        assertNotNull(parsedSql);
+        assertEquals("SELECT * FROM LB.PERSON WHERE NAME = ?", parsedSql.sql());
+        assertEquals(1, parsedSql.bindValueCount());
+        assertEquals(List.of("name"), parsedSql.bindValueNames());
+    }
 }

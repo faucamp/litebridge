@@ -62,6 +62,7 @@ import javax.sql.DataSource;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -596,23 +597,43 @@ public class LitebridgeCore implements SelectApi {
     }
 
     /**
-     * Convert a given result row into a Data Transfer Object (DTO) of the specified type.
+     * Converts the specified result row into a Data Transfer Object (DTO) of the specified type.
      *
      * @param <DTO>    The type of the Data Transfer Object to be created.
      * @param row      The data row to map, containing column-value pairs. Must not be null.
      * @param dtoClass The class type of the DTO to which the row is to be mapped. Must not be null.
      * @return An instance of the specified DTO type, populated with values from the given row.
      * @throws IllegalArgumentException if the row or dtoClass is null, or if mapping fails due to type mismatches or invalid configurations.
+     * @see #toDtos(List, Class) Converts multiple rows to DTOs.
      */
     public <DTO> DTO toDto(final Row row, final Class<DTO> dtoClass) {
+        return toDtos(Collections.singletonList(row), dtoClass).getFirst();
+    }
+
+    /**
+     * Converts the specified result rows into a Data Transfer Objects (DTOs) of the specified type.
+     *
+     * @param <DTO>    The type of the Data Transfer Objects to be created.
+     * @param rows     The data rows to map, containing column-value pairs. Must not be null.
+     * @param dtoClass The class type of the DTO to which the row is to be mapped. Must not be null.
+     * @return An instance of the specified DTO type, populated with values from the given row.
+     * @throws IllegalArgumentException if the row or dtoClass is null, or if mapping fails due to type mismatches or invalid configurations.
+     * @see #toDto(Row, Class) Converts a single row to a DTO.
+     */
+    @SuppressWarnings("unchecked")
+    public <DTO> List<DTO> toDtos(final List<Row> rows, final Class<DTO> dtoClass) {
+        if (dtoClass == Row.class) {
+            return (List<DTO>) rows;
+        }
+
         final DtoMapper dtoMapper = new DtoMapper(dtoConstructor, createDtoLitebridgeContext());
-        final List<DTO> dtos = dtoMapper.toDtos(dtoClass, null, List.of(row));
+        final List<DTO> dtos = dtoMapper.toDtos(dtoClass, null, rows);
 
         if (dtos.isEmpty()) {
             throw new IllegalArgumentException("No DTO could be created from the given row and DTO class.");
         }
 
-        return dtos.getFirst();
+        return dtos;
     }
 
     /**
@@ -659,12 +680,21 @@ public class LitebridgeCore implements SelectApi {
     }
 
     /**
-     * Provides access to the ORM table registry.
+     * Provides access to the ORM table registry for this Litebridge instance.
      *
-     * @return The {@link TableRegistry} instance associated with this Litebridge instances
+     * @return The {@link TableRegistry} instance associated with this Litebridge instance.
      */
     TableRegistry tableRegistry() {
         return tableRegistry;
+    }
+
+    /**
+     * Provides access to the database provider for this Litebridge instance.
+     *
+     * @return The {@link DatabaseProvider} instance associated with this Litebridge instance.
+     */
+    DatabaseProvider databaseProvider() {
+        return databaseProvider;
     }
 
     /**

@@ -97,13 +97,16 @@ println("Rows updated: "+result.rowsAffected());
 
 ## Mapping results to DTOs
 
-While `nativeSql().query()` returns raw `Row` objects, Litebridge can still be used to map these rows to DTOs manually using the `toDto()` method:
+While `nativeSql().query()` returns raw `Row` objects, Litebridge can map these rows to DTOs directly using `toDtos()` or `toDto()`:
 
 ```java
-List<Person> people = litebridge.nativeSql().query("SELECT * FROM PERSON WHERE AGE > ?", 18)
-        .stream()
-        .map(row -> litebridge.toDto(row, Person.class))
-        .toList();
+List<Row> rows = litebridge.nativeSql().query("SELECT * FROM PERSON WHERE AGE > ?", 18);
+
+// Map multiple rows to DTOs directly
+List<Person> people = litebridge.toDtos(rows, Person.class);
+
+// Or map a single row
+Person person = litebridge.toDto(rows.getFirst(), Person.class);
 ```
 
 ## Transactions

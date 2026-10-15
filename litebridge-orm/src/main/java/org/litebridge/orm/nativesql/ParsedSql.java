@@ -28,12 +28,21 @@ public record ParsedSql(String sql, int bindValueCount, List<String> bindValueNa
     private static final Logger LOGGER = LoggerFactory.getLogger(ParsedSql.class);
 
     /**
+     * Checks if the SQL statement uses named bind parameters.
+     *
+     * @return {@code true} if the SQL contains named bind parameters; {@code false} otherwise.
+     */
+    public boolean usesNamedBindParameters() {
+        return !bindValueNames.isEmpty();
+    }
+
+    /**
      * Prepares the SQL statement with a list of positional bind values.
      *
      * @param rawBindValues the list of raw bind values matching positional parameters
      * @return the prepared SQL instance
      */
-    public PreparedSql prepareSql(final List<@Nullable Object> rawBindValues) {
+    PreparedSql prepareSql(final List<@Nullable Object> rawBindValues) {
         validateBindValueCount(rawBindValues.size());
 
         final List<BindValue> bindValues = rawBindValues.stream()
@@ -49,7 +58,7 @@ public record ParsedSql(String sql, int bindValueCount, List<String> bindValueNa
      * @param rawBindValues the array of raw bind values matching positional parameters
      * @return the prepared SQL instance
      */
-    public PreparedSql prepareSql(final @Nullable Object[] rawBindValues) {
+    PreparedSql prepareSql(final @Nullable Object[] rawBindValues) {
         validateBindValueCount(rawBindValues.length);
         final List<BindValue> bindValues = new ArrayList<>(rawBindValues.length);
 
@@ -66,7 +75,7 @@ public record ParsedSql(String sql, int bindValueCount, List<String> bindValueNa
      * @param bindParameters the map of named parameter values
      * @return the prepared SQL instance
      */
-    public PreparedSql prepareSql(final Map<String, @Nullable Object> bindParameters) {
+    PreparedSql prepareSql(final Map<String, @Nullable Object> bindParameters) {
         validateBindValueCount(bindParameters.size());
 
         if (bindValueNames.isEmpty()) {

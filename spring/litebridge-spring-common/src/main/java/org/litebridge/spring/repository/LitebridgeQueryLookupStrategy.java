@@ -1,6 +1,8 @@
 package org.litebridge.spring.repository;
 
 import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.spring.annotation.Query;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -27,7 +29,22 @@ public class LitebridgeQueryLookupStrategy implements QueryLookupStrategy {
             ProjectionFactory projectionFactory,
             NamedQueries namedQueries) {
 
-        // Check if method is derived by name using PartTree
+        // Check for Litebridge @Query annotation
+        final Query queryAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
+
+        if (queryAnnotation != null) {
+            return new LitebridgeStringQuery(
+                    method,
+                    metadata,
+                    projectionFactory,
+                    queryAnnotation.value(),
+                    queryAnnotation.modifying(),
+                    partTreeSpringSupport,
+                    litebridge
+            );
+        }
+
+        // Fall back on queries derived by method name using PartTree
         return new LitebridgePartTreeQuery(method, metadata, projectionFactory, partTreeSpringSupport, litebridge);
     }
 }

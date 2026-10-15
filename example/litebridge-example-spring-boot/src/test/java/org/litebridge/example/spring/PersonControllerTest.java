@@ -93,4 +93,38 @@ class PersonControllerTest {
         // Then
         assertThat(found).isNotEmpty();
     }
+
+    @Test
+    void personController_getPersonWhereAgeBetweenExclusive() {
+        // Given
+        final Person person = new Person();
+        person.setName("Daisy");
+        person.setSurname("Miller");
+        person.setAge(28);
+        person.setEyeColour("Hazel");
+        personRepository.save(person);
+
+        // When
+        final List<Person> found = personController.getPersonWhereAgeBetweenExclusive(25, 30);
+
+        // Then
+        assertThat(found).isNotEmpty();
+    }
+
+    @Test
+    void personController_getAverageAge() {
+        // Given
+        final Person person = new Person();
+        person.setName("Edward");
+        person.setSurname("Norton");
+        person.setAge(50);
+        person.setEyeColour("Blue");
+        personRepository.save(person);
+
+        // When
+        final double avgAge = personController.getAverageAge();
+
+        // Then
+        assertThat(avgAge).isGreaterThan(0.0);
+    }
 }

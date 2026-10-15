@@ -215,6 +215,52 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
 }
 ```
 
+#### Native SQL Queries with @Query
+
+Repository methods can execute custom native SQL queries using the `@Query` annotation (`org.litebridge.spring.annotation.Query`).
+
+```java
+import org.litebridge.db.spi.Row;
+import org.litebridge.spring.annotation.Query;
+import org.springframework.data.repository.query.Param;
+
+@Repository
+public interface PersonRepository extends LitebridgeRepository<Person, Long> {
+
+    // Positional parameters
+    @Query("SELECT * FROM PERSON WHERE AGE > ?1")
+    List<Person> findByAgeGreaterThan(int minAge);
+
+    // Named parameters
+    @Query("SELECT * FROM PERSON WHERE AGE > :minAge AND AGE < :maxAge")
+    List<Person> findWhereAgeBetweenExclusive(@Param("minAge") int minAge, @Param("maxAge") int maxAge);
+
+    // Returning Litebridge native Row objects
+    @Query("SELECT * FROM PERSON WHERE AGE > ?1")
+    List<Row> findPersonRowsWhereAgeGreaterThan(int minAge);
+
+    // Scalar aggregations and projections
+    @Query("SELECT AVG(AGE) FROM PERSON")
+    double getAverageAge();
+
+    // Modifying queries (INSERT, UPDATE, DELETE)
+    @Query(value = "UPDATE PERSON SET AGE = :age WHERE ID = :id", modifying = true)
+    int updatePersonAge(@Param("id") Long id, @Param("age") int age);
+}
+```
+
+##### Parameter Binding
+
+- **Positional Parameters**: Standard JDBC `?` or numbered positional parameters (`?1`, `?2`) bind method arguments in order of appearance.
+- **Named Parameters**: Parameters prefixed with `:` (e.g., `:minAge`, `:maxAge`) bind to method parameters by name (optionally annotated with Spring Data's `@Param`).
+
+##### Supported Return Types
+
+- **Entities / DTOs**: Single instances (`Person`) or collections (`List<Person>`). Results are mapped to the entity class registered with Litebridge.
+- **Native Rows**: `Row` or `List<Row>` for direct access to raw column names and values.
+- **Scalar Values**: Primitive types or objects (e.g. `double`, `Double`, `long`, `Long`, `String`) for single-column projections and aggregate queries.
+- **Modifying Queries**: When `modifying = true` is set on `@Query`, mutating statements return the affected row count as an `int`, `long`, or `UpdateResult`.
+
 ### Custom Repository Configuration
 
 Explicit `@EnableLitebridgeRepositories` annotations take precedence over repository auto-configuration. When `@EnableLitebridgeRepositories` is declared, the auto-configuration backs off.

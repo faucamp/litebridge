@@ -49,7 +49,7 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs during query execution
      * @see NativeSqlContext#query(String, List) which this method delegates to
      */
-    public List<Row> query(final String sql, final Object... bindParameters) {
+    public List<Row> query(final String sql, final @Nullable Object... bindParameters) {
         final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
         final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
         return query(preparedSql);
@@ -96,7 +96,7 @@ public final class NativeSqlContext {
      * @throws IllegalStateException if an error occurs while executing the update statement
      * @see NativeSqlContext#execute(String, List) which this method delegates to
      */
-    public UpdateResult execute(final String sql, final Object... bindParameters) {
+    public UpdateResult execute(final String sql, final @Nullable Object... bindParameters) {
         final ParsedSql parsedSql = nativeSqlCache.getCachedSql(sql);
         final PreparedSql preparedSql = parsedSql.prepareSql(bindParameters);
         return execute(preparedSql);
@@ -164,6 +164,22 @@ public final class NativeSqlContext {
                 .map(parsedSql::prepareSql)
                 .toList();
         return executeBatch(operations);
+    }
+
+    /**
+     * Parses the specified SQL statement and returns a positional parameter-based version along with bind parameter metadata.
+     * <p>
+     * For named parameter-based queries, this translates the SQL into a positional parameter-based version and provides
+     * the positional index of each bind parameter.
+     * <p>
+     * This returns the cached parsed SQL statement if it is found in the cache.
+     * Otherwise, it parses the input SQL and caches the parsed SQL statement.
+     *
+     * @param sql SQL statement to parse/cache.
+     * @return Parsed (and cached) SQL statement and metadata.
+     */
+    public ParsedSql parse(final String sql) {
+        return nativeSqlCache.getCachedSql(sql);
     }
 
     private UpdateResult execute(final PreparedSql preparedSql) {

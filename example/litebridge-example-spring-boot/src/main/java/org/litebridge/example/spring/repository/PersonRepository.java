@@ -1,7 +1,10 @@
 package org.litebridge.example.spring.repository;
 
+import org.litebridge.db.spi.Row;
 import org.litebridge.example.common.entity.Person;
+import org.litebridge.spring.annotation.Query;
 import org.litebridge.spring.repository.LitebridgeRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -54,4 +57,22 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
      * @return List of persons matching the specified age range
      */
     List<Person> findAllByAgeBetween(int minAge, int maxAge);
+
+    /**
+     * Native query via annotation using named parameters out of order
+     */
+    @Query("SELECT * FROM LB.PERSON p WHERE p.AGE < :maxAge AND p.AGE > :minAge")
+    List<Person> getPersonWhereAgeBetweenExclusive(@Param("minAge") int minAge, @Param("maxAge") int maxAge);
+
+    /**
+     * Native query using positional parameters, returning raw Row results
+     */
+    @Query("SELECT * FROM LB.PERSON p WHERE p.AGE > ? AND p.AGE < ?")
+    List<Row> getPersonRowsWhereAgeBetweenExclusive(int minAge, int maxAge);
+
+    /**
+     * Native query with mapped return type
+     */
+    @Query("SELECT AVG(AGE) FROM LB.PERSON p")
+    double getAverageAgeNativeQuery();
 }

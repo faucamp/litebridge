@@ -245,7 +245,7 @@ public class SelectEngineTerminal {
                 // Selecting the actual DTO
                 return mapDtos(dtoClass, contextDtoClass, rows, ormTable, litebridgeContext);
             } else if (dtoClass == Row.class) {
-                // Multipe type overrides
+                // Multiple type overrides
                 return (List<DTO>) rows.stream()
                         .map(row -> convertRowValue(row, Objects.requireNonNull(selectNode.resultTypes()), typeConverter))
                         .toList();
@@ -292,6 +292,7 @@ public class SelectEngineTerminal {
 
             // Single value return type override
             final List<DTO> convertedResults = new ArrayList<>(rows.size());
+
             for (Row row : rows) {
                 convertedResults.add((DTO) unwrap(resultTypes[0], row.column(0), litebridgeContext.typeConverter()));
             }

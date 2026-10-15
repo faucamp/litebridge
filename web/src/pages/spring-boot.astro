@@ -204,6 +204,47 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
 }`
     },
     {
+        id: 'queryAnnotation',
+        title: 'Native @Query methods',
+        filename: 'PersonRepository.java',
+        lang: 'java',
+        animate: false,
+        description: `Execute custom native SQL queries directly using the <code>@Query</code> annotation with positional or named parameters, custom projections, or modifying statements.`,
+        code: `import java.util.List;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import org.litebridge.db.spi.Row;
+import org.litebridge.spring.annotation.Query;
+import org.litebridge.spring.repository.LitebridgeRepository;
+
+import org.example.entity.Person;
+
+@Repository
+public interface PersonRepository extends LitebridgeRepository<Person, Long> {
+
+    // Positional parameters (?1, ?2 or ?)
+    @Query("SELECT * FROM PERSON WHERE AGE > ?1")
+    List<Person> findByAgeGreaterThan(int minAge);
+
+    // Named parameters with @Param
+    @Query("SELECT * FROM PERSON WHERE AGE > :minAge AND AGE < :maxAge")
+    List<Person> findWhereAgeBetweenExclusive(@Param("minAge") int minAge, @Param("maxAge") int maxAge);
+
+    // Raw Row results for custom projections
+    @Query("SELECT * FROM PERSON WHERE AGE > ?1")
+    List<Row> findPersonRowsWhereAgeGreaterThan(int minAge);
+
+    // Scalar aggregations
+    @Query("SELECT AVG(AGE) FROM PERSON")
+    double getAverageAge();
+
+    // Modifying query (INSERT, UPDATE, DELETE)
+    @Query(value = "UPDATE PERSON SET AGE = :age WHERE ID = :id", modifying = true)
+    int updatePersonAge(@Param("id") Long id, @Param("age") int age);
+}`
+    },
+    {
         id: 'repoService',
         title: 'Service injection',
         filename: 'UserAccountService.java',

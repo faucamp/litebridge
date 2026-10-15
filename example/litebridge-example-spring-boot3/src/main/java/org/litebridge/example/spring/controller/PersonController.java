@@ -2,6 +2,7 @@ package org.litebridge.example.spring.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.litebridge.db.spi.Row;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.spring.service.ExampleService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,9 +80,35 @@ public class PersonController {
         return exampleService.getPersonsByNameOrSurname(name);
     }
 
-    @GetMapping(path = "/count-name-startswith")
+    @GetMapping(path = "/age-between")
+    @Operation(summary = "Get all Person records with ages between the the specified min and max")
+    public List<Person> getPersonsByAgeBetween(@Parameter(description = "Minimum age (inclusive)") @RequestParam final int minAge,
+                                               @Parameter(description = "Maximum age (inclusive)") @RequestParam final int maxAge) {
+        return exampleService.getPersonsByAgeBetween(minAge, maxAge);
+    }
+
+    @GetMapping(path = "/age-between-exclusive")
+    @Operation(summary = "Get all Person records with ages between the the specified min and max")
+    public List<Person> getPersonWhereAgeBetweenExclusive(@Parameter(description = "Minimum age (exclusive)") @RequestParam final int minAge,
+                                                          @Parameter(description = "Maximum age (exclusive)") @RequestParam final int maxAge) {
+        return exampleService.getPersonWhereAgeBetweenExclusive(minAge, maxAge);
+    }
+
+    @GetMapping(path = "/age/average")
+    @Operation(summary = "Get the average of the AGE column of LB.PERSON records")
+    public double getAverageAge() {
+        return exampleService.getAverageAgeNativeQuery();
+    }
+
+    @GetMapping(path = "/count/name-startswith")
     @Operation(summary = "Count all Person records with names starting with the specified prefix")
     public int countPersonsNameStartingWith(@Parameter(description = "Name prefix") @RequestParam final String namePrefix) {
         return exampleService.countPersonsNameStartingWith(namePrefix);
+    }
+
+    @GetMapping(path = "/exists/by-age")
+    @Operation(summary = "Existence check, filtered by age")
+    public boolean existByAge(@Parameter(description = "Age to filter on") @RequestParam final int age) {
+        return exampleService.existsByAge(age);
     }
 }

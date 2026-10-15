@@ -33,10 +33,16 @@ class SpringBoot3PersonControllerTest {
         // When
         final List<Person> found = personController.getPersonsByNameAndSurname("Boot3", "User");
         final int count = personController.countPersonsNameStartingWith("Boot");
+        final List<Person> exclusiveFound = personController.getPersonWhereAgeBetweenExclusive(20, 25);
+        final double avgAge = personController.getAverageAge();
+        final boolean exists = personController.existByAge(22);
 
         // Then
         assertThat(created.getId()).isNotNull();
         assertThat(found).isNotEmpty();
         assertThat(count).isGreaterThanOrEqualTo(1);
+        assertThat(exclusiveFound).isNotEmpty();
+        assertThat(avgAge).isGreaterThan(0.0);
+        assertThat(exists).isTrue();
     }
 }

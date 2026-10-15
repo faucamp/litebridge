@@ -1,5 +1,6 @@
 package org.litebridge.orm;
 
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.orm.engine.QueryPlanCache;
 import org.litebridge.orm.persistence.TableRegistry;
 
@@ -23,5 +24,9 @@ public final class LitebridgeInspector {
 
     public static TableRegistry getTableRegistry(final LitebridgeCore litebridge) {
         return litebridge.tableRegistry();
+    }
+
+    public static DatabaseProvider getDatabaseProvider(final LitebridgeCore litebridge) {
+        return litebridge.databaseProvider();
     }
 }

@@ -35,3 +35,4 @@ The key components include:
 - `Litebridge`: The main entry point, which can be easily defined as a Spring bean.
 - `LitebridgeRepository`: Base Spring Data repository interface extending `ListCrudRepository` and `ListPagingAndSortingRepository`.
 - `@EnableLitebridgeRepositories`: Annotation enabling Spring Data repository support with custom configuration.
+- `@Query`: Annotation for defining custom native SQL queries and mutating statements on repository methods.

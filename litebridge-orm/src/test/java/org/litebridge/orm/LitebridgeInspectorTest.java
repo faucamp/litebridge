@@ -1,7 +1,9 @@
 package org.litebridge.orm;
 
 import org.junit.jupiter.api.Test;
+import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.orm.engine.QueryPlanCache;
+import org.litebridge.orm.persistence.TableRegistry;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -26,6 +28,34 @@ class LitebridgeInspectorTest {
 
         // Then
         assertSame(expectedCache, actualCache);
+    }
+
+    @Test
+    void testGetTableRegistry() {
+        // Given
+        final LitebridgeCore litebridge = mock(LitebridgeCore.class);
+        final TableRegistry expectedRegistry = mock(TableRegistry.class);
+        when(litebridge.tableRegistry()).thenReturn(expectedRegistry);
+
+        // When
+        final TableRegistry actualRegistry = LitebridgeInspector.getTableRegistry(litebridge);
+
+        // Then
+        assertSame(expectedRegistry, actualRegistry);
+    }
+
+    @Test
+    void testGetDatabaseProvider() {
+        // Given
+        final LitebridgeCore litebridge = mock(LitebridgeCore.class);
+        final DatabaseProvider expectedProvider = mock(DatabaseProvider.class);
+        when(litebridge.databaseProvider()).thenReturn(expectedProvider);
+
+        // When
+        final DatabaseProvider actualProvider = LitebridgeInspector.getDatabaseProvider(litebridge);
+
+        // Then
+        assertSame(expectedProvider, actualProvider);
     }
 
     @Test
