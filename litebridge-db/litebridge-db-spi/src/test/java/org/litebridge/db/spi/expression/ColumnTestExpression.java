@@ -1,10 +1,11 @@
 package org.litebridge.db.spi.expression;
 
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.Column;
 import org.litebridge.db.spi.Operation;
 
+@NullMarked
 public record ColumnTestExpression(Column column, @Nullable String alias,
                                    @Nullable String tableAlias) implements ColumnExpression {
 
@@ -13,7 +14,7 @@ public record ColumnTestExpression(Column column, @Nullable String alias,
     }
 
     @Override
-    public String toSql(final @NonNull Operation operation, final @NonNull ClauseType clause, final @Nullable DelegateExpression parent) {
+    public String toSql(final Operation operation, final ClauseType clause, final @Nullable DelegateExpression parent) {
         return column.name();
     }
 }

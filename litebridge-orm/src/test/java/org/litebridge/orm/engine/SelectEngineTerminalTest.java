@@ -1,5 +1,6 @@
 package org.litebridge.orm.engine;
 
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.Column;
@@ -828,6 +829,7 @@ class SelectEngineTerminalTest {
         }
     }
 
+    @NullMarked
     private static class TestAliasedDelegateExpression implements DelegateExpression, AliasedExpression {
         private final SelectExpression target;
         private final String alias;

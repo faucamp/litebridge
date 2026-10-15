@@ -1,5 +1,6 @@
 package org.litebridge.orm.spi;
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
@@ -48,6 +49,7 @@ class LitebridgeOverrideDatabaseProviderTest {
         assertThrows(IllegalStateException.class, () -> override.createLitebridge(constructorArgs));
     }
 
+    @NullMarked
     private static class TestLitebridgeOverrideDatabaseProvider implements LitebridgeOverrideDatabaseProvider<LitebridgeCore> {
 
         @Override

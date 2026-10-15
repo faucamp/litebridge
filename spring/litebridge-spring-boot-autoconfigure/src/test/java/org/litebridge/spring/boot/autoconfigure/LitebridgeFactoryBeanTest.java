@@ -1,7 +1,7 @@
 package org.litebridge.spring.boot.autoconfigure;
 
 import org.flywaydb.core.Flyway;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.h2.H2DatabaseProvider;
@@ -265,6 +265,7 @@ class LitebridgeFactoryBeanTest {
         }
     }
 
+    @NullMarked
     public static class TestDatabaseProvider implements DatabaseProvider {
         private final DatabaseProvider delegate = new H2DatabaseProvider();
 
@@ -274,32 +275,32 @@ class LitebridgeFactoryBeanTest {
         }
 
         @Override
-        public DatabaseMetaData databaseMetaData(final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+        public DatabaseMetaData databaseMetaData(final ConnectionProvider connectionProvider) throws SQLException {
             return delegate.databaseMetaData(connectionProvider);
         }
 
         @Override
-        public TableMetaData tableMetaData(final @NonNull Table table, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+        public TableMetaData tableMetaData(final Table table, final ConnectionProvider connectionProvider) throws SQLException {
             return delegate.tableMetaData(table, connectionProvider);
         }
 
         @Override
-        public <T extends Result> T executeUpdate(final @NonNull PreparedSql preparedSql, final @NonNull Class<T> resultType, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+        public <T extends Result> T executeUpdate(final PreparedSql preparedSql, final Class<T> resultType, final ConnectionProvider connectionProvider) throws SQLException {
             return delegate.executeUpdate(preparedSql, resultType, connectionProvider);
         }
 
         @Override
-        public BatchUpdateResult executeBatch(final @NonNull List<PreparedSql> preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+        public BatchUpdateResult executeBatch(final List<PreparedSql> preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
             return delegate.executeBatch(preparedSql, connectionProvider);
         }
 
         @Override
-        public List<Row> executeQuery(final @NonNull PreparedSql preparedSql, final @NonNull ConnectionProvider connectionProvider) throws SQLException {
+        public List<Row> executeQuery(final PreparedSql preparedSql, final ConnectionProvider connectionProvider) throws SQLException {
             return delegate.executeQuery(preparedSql, connectionProvider);
         }
 
         @Override
-        public String toSql(final @NonNull Operation operation, final @NonNull ConnectionProvider connectionProvider) {
+        public String toSql(final Operation operation, final ConnectionProvider connectionProvider) {
             return delegate.toSql(operation, connectionProvider);
         }
 
@@ -309,7 +310,7 @@ class LitebridgeFactoryBeanTest {
         }
 
         @Override
-        public SequenceColumnValueGenerator sequenceColumnValueGenerator(final @NonNull String sequence) throws UnsupportedOperationException {
+        public SequenceColumnValueGenerator sequenceColumnValueGenerator(final String sequence) throws UnsupportedOperationException {
             return delegate.sequenceColumnValueGenerator(sequence);
         }
 
@@ -329,6 +330,7 @@ class LitebridgeFactoryBeanTest {
         }
     }
 
+    @NullMarked
     public static class TestCustomLitebridgeDatabaseProvider extends TestDatabaseProvider implements LitebridgeOverrideDatabaseProvider<TestCustomLitebridge> {
         public TestCustomLitebridgeDatabaseProvider() {
         }

@@ -632,16 +632,19 @@ public class DtoMapper {
         return resolved;
     }
 
-    private @Nullable Object constructIntermediateObject(final Class<?> targetClass, final List<ChainedFieldEntry> entries) {
+    private Object constructIntermediateObject(final Class<?> targetClass, final List<ChainedFieldEntry> entries) {
         final Map<FieldAccessor, @Nullable Object> directFields = new HashMap<>();
         final Map<FieldAccessor, List<ChainedFieldEntry>> subChains = new LinkedHashMap<>();
 
         for (final ChainedFieldEntry entry : entries) {
             final List<FieldAccessor> accessors = entry.remainingAccessors();
+
             if (accessors.isEmpty()) {
                 continue;
             }
+
             final FieldAccessor first = accessors.getFirst();
+
             if (accessors.size() == 1) {
                 directFields.put(first, entry.value());
             } else {
@@ -663,11 +666,13 @@ public class DtoMapper {
     private Object instantiateIntermediateType(final Class<?> targetClass, final Map<FieldAccessor, @Nullable Object> fieldValues) {
         if (targetClass.isRecord()) {
             final RecordComponent[] components = targetClass.getRecordComponents();
+
             if (components == null) {
                 throw new IllegalStateException("Failed to get record components for record class: " + targetClass.getName());
             }
 
             final @Nullable Object[] args = new Object[components.length];
+
             final Constructor<?> constructor = intermediateConstructorCache.computeIfAbsent(targetClass, cls -> {
                 final Class<?>[] paramTypes = Arrays.stream(components)
                         .map(RecordComponent::getType)
@@ -764,7 +769,8 @@ public class DtoMapper {
 
                                 if (val == null && !fieldValues.isEmpty()) {
                                     // If parameter name not preserved, fallback to field by index
-                                    final List<Object> vals = new ArrayList<>(fieldValues.values());
+                                    final List<@Nullable Object> vals = new ArrayList<>(fieldValues.values());
+
                                     if (idx < vals.size()) {
                                         val = vals.get(idx);
                                     }

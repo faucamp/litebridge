@@ -1,5 +1,6 @@
 package org.litebridge.orm;
 
+import org.jspecify.annotations.NullMarked;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ObjectUtils;
 import org.litebridge.db.spi.DatabaseMetaData;
@@ -219,6 +220,7 @@ class LitebridgeBuilderTest {
         assertNotNull(overrideLitebridge);
     }
 
+    @NullMarked
     private static class TestLitebridgeCoreOverrideDatabaseProvider implements LitebridgeOverrideDatabaseProvider<LitebridgeCore> {
 
         private final DatabaseProvider delegate = mockDatabaseProviderWithMetaData();
@@ -289,6 +291,7 @@ class LitebridgeBuilderTest {
         }
     }
 
+    @NullMarked
     private static class TestCustomLitebridgeOverrideDatabaseProvider implements LitebridgeOverrideDatabaseProvider<TestCustomLitebridge> {
 
         private final DatabaseProvider delegate = mockDatabaseProviderWithMetaData();
