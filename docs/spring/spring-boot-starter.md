@@ -261,6 +261,58 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
 - **Scalar Values**: Primitive types or objects (e.g. `double`, `Double`, `long`, `Long`, `String`) for single-column projections and aggregate queries.
 - **Modifying Queries**: When `modifying = true` is set on `@Query`, mutating statements return the affected row count as an `int`, `long`, or `UpdateResult`.
 
+#### Custom Repository Implementations
+
+For query logic requiring dynamic construction or full programmatic control, custom repository implementations can be built using standard Spring Data repository composition conventions. 
+This allows direct use of Litebridge's fluent query API within repository instances.
+
+##### Step 1: Define a Custom Interface
+
+Create an interface declaring the custom method signature(s):
+
+```java
+public interface PersonRepositoryCustom {
+
+    List<Person> getPersonsInAgeRange(final int age);
+}
+```
+
+##### Step 2: Implement the Custom Interface
+
+Create an implementation class following Spring Data naming conventions (by default, appending `Impl` to the repository interface name or custom interface name). Inject `Litebridge` or `LitebridgeCore` and construct queries using the fluent API:
+
+```java
+public class PersonRepositoryImpl implements PersonRepositoryCustom {
+
+    private final Litebridge litebridge;
+
+    public PersonRepositoryImpl(final Litebridge litebridge) {
+        this.litebridge = litebridge;
+    }
+
+    @Override
+    public List<Person> getPersonsInAgeRange(final int age) {
+        return litebridge.select(Person.class)
+                .where("age").gt(age - 5)
+                .and("age").lt(age + 5)
+                .list();
+    }
+}
+```
+
+##### Step 3: Extend the Custom Interface in the Repository
+
+Extend both `LitebridgeRepository` and the custom interface in the main repository declaration:
+
+```java
+@Repository
+public interface PersonRepository extends LitebridgeRepository<Person, Long>, PersonRepositoryCustom {
+    // Derived query methods, @Query methods, and custom implementations
+}
+```
+
+Spring Data automatically detects the implementation class and routes calls to custom methods to the implementation bean.
+
 ### Custom Repository Configuration
 
 Explicit `@EnableLitebridgeRepositories` annotations take precedence over repository auto-configuration. When `@EnableLitebridgeRepositories` is declared, the auto-configuration backs off.

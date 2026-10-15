@@ -2,7 +2,6 @@ package org.litebridge.example.spring.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.litebridge.db.spi.Row;
 import org.litebridge.example.common.dto.Person;
 import org.litebridge.example.spring.service.ExampleService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -98,6 +97,12 @@ public class PersonController {
     public List<Person> getPersonWhereAgeBetweenExclusive(@Parameter(description = "Minimum age (exclusive)") @RequestParam final int minAge,
                                                           @Parameter(description = "Maximum age (exclusive)") @RequestParam final int maxAge) {
         return exampleService.getPersonWhereAgeBetweenExclusive(minAge, maxAge);
+    }
+
+    @GetMapping(path = "/age-in-range")
+    @Operation(summary = "Get all Person records with ages within 5 years of the specified age")
+    public List<Person> getPersonsInAgeRage(@Parameter(description = "Age to check") @RequestParam final int age) {
+        return exampleService.getPersonsInAgeRage(age);
     }
 
     @GetMapping(path = "/age/average")

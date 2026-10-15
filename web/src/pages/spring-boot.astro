@@ -245,6 +245,45 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
 }`
     },
     {
+        id: 'customRepo',
+        title: 'Custom implementations',
+        filename: 'PersonRepositoryImpl.java',
+        lang: 'java',
+        animate: false,
+        description: `Implement custom query logic using Spring Data repository composition conventions and Litebridge's fluent query API.`,
+        code: `import java.util.List;
+import org.litebridge.orm.LitebridgeCore;
+import org.example.entity.Person;
+
+// Custom repository interface following Spring conventions and declaring a custom query method
+public interface PersonRepositoryCustom {
+    List<Person> getPersonsInAgeRange(int age);
+}
+
+// Custom implementation class following Spring conventions
+public class PersonRepositoryImpl implements PersonRepositoryCustom {
+
+    private final Litebridge litebridge;
+
+    public PersonRepositoryImpl(final Litebridge litebridge) {
+        this.litebridge = litebridge;
+    }
+
+    @Override
+    public List<Person> getPersonsInAgeRange(final int age) {
+        return litebridge.select(Person.class)
+                .where("age").gt(age - 5)
+                .and("age").lt(age + 5)
+                .list();
+    }
+}
+
+// Repository interface extending both LitebridgeRepository and custom interface
+@Repository
+public interface PersonRepository extends LitebridgeRepository<Person, Long>, PersonRepositoryCustom {
+}`
+    },
+    {
         id: 'repoService',
         title: 'Service injection',
         filename: 'UserAccountService.java',
@@ -519,7 +558,7 @@ public class RepositoryConfig {
                     </div>
                     <p class="mb-4 text-gray-600 dark:text-gray-400">
                         Declare interfaces extending <code>LitebridgeRepository&lt;T, ID&gt;</code> for boilerplate-free
-                        CRUD operations, custom derived query methods, and Spring Data integration:
+                        CRUD operations, custom derived query methods, native <code>@Query</code> statements, and custom query implementations:
                     </p>
                     <CodeExample examples={repositoryExamples}/>
                 </section>

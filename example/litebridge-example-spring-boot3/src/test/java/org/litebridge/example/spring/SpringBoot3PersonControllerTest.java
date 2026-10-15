@@ -113,6 +113,23 @@ class SpringBoot3PersonControllerTest {
     }
 
     @Test
+    void personController_getPersonsInAgeRage() {
+        // Given
+        final Person person = new Person();
+        person.setName("Daisy");
+        person.setSurname("Miller");
+        person.setAge(28);
+        person.setEyeColour("Hazel");
+        personRepository.save(person);
+
+        // When
+        final List<Person> found = personController.getPersonsInAgeRage(25);
+
+        // Then
+        assertThat(found).isNotEmpty();
+    }
+
+    @Test
     void personController_getAverageAge() {
         // Given
         final Person person = new Person();

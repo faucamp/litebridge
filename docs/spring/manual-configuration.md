@@ -86,6 +86,23 @@ litebridge.register(mappings);
 
 These classes leverage Spring's `ClassPathScanningCandidateComponentProvider` to find relevant components in the specified packages.
 
+## Spring Data Repositories
+
+To enable Spring Data repositories in manual configurations, annotate configuration classes with `@EnableLitebridgeRepositories`:
+
+```java
+import org.litebridge.spring.repository.EnableLitebridgeRepositories;
+
+@Configuration
+@EnableTransactionManagement
+@EnableLitebridgeRepositories(basePackages = "com.example.app.repository")
+public class LitebridgeConfig {
+    // ...
+}
+```
+
+Repository interfaces extending `LitebridgeRepository` will be discovered in the configured base packages, supporting standard CRUD methods, derived query methods, `@Query` annotations, and custom fragment implementations (`*Custom` / `*Impl`).
+
 ## Key Considerations
 
 ### Transaction Management

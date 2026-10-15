@@ -67,6 +67,10 @@ public class ExampleService {
         return personRepository.getPersonRowsWhereAgeBetweenExclusive(minAge, maxAge);
     }
 
+    public List<Person> getPersonsInAgeRage(final int age) {
+        return personRepository.getPersonsInAgeRage(age);
+    }
+
     public double getAverageAgeNativeQuery() {
         return personRepository.getAverageAgeNativeQuery();
     }

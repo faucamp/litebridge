@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PersonRepository extends LitebridgeRepository<Person, Long> {
+public interface PersonRepository extends LitebridgeRepository<Person, Long>, PersonRepositoryCustom {
 
     /**
      * Finds all persons with the specified name and surname.
