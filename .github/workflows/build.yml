@@ -25,7 +25,7 @@ jobs:
         cache: maven
     
     - name: Build with Maven and generate JaCoCo report
-      run: mvn -B clean verify
+      run: ./mvnw -B clean verify
 
     - name: "Generate JaCoCo Badge: litebridge-annotations"
       uses: cicirello/jacoco-badge-generator@v2

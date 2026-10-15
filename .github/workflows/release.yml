@@ -27,7 +27,7 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - name: Publish to Maven Central
-        run: mvn clean deploy -Prelease
+        run: ./mvnw clean deploy -Prelease
         env:
           CENTRAL_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}

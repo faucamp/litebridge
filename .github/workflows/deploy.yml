@@ -39,7 +39,7 @@ jobs:
       - name: Generate JavaDoc
         run: |
           mkdir -p ${{ env.BUILD_PATH }}/public/javadoc
-          mvn install -pl litebridge-maven-plugin -am -DskipTests=true javadoc:aggregate
+          ./mvnw install -pl litebridge-maven-plugin -am -DskipTests=true javadoc:aggregate
           cp -r target/reports/apidocs/* ${{ env.BUILD_PATH }}/public/javadoc/
 
       # Detect Node package manager
