@@ -274,7 +274,7 @@ class LitebridgeAutoConfigurationTest {
                 });
     }
 
-    public static class CustomLitebridge extends LitebridgeCore {
+    public static class CustomLitebridge extends Litebridge {
         public CustomLitebridge(final DatabaseProvider databaseProvider,
                                 final TransactionManager transactionManager,
                                 final LitebridgeConfig litebridgeConfig,

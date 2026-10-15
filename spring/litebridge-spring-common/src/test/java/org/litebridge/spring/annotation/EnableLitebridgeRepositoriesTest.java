@@ -1,7 +1,7 @@
 package org.litebridge.spring.annotation;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.repository.LitebridgeRepository;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -21,8 +21,8 @@ class EnableLitebridgeRepositoriesTest {
     public static class TestConfig {
 
         @Bean
-        public LitebridgeCore litebridgeCore() {
-            return Mockito.mock(LitebridgeCore.class);
+        public Litebridge litebridge() {
+            return Mockito.mock(Litebridge.class);
         }
     }
 
@@ -49,7 +49,7 @@ class EnableLitebridgeRepositoriesTest {
             context.register(TestConfig.class);
             context.refresh();
             final SampleRepository repository = context.getBean(SampleRepository.class);
-            final LitebridgeCore litebridgeCore = context.getBean(LitebridgeCore.class);
+            final Litebridge litebridgeCore = context.getBean(Litebridge.class);
             final org.litebridge.orm.api.select.dto.DtoFromClauseTerminal<Object> dtoSelectTerminal =
                     Mockito.mock(org.litebridge.orm.api.select.dto.DtoFromClauseTerminal.class);
             Mockito.when(litebridgeCore.select(Object.class)).thenReturn(dtoSelectTerminal);

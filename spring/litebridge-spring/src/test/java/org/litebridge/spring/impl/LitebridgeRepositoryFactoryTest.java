@@ -1,7 +1,7 @@
 package org.litebridge.spring.impl;
 
 import org.junit.jupiter.api.Test;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.repository.LitebridgeQueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
@@ -17,7 +17,7 @@ class LitebridgeRepositoryFactoryTest {
     @Test
     void getQueryLookupStrategy() {
         // Given
-        final LitebridgeCore litebridge = mock(LitebridgeCore.class);
+        final Litebridge litebridge = mock(Litebridge.class);
         final LitebridgeRepositoryFactory factory = new LitebridgeRepositoryFactory(litebridge);
 
         // When

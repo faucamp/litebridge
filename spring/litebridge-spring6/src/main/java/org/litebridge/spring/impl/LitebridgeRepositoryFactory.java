@@ -1,7 +1,7 @@
 package org.litebridge.spring.impl;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.repository.AbstractLitebridgeRepositoryFactory;
 import org.litebridge.spring.repository.LitebridgeQueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy;
@@ -19,7 +19,7 @@ public final class LitebridgeRepositoryFactory extends AbstractLitebridgeReposit
      *
      * @param litebridge The Litebridge instance to use.
      */
-    public LitebridgeRepositoryFactory(final LitebridgeCore litebridge) {
+    public LitebridgeRepositoryFactory(final Litebridge litebridge) {
         super(litebridge);
     }
 

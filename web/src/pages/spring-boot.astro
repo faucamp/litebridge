@@ -252,7 +252,8 @@ public interface PersonRepository extends LitebridgeRepository<Person, Long> {
         animate: false,
         description: `Implement custom query logic using Spring Data repository composition conventions and Litebridge's fluent query API.`,
         code: `import java.util.List;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
+
 import org.example.entity.Person;
 
 // Custom repository interface following Spring conventions and declaring a custom query method

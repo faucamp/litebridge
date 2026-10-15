@@ -1,6 +1,6 @@
 package org.litebridge.spring.repository;
 
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.annotation.Query;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.projection.ProjectionFactory;
@@ -14,10 +14,10 @@ import java.lang.reflect.Method;
 public class LitebridgeQueryLookupStrategy implements QueryLookupStrategy {
 
     private final LitebridgePartTreeQuery.PartTreeSpringSupport partTreeSpringSupport;
-    private final LitebridgeCore litebridge;
+    private final Litebridge litebridge;
 
     public LitebridgeQueryLookupStrategy(final LitebridgePartTreeQuery.PartTreeSpringSupport partTreeSpringSupport,
-                                         final LitebridgeCore litebridge) {
+                                         final Litebridge litebridge) {
         this.partTreeSpringSupport = partTreeSpringSupport;
         this.litebridge = litebridge;
     }

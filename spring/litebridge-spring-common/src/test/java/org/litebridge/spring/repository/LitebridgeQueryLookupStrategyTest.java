@@ -2,7 +2,7 @@ package org.litebridge.spring.repository;
 
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.h2.H2DatabaseProvider;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.annotation.Query;
 import org.litebridge.spring.impl.LitebridgeRepositoryFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -37,7 +37,7 @@ class LitebridgeQueryLookupStrategyTest {
     @Test
     void resolveQuery_withQueryAnnotation_returnsLitebridgeStringQuery() throws NoSuchMethodException {
         // Given
-        final LitebridgeCore litebridge = new LitebridgeCore(new H2DatabaseProvider(), mock(DataSource.class));
+        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), mock(DataSource.class));
         final LitebridgePartTreeQuery.PartTreeSpringSupport partTreeSupport = new LitebridgeRepositoryFactory.PartTreeSupportImpl();
         final LitebridgeQueryLookupStrategy strategy = new LitebridgeQueryLookupStrategy(partTreeSupport, litebridge);
         final DefaultRepositoryMetadata metadata = new DefaultRepositoryMetadata(TestRepository.class);
@@ -56,7 +56,7 @@ class LitebridgeQueryLookupStrategyTest {
     @Test
     void resolveQuery_withoutQueryAnnotation_returnsLitebridgePartTreeQuery() throws NoSuchMethodException {
         // Given
-        final LitebridgeCore litebridge = new LitebridgeCore(new H2DatabaseProvider(), mock(DataSource.class));
+        final Litebridge litebridge = new Litebridge(new H2DatabaseProvider(), mock(DataSource.class));
         final LitebridgePartTreeQuery.PartTreeSpringSupport partTreeSupport = new LitebridgeRepositoryFactory.PartTreeSupportImpl();
         final LitebridgeQueryLookupStrategy strategy = new LitebridgeQueryLookupStrategy(partTreeSupport, litebridge);
         final DefaultRepositoryMetadata metadata = new DefaultRepositoryMetadata(TestRepository.class);

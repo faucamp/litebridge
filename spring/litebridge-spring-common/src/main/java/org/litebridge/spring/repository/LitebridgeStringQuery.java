@@ -5,7 +5,7 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.db.spi.Row;
 import org.litebridge.db.spi.convert.TypeConverter;
 import org.litebridge.db.spi.update.UpdateResult;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.LitebridgeInspector;
 import org.litebridge.orm.nativesql.ParsedSql;
 import org.springframework.data.projection.ProjectionFactory;
@@ -27,7 +27,7 @@ public class LitebridgeStringQuery implements RepositoryQuery {
     private final QueryMethod queryMethod;
     private final boolean isModifying;
     private final String sql;
-    private final LitebridgeCore litebridge;
+    private final Litebridge litebridge;
     private final TypeConverter typeConverter;
 
     public LitebridgeStringQuery(final Method method,
@@ -36,7 +36,7 @@ public class LitebridgeStringQuery implements RepositoryQuery {
                                  final String sql,
                                  final boolean isModifying,
                                  final LitebridgePartTreeQuery.PartTreeSpringSupport partTreeSpringSupport,
-                                 final LitebridgeCore litebridge) {
+                                 final Litebridge litebridge) {
         this.queryMethod = partTreeSpringSupport.createQueryMethod(method, metadata, factory);
         this.sql = sql;
         this.isModifying = isModifying;

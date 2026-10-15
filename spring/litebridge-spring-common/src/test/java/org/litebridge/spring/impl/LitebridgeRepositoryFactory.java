@@ -2,7 +2,7 @@ package org.litebridge.spring.impl;
 
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.spring.repository.AbstractLitebridgeRepositoryFactory;
 import org.litebridge.spring.repository.LitebridgePartTreeQuery;
 import org.litebridge.spring.repository.LitebridgeQueryLookupStrategy;
@@ -22,7 +22,7 @@ import java.util.Optional;
 @NullMarked
 public final class LitebridgeRepositoryFactory extends AbstractLitebridgeRepositoryFactory {
 
-    public LitebridgeRepositoryFactory(final LitebridgeCore litebridge) {
+    public LitebridgeRepositoryFactory(final Litebridge litebridge) {
         super(litebridge);
     }
 

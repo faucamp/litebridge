@@ -276,6 +276,24 @@ public class LitebridgeCore implements SelectApi {
     }
 
     /**
+     * Copy constructor.
+     *
+     * @param other Instance to copy.
+     */
+    protected LitebridgeCore(final LitebridgeCore other) {
+        this.persistenceFacade = other.persistenceFacade;
+        this.databaseProvider = other.databaseProvider;
+        this.transactionContext = other.transactionContext;
+        this.nativeSqlContext = other.nativeSqlContext;
+        this.changeTracker = other.changeTracker;
+        this.dtoConstructor = other.dtoConstructor;
+        this.registrationEngine = other.registrationEngine;
+        this.selectEngine = other.selectEngine;
+        this.litebridgeConfig = other.litebridgeConfig;
+        this.tableMetaDataCache = other.tableMetaDataCache;
+    }
+
+    /**
      * Registers a DTO class along with its associated table specification using the provided registration context function.
      *
      * @param dtoClass The class object of the DTO (Data Transfer Object) to be registered.
@@ -675,7 +693,7 @@ public class LitebridgeCore implements SelectApi {
      *
      * @return the {@link MappingPlanCache} instance associated with this Litebridge instance
      */
-    MappingPlanCache mappingPlanCache() {
+    protected MappingPlanCache mappingPlanCache() {
         return mappingPlanCache;
     }
 
@@ -684,7 +702,7 @@ public class LitebridgeCore implements SelectApi {
      *
      * @return The {@link TableRegistry} instance associated with this Litebridge instance.
      */
-    TableRegistry tableRegistry() {
+    protected TableRegistry tableRegistry() {
         return tableRegistry;
     }
 
@@ -693,7 +711,7 @@ public class LitebridgeCore implements SelectApi {
      *
      * @return The {@link DatabaseProvider} instance associated with this Litebridge instance.
      */
-    DatabaseProvider databaseProvider() {
+    protected DatabaseProvider databaseProvider() {
         return databaseProvider;
     }
 

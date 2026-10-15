@@ -18,7 +18,7 @@ import java.lang.invoke.MethodHandles;
 /**
  * Factory bean that creates a specific type of Litebridge bean based on the configured database provider.
  */
-public class LitebridgeFactoryBean implements FactoryBean<LitebridgeCore> {
+public class LitebridgeFactoryBean implements FactoryBean<Litebridge> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LitebridgeFactoryBean.class);
 
@@ -47,7 +47,7 @@ public class LitebridgeFactoryBean implements FactoryBean<LitebridgeCore> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public LitebridgeCore getObject() throws Exception {
+    public Litebridge getObject() throws Exception {
         LOGGER.trace("Creating Litebridge instance with database provider: {}, transaction manager: {}", databaseProvider.getClass().getName(), transactionManager.getClass().getName());
         final LitebridgeConfig litebridgeConfig = new LitebridgeConfig(properties.getRelatedDtoStrategy());
 
@@ -82,7 +82,12 @@ public class LitebridgeFactoryBean implements FactoryBean<LitebridgeCore> {
         }
 
         LOGGER.trace("Litebridge Spring Boot autoconfiguration complete");
-        return litebridge;
+
+        if (litebridge instanceof Litebridge typedLitebridge) {
+            return typedLitebridge;
+        } else {
+            return new LitebridgeCoreWrapper(litebridge);
+        }
     }
 
     @Override

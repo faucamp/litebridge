@@ -3,7 +3,7 @@ package org.litebridge.spring.repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.api.delete.DeleteTerminal;
 import org.litebridge.orm.api.delete.DtoDeleteStart;
 import org.litebridge.orm.api.select.FromClauseStartTypeOverride;
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 class LitebridgeRepositoryImplTest {
 
     @Mock
-    private LitebridgeCore litebridge;
+    private Litebridge litebridge;
 
     @Mock
     private DtoFromClauseTerminal<TestEntity> dtoSelectTerminal;
@@ -191,8 +191,7 @@ class LitebridgeRepositoryImplTest {
                 new TestEntity(1L, "Alice", 30),
                 new TestEntity(2L, "Bob", 25)
         );
-        @SuppressWarnings("unchecked")
-        final DtoWhereConditionClauseTerminal<TestEntity> whereTerminal = mock(DtoWhereConditionClauseTerminal.class);
+        @SuppressWarnings("unchecked") final DtoWhereConditionClauseTerminal<TestEntity> whereTerminal = mock(DtoWhereConditionClauseTerminal.class);
         when(litebridge.select(TestEntity.class)).thenReturn(dtoSelectTerminal);
         when(dtoSelectTerminal.withIds(ids)).thenReturn(whereTerminal);
         when(whereTerminal.list()).thenReturn(entities);

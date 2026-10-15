@@ -117,6 +117,15 @@ public class Litebridge extends LitebridgeCore {
     }
 
     /**
+     * Copy constructor.
+     *
+     * @param other Instance to copy.
+     */
+    protected Litebridge(final LitebridgeCore other) {
+        super(other);
+    }
+
+    /**
      * Merges/upserts the specified entity/mapped DTO into the database.
      * <p>
      * This method constructs an SQL `MERGE INTO` statement based on the provided DTO

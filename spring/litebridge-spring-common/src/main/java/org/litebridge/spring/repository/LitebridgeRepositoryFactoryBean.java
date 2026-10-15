@@ -1,6 +1,6 @@
 package org.litebridge.spring.repository;
 
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.util.ClassUtils;
@@ -40,12 +40,12 @@ public class LitebridgeRepositoryFactoryBean<T extends Repository<S, ID>, S, ID 
         try {
             repositoryFactoryClass = (Class<LRF>) ClassUtils.forName("org.litebridge.spring.impl.LitebridgeRepositoryFactory", getClass().getClassLoader());
         } catch (Exception o_O) {
-            throw new IllegalStateException("Class 'org.litebridge.spring.impl.LitebridgeRepositoryFactoryBean' not found");
+            throw new IllegalStateException("Class 'org.litebridge.spring.impl.LitebridgeRepositoryFactory' not found");
         }
 
         final Constructor<LRF> constructor = Objects.requireNonNull(
-                ClassUtils.getConstructorIfAvailable(repositoryFactoryClass, LitebridgeCore.class),
-                "Constructor not found for class 'org.litebridge.spring.impl.LitebridgeRepositoryFactoryBean'");
+                ClassUtils.getConstructorIfAvailable(repositoryFactoryClass, Litebridge.class),
+                "Constructor not found for class 'org.litebridge.spring.impl.LitebridgeRepositoryFactory'");
 
         return org.litebridge.commons.ClassUtils.newInstance(repositoryFactoryClass, constructor, litebridge);
     }

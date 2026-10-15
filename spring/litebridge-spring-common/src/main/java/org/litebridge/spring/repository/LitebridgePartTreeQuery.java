@@ -2,7 +2,7 @@ package org.litebridge.spring.repository;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.query.LogicOperator;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.api.condition.DtoWhereCriteriaBuilder;
 import org.litebridge.orm.api.select.LimitClauseTerminal;
 import org.litebridge.orm.api.select.OrderByClauseTerminal;
@@ -29,13 +29,13 @@ public class LitebridgePartTreeQuery implements RepositoryQuery {
     private final PartTree tree;
     private final Class<?> entityClass;
     private final PartTreeSpringSupport partTreeSpringSupport;
-    private final LitebridgeCore litebridge;
+    private final Litebridge litebridge;
 
     public LitebridgePartTreeQuery(final Method method,
                                    final RepositoryMetadata metadata,
                                    final ProjectionFactory projectionFactory,
                                    final PartTreeSpringSupport partTreeSpringSupport,
-                                   final LitebridgeCore litebridge) {
+                                   final Litebridge litebridge) {
         this.queryMethod = partTreeSpringSupport.createQueryMethod(method, metadata, projectionFactory);
         this.entityClass = metadata.getDomainType();
         this.partTreeSpringSupport = partTreeSpringSupport;

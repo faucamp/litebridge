@@ -1,6 +1,6 @@
 package org.litebridge.spring.repository;
 
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.litebridge.orm.api.select.OrderByClauseTerminal;
 import org.litebridge.orm.api.select.dto.DtoFromClauseTerminal;
 import org.litebridge.orm.api.select.dto.DtoOrderByClauseChain;
@@ -17,10 +17,10 @@ import java.util.stream.StreamSupport;
 
 public class LitebridgeRepositoryImpl<T, ID> implements LitebridgeRepository<T, ID> {
 
-    private final LitebridgeCore litebridge;
+    private final Litebridge litebridge;
     private Class<T> entityClass;
 
-    public LitebridgeRepositoryImpl(final Class<T> entityClass, final LitebridgeCore litebridge) {
+    public LitebridgeRepositoryImpl(final Class<T> entityClass, final Litebridge litebridge) {
         this.litebridge = litebridge;
         this.entityClass = entityClass;
     }

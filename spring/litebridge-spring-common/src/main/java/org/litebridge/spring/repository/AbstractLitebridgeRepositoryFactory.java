@@ -1,7 +1,7 @@
 package org.litebridge.spring.repository;
 
 import org.jspecify.annotations.Nullable;
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -14,14 +14,14 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
  */
 public abstract class AbstractLitebridgeRepositoryFactory extends RepositoryFactorySupport {
 
-    protected final LitebridgeCore litebridge;
+    protected final Litebridge litebridge;
 
     /**
      * Creates a new {@code AbstractLitebridgeRepositoryFactory} instance.
      *
      * @param litebridge The Litebridge instance to use.
      */
-    public AbstractLitebridgeRepositoryFactory(final LitebridgeCore litebridge) {
+    public AbstractLitebridgeRepositoryFactory(final Litebridge litebridge) {
         this.litebridge = litebridge;
     }
 

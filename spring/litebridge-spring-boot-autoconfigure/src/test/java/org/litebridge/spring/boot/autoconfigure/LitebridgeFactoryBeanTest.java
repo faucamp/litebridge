@@ -4,6 +4,7 @@ import org.flywaydb.core.Flyway;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.litebridge.commons.ClassUtils;
+import org.litebridge.db.h2.H2DatabaseProvider;
 import org.litebridge.db.spi.DatabaseMetaData;
 import org.litebridge.db.spi.DatabaseProvider;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
@@ -128,8 +129,8 @@ class LitebridgeFactoryBeanTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result).isInstanceOf(LitebridgeCore.class);
-        assertThat(result.getClass()).isEqualTo(LitebridgeCore.class);
+        assertThat(result).isInstanceOf(Litebridge.class);
+        assertThat(result.getClass()).isEqualTo(LitebridgeCoreWrapper.class);
     }
 
     @Test
@@ -255,7 +256,7 @@ class LitebridgeFactoryBeanTest {
         return new LitebridgeTransactionManager(dataSource);
     }
 
-    public static class TestCustomLitebridge extends LitebridgeCore {
+    public static class TestCustomLitebridge extends Litebridge {
         public TestCustomLitebridge(final DatabaseProvider databaseProvider,
                                     final TransactionManager transactionManager,
                                     final LitebridgeConfig litebridgeConfig,
@@ -265,7 +266,7 @@ class LitebridgeFactoryBeanTest {
     }
 
     public static class TestDatabaseProvider implements DatabaseProvider {
-        private final DatabaseProvider delegate = new org.litebridge.db.h2.H2DatabaseProvider();
+        private final DatabaseProvider delegate = new H2DatabaseProvider();
 
         @Override
         public DatabaseProviderMetaData metaData() {

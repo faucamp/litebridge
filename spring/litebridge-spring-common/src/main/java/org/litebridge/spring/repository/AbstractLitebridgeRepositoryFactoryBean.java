@@ -1,6 +1,6 @@
 package org.litebridge.spring.repository;
 
-import org.litebridge.orm.LitebridgeCore;
+import org.litebridge.orm.Litebridge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
@@ -17,7 +17,7 @@ import java.io.Serializable;
 public abstract class AbstractLitebridgeRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
         extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
 
-    protected LitebridgeCore litebridge;
+    protected Litebridge litebridge;
 
     /**
      * Creates a new {@code AbstractLitebridgeRepositoryFactoryBean} instance.
@@ -29,7 +29,7 @@ public abstract class AbstractLitebridgeRepositoryFactoryBean<T extends Reposito
     }
 
     @Autowired
-    public void setLitebridge(final LitebridgeCore litebridge) {
+    public void setLitebridge(final Litebridge litebridge) {
         this.litebridge = litebridge;
     }
 }
