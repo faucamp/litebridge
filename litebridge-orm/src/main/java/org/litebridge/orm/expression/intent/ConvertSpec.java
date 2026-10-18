@@ -4,6 +4,8 @@ import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.expression.Resolvable;
 import org.litebridge.orm.expression.TypeOverrideExpressionSpec;
 
+import java.util.Objects;
+
 /**
  * Converts a database result into the specified Java type.
  * <p>
@@ -52,5 +54,16 @@ public record ConvertSpec<T>(ExpressionSpec target,
      */
     public ConvertSpec<T> replaceTarget(final ExpressionSpec resolvedExpressionSpec) {
         return new ConvertSpec<>(resolvedExpressionSpec, returnType);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof ConvertSpec<?>(ExpressionSpec target1, Class<?> type))) return false;
+        return Objects.equals(target, target1);
+    }
+
+    @Override
+    public int hashCode() {
+        return target.hashCode();
     }
 }

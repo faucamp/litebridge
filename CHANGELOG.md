@@ -6,6 +6,7 @@
 - ORM:
     - Fix `ValueSpec.hashCode()`, which caused `MERGE INTO` using `VALUES` operations to not be properly cached.
     - Fix alias over-generation when using `Litebridge.saveAll()`
+    - Fix and optimise query plan caching for return type-modifying expressions such as `Fn.count()`
 
 ## [0.5.0] - 2026-10-15
 

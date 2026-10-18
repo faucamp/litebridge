@@ -89,7 +89,6 @@ public record SelectNode(@Nullable String table,
                 && Objects.equals(contextDtoClass, thatContextDtoClass)
                 && Objects.equals(fromQueryNode, thatFromQueryNode)
                 && Objects.equals(alias, thatAlias)
-                && Arrays.deepEquals(resultTypes, thatResultTypes)
                 && Arrays.deepEquals(columns, thatColumns)
                 && Arrays.deepEquals(expressions, thatExpressions);
     }
@@ -102,7 +101,6 @@ public record SelectNode(@Nullable String table,
                 fromQueryNode,
                 alias,
                 Arrays.hashCode(columns),
-                Arrays.deepHashCode(expressions),
-                Arrays.hashCode(resultTypes));
+                Arrays.deepHashCode(expressions));
     }
 }

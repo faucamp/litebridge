@@ -57,16 +57,27 @@ public class FunctionsE2eTest extends AbstractE2eTest {
     @TestTemplate
     @DisplayName("COUNT()")
     void count(final DbEnvDtoTableMapper tableMapper) throws Exception {
+        final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
+        assertEquals(1, queryPlanCache.size());
+
         // Count the records
         final Long personCount = litebridge.select(Fn.count()).from(Person.class).oneOrThrow();
         assertEquals(3, personCount);
+        assertEquals(2, queryPlanCache.size());
+
+        // Repeat and ensure cache was used
+        final Long verifyPersonCount = litebridge.select(Fn.count()).from(Person.class).oneOrThrow();
+        assertEquals(3, verifyPersonCount);
+        assertEquals(2, queryPlanCache.size());
 
         // Type override
         final double personCountDouble = litebridge.select(Fn.convert(Fn.count(), Double.class)).from(Person.class).oneOrThrow();
         assertEquals(3.0, personCountDouble);
+        assertEquals(2, queryPlanCache.size());
 
         final String personCountString = litebridge.select(Fn.convert(Fn.count(), String.class)).from(Person.class).oneOrThrow();
         assertEquals("3", personCountString);
+        assertEquals(2, queryPlanCache.size());
     }
 
     @TestTemplate
