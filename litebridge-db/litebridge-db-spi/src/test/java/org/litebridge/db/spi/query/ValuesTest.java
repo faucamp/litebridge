@@ -3,7 +3,6 @@ package org.litebridge.db.spi.query;
 import org.junit.jupiter.api.Test;
 import org.litebridge.db.spi.expression.LiteralExpression;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,7 +23,8 @@ class ValuesTest {
         assertEquals(list, values.values());
         assertEquals("v_alias", values.name());
         assertTrue(values.isVirtual());
-        assertEquals("Values[alias='v_alias', values=" + list + "]", values.toString());
+        assertEquals(1, values.rows());
+        assertEquals("Values[alias='v_alias', values=" + list + ", rows=1]", values.toString());
     }
 
     @Test

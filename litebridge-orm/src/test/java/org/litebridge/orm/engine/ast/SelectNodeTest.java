@@ -89,7 +89,7 @@ class SelectNodeTest {
         assertNotEquals(base, diffDto);
         assertNotEquals(base, diffCols);
         assertNotEquals(base, diffExprs);
-        assertNotEquals(base, diffTypes);
+        assertEquals(base, diffTypes);
 
         assertNotEquals(base, null);
         assertNotEquals(base, "other");
