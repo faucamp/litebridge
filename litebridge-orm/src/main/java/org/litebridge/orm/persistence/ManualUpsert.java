@@ -8,8 +8,18 @@ import org.litebridge.orm.engine.ast.QueryNode;
 public record ManualUpsert(UpdateBuilder updateBuilder, InsertBuilder insertBuilder) implements StatementBuilder {
 
     @Override
+    public Object dto() {
+        return updateBuilder.dto();
+    }
+
+    @Override
     public QueryNode node() {
         return updateBuilder.node();
+    }
+
+    @Override
+    public int nodeHash() {
+        return updateBuilder.nodeHash();
     }
 
     @Override

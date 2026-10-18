@@ -19,6 +19,7 @@ import org.litebridge.db.spi.update.UpdateResult;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -198,6 +199,30 @@ class ExecutionEngineTest {
         assertArrayEquals(blob, blobStream.getValue().readAllBytes());
         verify(statement).setBytes(11, bytes);
         verify(statement).setObject(12, fallback, Types.JAVA_OBJECT);
+    }
+
+    @Test
+    void prepareStatement_withFallbackObjectsAndNullSqlType_usesTwoArgSetObject() throws Exception {
+        // Given
+        final PreparedStatement statement = mock(PreparedStatement.class);
+        final BigInteger bigInteger = new BigInteger("12345678901234567890");
+        final Object customObject = new Object();
+        final PreparedSql preparedSql = new PreparedSql("update test", List.of(
+                new BindValue(bigInteger),
+                new BindValue(customObject, Types.NULL),
+                new BindValue(customObject, 0)));
+        final ExecutionEngine engine = engine();
+
+        // When
+        engine.executeUpdate(preparedSql, provider(connection(statement)));
+
+        // Then
+        verify(statement).setObject(1, bigInteger);
+        verify(statement).setObject(2, customObject);
+        verify(statement).setObject(3, customObject);
+        verify(statement, never()).setObject(eq(1), eq(bigInteger), anyInt());
+        verify(statement, never()).setObject(eq(2), eq(customObject), anyInt());
+        verify(statement, never()).setObject(eq(3), eq(customObject), anyInt());
     }
 
     @Test

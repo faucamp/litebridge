@@ -115,11 +115,32 @@ public class PersistenceFacade {
      */
     public <DTO> void save(final Iterable<DTO> dtos) throws SQLException {
         final TableProvider tableProvider = new TableProvider(tableRegistry);
-        final Set<Object> inProgressDtos = new HashSet<>();
+        final Map<Integer, List<StatementBuilder>> groupedBuilders = new HashMap<>();
 
         for (DTO dto : dtos) {
-            final StatementBuilder statementBuilder = createStatementBuilder(dto, inProgressDtos, tableProvider);
-            save(dto, statementBuilder, tableProvider);
+            final StatementBuilder statementBuilder = createStatementBuilder(dto, new HashSet<>(), tableProvider);
+
+            if (!statementBuilder.combinable()) {
+                save(dto, statementBuilder, tableProvider);
+                continue;
+            }
+
+            groupedBuilders.computeIfAbsent(statementBuilder.nodeHash(), k -> new ArrayList<>())
+                    .add(statementBuilder);
+        }
+
+        for (Map.Entry<Integer, List<StatementBuilder>> entry : groupedBuilders.entrySet()) {
+            final List<StatementBuilder> statementBuilders = entry.getValue();
+            StatementBuilder statementBuilder = statementBuilders.getFirst();
+
+            if (statementBuilders.size() == 1) {
+                save(statementBuilder.dto(), statementBuilder, tableProvider);
+                continue;
+            }
+
+            // Combine the statement builders into a operation
+            statementBuilder.combineWith(statementBuilders);
+            save(statementBuilder.dto(), statementBuilder, tableProvider);
         }
     }
 
@@ -245,7 +266,7 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createInsertBuilder(final Object dto, final OrmTable ormTable, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final InsertBuilder insertBuilder = new InsertBuilder(ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
+        final InsertBuilder insertBuilder = new InsertBuilder(dto, ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
 
         if (prepareUpdateStatement(dto, ormTable, insertBuilder, inProgressDtos, tableProvider) == null) {
             return NO_OP_STATEMENT_BUILDER;
@@ -255,7 +276,7 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createMergeBuilder(final Object dto, final OrmTable ormTable, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final MergeBuilder mergeBuilder = new MergeBuilder(ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
+        final MergeBuilder mergeBuilder = new MergeBuilder(dto, ormTable, tableProvider.getContextDtoClass(), litebridgeContext);
 
         if (prepareUpdateStatement(dto, ormTable, mergeBuilder, inProgressDtos, tableProvider) == null) {
             return NO_OP_STATEMENT_BUILDER;
@@ -265,7 +286,7 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createUpdateBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final UpdateBuilder updateBuilder = new UpdateBuilder(table, tableProvider.getContextDtoClass(), litebridgeContext);
+        final UpdateBuilder updateBuilder = new UpdateBuilder(dto, table, tableProvider.getContextDtoClass(), litebridgeContext);
 
         if (prepareUpdateStatement(dto, table, updateBuilder, inProgressDtos, tableProvider) == null) {
             return NO_OP_STATEMENT_BUILDER;
@@ -275,7 +296,7 @@ public class PersistenceFacade {
     }
 
     private StatementBuilder createDeleteBuilder(final Object dto, final OrmTable table, final Set<Object> inProgressDtos, final TableProvider tableProvider) {
-        final DeleteBuilder deleteBuilder = new DeleteBuilder(table, tableProvider.getContextDtoClass(), litebridgeContext);
+        final DeleteBuilder deleteBuilder = new DeleteBuilder(dto, table, tableProvider.getContextDtoClass(), litebridgeContext);
         prepareDeleteStatement(dto, table, deleteBuilder, inProgressDtos, tableProvider);
         return deleteBuilder;
     }
@@ -482,7 +503,7 @@ public class PersistenceFacade {
         } else {
             // Get the primary key
             nestedDtoTable.metaData().primaryKey().forEach(pkColumn -> {
-                final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.fieldForColumnName(pkColumn.name());
                 final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
                 if (statementBuilder instanceof UpdateBuilder updateBuilder) {
@@ -506,7 +527,7 @@ public class PersistenceFacade {
         if (pkColumns.size() == 1) {
             // Simple PK
             final ColumnMetaData pkColumn = pkColumns.getFirst();
-            final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+            final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.fieldForColumnName(pkColumn.name());
             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
 
             if (columnMetaData.getJoinColumn() != null && columnMetaData.getJoinColumn().name().equalsIgnoreCase(pkColumn.name())) {
@@ -522,7 +543,7 @@ public class PersistenceFacade {
             final LinkedHashMap<String, Object> compositePk = new LinkedHashMap<>();
 
             for (ColumnMetaData pkColumn : nestedDtoTable.metaData().primaryKey()) {
-                final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.getFieldForColumnName(pkColumn.name());
+                final FieldAccessor embeddedDtoPkAccessor = nestedDtoTable.fieldForColumnName(pkColumn.name());
                 final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(value);
                 compositePk.put(embeddedDtoPkAccessor.name(), Objects.requireNonNull(embeddedDtoPkValue, "Composite PK value null"));
             }
@@ -581,7 +602,7 @@ public class PersistenceFacade {
                                     dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkValue);
                                 } else {
                                     final ColumnMetaData pkColumn = primaryKeyColumns.getFirst();
-                                    final FieldAccessor pkField = table.getFieldForColumnName(pkColumn.name());
+                                    final FieldAccessor pkField = table.fieldForColumnName(pkColumn.name());
                                     dependantStatementBuilder.setField(mappedOneToMany.mappedByField().name(), pkField.get(dto));
                                 }
                             }));
@@ -615,7 +636,7 @@ public class PersistenceFacade {
                 for (Object value : updatedValues) {
                     if (!inProgressDtos.contains(value)) {
                         // Prepare join table entry
-                        final InsertBuilder joinTableInsertBuilder = new InsertBuilder(mappedManyToMany.joinOrmTable(), tableProvider.getContextDtoClass(), litebridgeContext);
+                        final InsertBuilder joinTableInsertBuilder = new InsertBuilder(value, mappedManyToMany.joinOrmTable(), tableProvider.getContextDtoClass(), litebridgeContext);
                         statementChain.addDependant(joinTableInsertBuilder, new PipedStatement(joinTableInsertBuilder, value));
 
                         // Cascade save to the nested DTO
@@ -649,7 +670,7 @@ public class PersistenceFacade {
         final Map<FieldAccessor, @Nullable Object> generatedPkValues = new HashMap<>();
 
         for (ColumnMetaData pkColumn : generatedKeys.keySet()) {
-            final FieldAccessor field = embeddedDtoTable.getFieldForColumnName(pkColumn.name());
+            final FieldAccessor field = embeddedDtoTable.fieldForColumnName(pkColumn.name());
             final Object currentPkValue = field.get(dto);
 
             if (Objects.equals(currentPkValue, ClassUtils.getDefaultValue(field.type()))) {
@@ -716,7 +737,7 @@ public class PersistenceFacade {
 
         for (int i = 0; i < joinColumnNames.length; i++) {
             final ColumnMetaData pkColumn = primaryKeyColumns.get(i);
-            final FieldAccessor pkField = ormTable.getFieldForColumnName(pkColumn.name());
+            final FieldAccessor pkField = ormTable.fieldForColumnName(pkColumn.name());
             rowValues.put(joinColumnNames[i], pkField.get(dto));
         }
     }
@@ -860,12 +881,12 @@ public class PersistenceFacade {
     }
 
     private UpdateResult executeUpdateStatement(final StatementBuilder statementBuilder) throws SQLException {
-        final QueryNode node = statementBuilder.node();
-        final int nodeHash = node.hashCode();
+        final int nodeHash = statementBuilder.nodeHash();
         final QueryPlanCache.CachedOperation cachedOperation = litebridgeContext.queryPlanCache().get(nodeHash);
         final UpdateResult updateResult;
 
         if (cachedOperation != null) {
+            final QueryNode node = statementBuilder.node();
             final List<@Nullable Object> rawBindValues = QueryBindValueExtractor.extractBindValues(node, litebridgeContext);
             final PreparedSql preparedSql = cachedOperation.preparedSql(rawBindValues);
             updateResult = (UpdateResult) databaseProvider.executeUpdate(preparedSql, statementBuilder.resultType(), transactionManager);
@@ -969,7 +990,7 @@ public class PersistenceFacade {
 
         for (ColumnMetaData columnMetaData : ormTable.metaData().primaryKey()) {
             final Column pkColumn = columnMetaData.column();
-            final FieldAccessor field = ormTable.getFieldForColumnName(pkColumn.name());
+            final FieldAccessor field = ormTable.fieldForColumnName(pkColumn.name());
             final Object pkValue = field.get(dto);
             final SelectColumnSpec pkColumnSpec = new SelectColumnSpec(pkColumn);
 
@@ -984,7 +1005,7 @@ public class PersistenceFacade {
                     final OrmTable relatedDtoTable = tableProvider.getTableOrThrow(pkValue.getClass());
 
                     for (ColumnMetaData relatedDtoPkColumn : relatedDtoTable.metaData().primaryKey()) {
-                        final FieldAccessor embeddedDtoPkAccessor = relatedDtoTable.getFieldForColumnName(relatedDtoPkColumn.name());
+                        final FieldAccessor embeddedDtoPkAccessor = relatedDtoTable.fieldForColumnName(relatedDtoPkColumn.name());
                         final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(pkValue);
                         conditionNode = new ConditionNode(conditionNode, logicOperator, null, pkColumnSpec, Operator.EQ, embeddedDtoPkValue);
                     }

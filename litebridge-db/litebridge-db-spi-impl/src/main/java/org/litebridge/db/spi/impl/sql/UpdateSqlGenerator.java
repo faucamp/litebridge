@@ -49,7 +49,7 @@ public class UpdateSqlGenerator extends AbstractSqlGenerator {
             }
 
             sql.append(labelGenerator.quoteIdentifier(updateColumn.name())).append(" = ");
-            sql.append(getColumnValueFragment(updateColumn));
+            sql.append(getColumnValueFragment(updateColumn, ClauseType.SELECT, update));
         }
 
         if (!update.where().isEmpty()) {

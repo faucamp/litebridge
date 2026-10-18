@@ -11,6 +11,8 @@ import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.alias.AliasedQuery;
 import org.litebridge.db.spi.alias.AliasedTable;
+import org.litebridge.db.spi.convert.TypeConverter;
+import org.litebridge.db.spi.expression.AliasReference;
 import org.litebridge.db.spi.expression.LiteralExpression;
 import org.litebridge.db.spi.expression.LiteralExpressionFactory;
 import org.litebridge.db.spi.query.ConditionGroup;
@@ -31,6 +33,7 @@ import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
+import org.litebridge.orm.expression.select.AliasReferenceSpec;
 import org.litebridge.orm.expression.select.ValuesSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
@@ -38,11 +41,10 @@ import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.tracking.FieldAccessor;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -97,16 +99,18 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             return;
         } else if (usingNode.values() != null) {
             // Using values
-            final ValuesSpec valuesSpec = Objects.requireNonNull(usingNode.values(), "No USING <table>/<DTO class>/<subquery>/<values> specified");
+            final ValuesSpec valuesSpec = usingNode.values();
             final LiteralExpressionFactory literalExpressionFactory = litebridgeContext.sqlFunctionRegistry().select().literal();
+            final TypeConverter typeConverter = litebridgeContext.typeConverter();
             final String[] labels = valuesSpec.labels();
-            final @Nullable Object[] values = valuesSpec.values();
+            final List<@Nullable Object> values = expandValueList(valuesSpec.values());
 
             final List<LiteralExpression> literalExpressions = new ArrayList<>(labels.length);
 
             for (int i = 0; i < labels.length; i++) {
-                final Object value = values[i];
-                bindValues.add(new BindValue(value));
+                final Object value = values.get(i);
+                final int sqlDataType = value != null ? typeConverter.getSqlDataType(value.getClass()) : Types.NULL;
+                bindValues.add(new BindValue(value, sqlDataType));
                 literalExpressions.add(literalExpressionFactory.create(value, labels[i]));
             }
 
@@ -181,61 +185,14 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
     public void whenMatchedUpdateSet(final SetNode setNode) {
         final WhenMatchedSpec whenMatchedSpec = whenMatchedSpecs.getLast();
-        final Table targetTable = getTable(target);
-        final List<ColumnMetaData> columnMetaDatas;
-
-        if (setNode.column() != null) {
-            if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
-                final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
-                columnMetaDatas = getColumnMetaDataListForField(setNode.column(), targetOrmTable);
-            } else {
-                final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
-                columnMetaDatas = Collections.singletonList(targetTableMetaData.column(setNode.column()));
-            }
-        } else {
-            final ExpressionSpec expressionSpec = Objects.requireNonNull(setNode.expressionSpec());
-
-            if (expressionSpec instanceof QueryField queryField) {
-                final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
-                columnMetaDatas = getColumnMetaDataListForField(QueryFieldInspector.getFieldName(queryField), targetOrmTable);
-            } else if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
-                final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
-                columnMetaDatas = Collections.singletonList(targetTableMetaData.column(columnExpressionSpec.getColumn().name()));
-            } else {
-                throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());
-            }
-        }
-
-        final Object rawValue = setNode.value();
-        final List<@Nullable Object> values = new ArrayList<>(columnMetaDatas.size());
-
-        if (rawValue instanceof LinkedHashMap<?, ?> map) {
-            values.addAll(map.sequencedValues());
-        } else if (rawValue instanceof Collection<?> collection) {
-            values.addAll(collection);
-        } else {
-            values.add(rawValue);
-        }
-
-        for (int i = 0; i < values.size(); i++) {
-            final ColumnMetaData columnMetaData = columnMetaDatas.get(i);
-            final Object value = values.get(i);
-
-            if (setNode.mathOperator() != null) {
-                whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator()));
-            } else {
-                whenMatchedSpec.addUpdateColumn(columnMetaData);
-            }
-
-            whenMatchedSpec.addBindValue(new BindValue(value, columnMetaData.getDataType()));
-        }
+        whenMatchedSpec.addSetNode(setNode);
     }
 
     private List<ColumnMetaData> getColumnMetaDataListForField(final String field, final OrmTable ormTable) {
         final MappedFieldTarget mappedFieldTarget = ormTable.mappedFieldTargetForFieldOrNull(field);
 
         if (mappedFieldTarget == null) {
-            return Collections.singletonList(ormTable.columnMetaDataForField(field));
+            return Collections.singletonList(ormTable.metaData().column(field));
         }
 
         return switch (mappedFieldTarget) {
@@ -250,78 +207,30 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
     public void whenNotMatchedInsert(final InsertNode insertNode) {
         final WhenMatchedSpec whenMatchedSpec = whenMatchedSpecs.getLast();
-        final Table targetTable = getTable(target);
-        final String[] columnNames = insertNode.columns();
-        final ExpressionSpec[] expressionSpecs = insertNode.expressionSpecs();
-        final List<ColumnMetaData> columnMetaDataList;
-
-        if (columnNames != null) {
-            columnMetaDataList = new ArrayList<>(columnNames.length);
-
-            for (String columnName : columnNames) {
-                if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
-                    final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
-                    columnMetaDataList.addAll(getColumnMetaDataListForField(columnName, targetOrmTable));
-                } else {
-                    final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
-                    columnMetaDataList.add(targetTableMetaData.column(columnName));
-                }
-            }
-        } else if (expressionSpecs != null) {
-            columnMetaDataList = new ArrayList<>(expressionSpecs.length);
-
-            for (ExpressionSpec expressionSpec : expressionSpecs) {
-                if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
-                    final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
-                    columnMetaDataList.add(targetTableMetaData.column(columnExpressionSpec.getColumn().name()));
-                } else if (expressionSpec instanceof QueryField queryField) {
-                    final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
-                    final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
-                    final String fieldName = QueryFieldInspector.getFieldName(queryField);
-                    columnMetaDataList.addAll(getColumnMetaDataListForField(fieldName, targetOrmTable));
-                } else {
-                    throw new UnsupportedOperationException("Unsupported expression spec: " + expressionSpec);
-                }
-            }
-        } else {
-            // Update columns will be supplied via an InsertDtoValueNode
-            return;
-        }
-
-        whenMatchedSpec.addUpdateColumns(columnMetaDataList);
+        whenMatchedSpec.setInsertNode(insertNode);
     }
 
     public void addInsertValues(final InsertValuesNode insertValuesNode) {
         final WhenMatchedSpec whenMatchedSpec = getWhenMatchedSpec();
-        final List<ColumnMetaData> columnMetaDataList = getWhenMatchedSpec().getColumnMetaDataList();
-        //noinspection NullableProblems
-        final Object[] rawValues = insertValuesNode.values();
-        final Object[] values;
+        whenMatchedSpec.addInsertValuesNode(insertValuesNode);
+    }
 
-        if (rawValues.length != columnMetaDataList.size()) {
-            // There are composite values that need to be expanded
-            final List<@Nullable Object> valueList = new ArrayList<>(columnMetaDataList.size());
-
-            for (Object rawValue : rawValues) {
-                if (rawValue instanceof LinkedHashMap<?, ?> map) {
-                    valueList.addAll(map.sequencedValues());
-                } else if (rawValue instanceof Collection<?> collection) {
-                    valueList.addAll(collection);
-                } else {
-                    valueList.add(rawValue);
-                }
-            }
-
-            for (int i = 0; i < valueList.size(); i++) {
-                final int sqlDataType = columnMetaDataList.get(i).getDataType();
-                whenMatchedSpec.addBindValue(new BindValue(valueList.get(i), sqlDataType));
-            }
+    private int addUpdateColumn(final @Nullable Object value,
+                                final WhenMatchedSpec whenMatchedSpec,
+                                final ColumnMetaData columnMetaData,
+                                int currentBindIndex) {
+        if (value instanceof AliasReferenceSpec aliasReferenceSpec) {
+            //noinspection DataFlowIssue
+            final AliasReference aliasReference = litebridgeContext.sqlFunctionRegistry().select().aliasReference()
+                    .create(aliasReferenceSpec.alias(), aliasReferenceSpec.tableAlias());
+            whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), aliasReference));
         } else {
-            for (int i = 0; i < rawValues.length; i++) {
-                final int sqlDataType = columnMetaDataList.get(i).getDataType();
-                whenMatchedSpec.addBindValue(new BindValue(rawValues[i], sqlDataType));
-            }
+            final int sqlDataType = columnMetaData.getDataType();
+            whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), null, null, currentBindIndex++));
+            whenMatchedSpec.addBindValue(new BindValue(value, sqlDataType));
         }
+
+        return currentBindIndex;
     }
 
     public void addInsertDtoValues(final InsertDtoValuesNode insertDtoValuesNode) {
@@ -347,7 +256,7 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                     final OrmTable fkOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(value.getClass());
 
                     for (final ForeignKeyConstraint fkc : foreignKeyConstraints) {
-                        final FieldAccessor fkFieldAccessor = fkOrmTable.getFieldForColumnName(fkc.foreignKey().name());
+                        final FieldAccessor fkFieldAccessor = fkOrmTable.fieldForColumnName(fkc.foreignKey().name());
                         final Object pkValue = fkFieldAccessor.get(value);
                         whenMatchedSpec.addUpdateColumn(columnMetaData);
                         whenMatchedSpec.addBindValue(new BindValue(pkValue, columnMetaData.getDataType()));
@@ -396,15 +305,17 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 if (whenMatchedSpec.isDelete()) {
                     operation = new Merge.MergeDelete();
                 } else {
-                    final List<UpdateColumn> updatedColumns = Objects.requireNonNull(getUpdateColumns(whenMatchedSpec));
-                    operation = new Merge.MergeUpdate(updatedColumns);
+                    compileWhenMatchedUpdateSet(whenMatchedSpec);
+                    final List<UpdateColumn> updateColumns = whenMatchedSpec.getUpdateColumns();
+                    operation = new Merge.MergeUpdate(updateColumns);
                 }
 
                 whenMatchedList.add(new Merge.WhenMatched<>(andConditionGroup, operation));
             } else {
                 // When not matched
-                final List<UpdateColumn> updatedColumns = Objects.requireNonNull(getUpdateColumns(whenMatchedSpec));
-                final Merge.WhenMatched<Merge.MergeInsert> whenNotMatched = new Merge.WhenMatched<>(andConditionGroup, new Merge.MergeInsert(updatedColumns, 1));
+                compileWhenNotMatchedInsert(whenMatchedSpec);
+                final List<UpdateColumn> updateColumns = whenMatchedSpec.getUpdateColumns();
+                final Merge.WhenMatched<Merge.MergeInsert> whenNotMatched = new Merge.WhenMatched<>(andConditionGroup, new Merge.MergeInsert(updateColumns, 1));
                 whenNotMatchedList.add(whenNotMatched);
             }
 
@@ -416,6 +327,148 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 onConditionGroup,
                 whenMatchedList,
                 whenNotMatchedList);
+    }
+
+    private void compileWhenMatchedUpdateSet(final WhenMatchedSpec whenMatchedSpec) {
+        final List<SetNode> setNodes = whenMatchedSpec.getSetNodes();
+
+        for (SetNode setNode : setNodes) {
+            compileWhenMatchedUpdateSet(setNode, whenMatchedSpec);
+        }
+    }
+
+    private void compileWhenMatchedUpdateSet(final SetNode setNode, final WhenMatchedSpec whenMatchedSpec) {
+        final Table targetTable = getTable(target);
+        final List<ColumnMetaData> columnMetaDatas;
+
+        if (setNode.column() != null) {
+            if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
+                final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
+                columnMetaDatas = getColumnMetaDataListForField(setNode.column(), targetOrmTable);
+            } else {
+                final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
+                columnMetaDatas = Collections.singletonList(targetTableMetaData.column(setNode.column()));
+            }
+        } else {
+            final ExpressionSpec expressionSpec = Objects.requireNonNull(setNode.expressionSpec());
+
+            if (expressionSpec instanceof QueryField queryField) {
+                final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
+                columnMetaDatas = getColumnMetaDataListForField(QueryFieldInspector.getFieldName(queryField), targetOrmTable);
+            } else if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+                final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
+                columnMetaDatas = Collections.singletonList(targetTableMetaData.column(columnExpressionSpec.getColumn().name()));
+            } else {
+                throw new IllegalArgumentException("Unsupported expression spec type: " + expressionSpec.getClass().getName());
+            }
+        }
+
+        final Object rawValue = setNode.value();
+        final List<@Nullable Object> values = expandValueList(rawValue);
+        int currentBindIndex = bindValues.size();
+
+        for (int i = 0; i < values.size(); i++) {
+            final ColumnMetaData columnMetaData = columnMetaDatas.get(i);
+            final Object value = values.get(i);
+
+            if (setNode.mathOperator() != null) {
+                if (setNode.value() != null) {
+                    whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator(), currentBindIndex++));
+                    whenMatchedSpec.addBindValue(new BindValue(value, columnMetaData.getDataType()));
+                } else {
+                    whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), null, setNode.mathOperator()));
+                }
+            } else if (value instanceof AliasReferenceSpec aliasReferenceSpec) {
+                // Not a bind value
+                final AliasReference aliasReference = litebridgeContext.sqlFunctionRegistry().select().aliasReference()
+                        .create(aliasReferenceSpec.alias(), aliasReferenceSpec.tableAlias());
+                whenMatchedSpec.addUpdateColumn(new UpdateColumn(columnMetaData.name(), aliasReference));
+            } else {
+                whenMatchedSpec.addUpdateColumn(columnMetaData, currentBindIndex++);
+                whenMatchedSpec.addBindValue(new BindValue(value, columnMetaData.getDataType()));
+            }
+        }
+    }
+
+    private void compileWhenNotMatchedInsert(final WhenMatchedSpec whenMatchedSpec) {
+        final InsertNode insertNode = whenMatchedSpec.getInsertNode();
+
+        if (insertNode == null) {
+            return;
+        }
+
+        compileWhenNotMatchedInsert(insertNode, whenMatchedSpec);
+
+        final List<InsertValuesNode> insertValuesNodes = whenMatchedSpec.getInsertValuesNodes();
+
+        for (InsertValuesNode insertValuesNode : insertValuesNodes) {
+            compileInsertValues(insertValuesNode, whenMatchedSpec);
+        }
+    }
+
+    private void compileWhenNotMatchedInsert(final InsertNode insertNode, final WhenMatchedSpec whenMatchedSpec) {
+        final Table targetTable = getTable(target);
+        final String[] columnNames = insertNode.columns();
+        final ExpressionSpec[] expressionSpecs = insertNode.expressionSpecs();
+        final List<ColumnMetaData> columnMetaDataList;
+
+        if (columnNames != null) {
+            columnMetaDataList = new ArrayList<>(columnNames.length);
+
+            for (String columnName : columnNames) {
+                if (litebridgeContext.mode() == LitebridgeContext.Mode.DTO) {
+                    final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(targetTable);
+                    columnMetaDataList.addAll(getColumnMetaDataListForField(columnName, targetOrmTable));
+                } else {
+                    final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
+                    columnMetaDataList.add(targetTableMetaData.column(columnName));
+                }
+            }
+        } else if (expressionSpecs != null) {
+            columnMetaDataList = new ArrayList<>(expressionSpecs.length);
+
+            for (ExpressionSpec expressionSpec : expressionSpecs) {
+                if (expressionSpec instanceof ColumnExpressionSpec columnExpressionSpec) {
+                    final TableMetaData targetTableMetaData = getTableMetaData(targetTable);
+                    columnMetaDataList.add(targetTableMetaData.column(columnExpressionSpec.getColumn().name()));
+                } else if (expressionSpec instanceof QueryField queryField) {
+                    final Class<?> dtoClass = QueryFieldInspector.getDtoClass(queryField);
+                    final OrmTable targetOrmTable = tableRegistry.getOrmTableOrThrow(dtoClass);
+                    final String fieldName = QueryFieldInspector.getFieldName(queryField);
+                    columnMetaDataList.addAll(getColumnMetaDataListForField(fieldName, targetOrmTable));
+                } else {
+                    throw new UnsupportedOperationException("Unsupported expression spec: " + expressionSpec);
+                }
+            }
+        } else {
+            // Update columns will be supplied via an InsertDtoValueNode
+            return;
+        }
+
+        whenMatchedSpec.setColumnMetaDataList(columnMetaDataList);
+    }
+
+    private void compileInsertValues(final InsertValuesNode insertValuesNode, final WhenMatchedSpec whenMatchedSpec) {
+        final List<ColumnMetaData> columnMetaDataList = getWhenMatchedSpec().getColumnMetaDataList();
+        final @Nullable Object[] rawValues = insertValuesNode.values();
+        int currentBindIndex = bindValues.size();
+
+        if (rawValues.length != columnMetaDataList.size()) {
+            // There are composite values that need to be expanded
+            final List<@Nullable Object> valueList = expandValueList(rawValues);
+
+            for (int i = 0; i < valueList.size(); i++) {
+                final ColumnMetaData columnMetaData = columnMetaDataList.get(i);
+                final Object value = valueList.get(i);
+                currentBindIndex = addUpdateColumn(value, whenMatchedSpec, columnMetaData, currentBindIndex);
+            }
+        } else {
+            for (int i = 0; i < rawValues.length; i++) {
+                final ColumnMetaData columnMetaData = columnMetaDataList.get(i);
+                final Object value = rawValues[i];
+                currentBindIndex = addUpdateColumn(value, whenMatchedSpec, columnMetaData, currentBindIndex);
+            }
+        }
     }
 
     private void addConditionToGroup(final ConditionNode conditionNode, final ConditionGroupSpec conditionGroupSpec) {
@@ -436,30 +489,12 @@ final class MergeCompilationContext extends AbstractCompilationContext {
                 conditionNode.rhs());
     }
 
-    private @Nullable List<UpdateColumn> getUpdateColumns(final WhenMatchedSpec whenMatchedSpec) {
-        final List<UpdateColumn> updatedColumns;
-
-        if (whenMatchedSpec.getUpdateColumns() != null) {
-            updatedColumns = new ArrayList<>(whenMatchedSpec.getUpdateColumns().size());
-            int currentBindIndex = bindValues.size();
-
-            for (UpdateColumn col : whenMatchedSpec.getUpdateColumns()) {
-                if (col.generator() == null && col.mathOperator() == null) {
-                    updatedColumns.add(new UpdateColumn(col.name(), col.generator(), col.mathOperator(), currentBindIndex++));
-                } else {
-                    updatedColumns.add(col);
-                }
-            }
-        } else {
-            updatedColumns = null;
-        }
-
-        return updatedColumns;
-    }
-
     static final class WhenMatchedSpec {
         private final boolean matched;
         private @Nullable ConditionGroupSpecStack and;
+        private @Nullable List<SetNode> setNodes;
+        private @Nullable InsertNode insertNode;
+        private @Nullable List<InsertValuesNode> insertValuesNodes;
         private @Nullable List<ColumnMetaData> columnMetaDataList;
         private @Nullable List<UpdateColumn> updateColumns;
         private boolean delete;
@@ -471,6 +506,30 @@ final class MergeCompilationContext extends AbstractCompilationContext {
 
         public boolean isMatched() {
             return matched;
+        }
+
+        public void addSetNode(final SetNode setNode) {
+            ensureSetNodes().add(setNode);
+        }
+
+        public List<SetNode> getSetNodes() {
+            return ensureSetNodes();
+        }
+
+        public @Nullable InsertNode getInsertNode() {
+            return insertNode;
+        }
+
+        public void setInsertNode(final @Nullable InsertNode insertNode) {
+            this.insertNode = insertNode;
+        }
+
+        public void addInsertValuesNode(final InsertValuesNode insertValuesNode) {
+            ensureInsertValuesNodes().add(insertValuesNode);
+        }
+
+        public List<InsertValuesNode> getInsertValuesNodes() {
+            return ensureInsertValuesNodes();
         }
 
         public ConditionGroupSpecStack ensureAndConditionGroupStack() {
@@ -493,17 +552,26 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             ensureUpdateColumns().addAll(updateColumns);
         }
 
-        public void addUpdateColumn(final ColumnMetaData columnMetaData) {
+        private void addUpdateColumn(final ColumnMetaData columnMetaData) {
             addUpdateColumn(columnMetaData, false);
         }
 
-        public void addUpdateColumn(final ColumnMetaData columnMetaData, final boolean useGenerator) {
+        private void addUpdateColumn(final ColumnMetaData columnMetaData, final boolean useGenerator) {
             ensureColumnMetaDataList().add(columnMetaData);
             ensureUpdateColumns().add(new UpdateColumn(columnMetaData.name(), useGenerator ? columnMetaData.getGenerator() : null, null));
         }
 
-        public @Nullable List<UpdateColumn> getUpdateColumns() {
-            return updateColumns;
+        private void addUpdateColumn(final ColumnMetaData columnMetaData, final int bindValueIndex) {
+            ensureColumnMetaDataList().add(columnMetaData);
+            ensureUpdateColumns().add(new UpdateColumn(columnMetaData.name(), null, null, bindValueIndex));
+        }
+
+        public void addUpdateColumn(final UpdateColumn updateColumn) {
+            ensureUpdateColumns().add(updateColumn);
+        }
+
+        public List<UpdateColumn> getUpdateColumns() {
+            return ensureUpdateColumns();
         }
 
         public boolean isDelete() {
@@ -518,6 +586,10 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             return Objects.requireNonNull(columnMetaDataList);
         }
 
+        public void setColumnMetaDataList(final List<ColumnMetaData> columnMetaDataList) {
+            this.columnMetaDataList = columnMetaDataList;
+        }
+
         public List<BindValue> getBindValues() {
             return bindValues != null ? bindValues : Collections.emptyList();
         }
@@ -528,10 +600,6 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             }
 
             bindValues.add(bindValue);
-        }
-
-        public void addUpdateColumn(final UpdateColumn updateColumn) {
-            ensureUpdateColumns().add(updateColumn);
         }
 
         private List<UpdateColumn> ensureUpdateColumns() {
@@ -548,6 +616,22 @@ final class MergeCompilationContext extends AbstractCompilationContext {
             }
 
             return columnMetaDataList;
+        }
+
+        private List<SetNode> ensureSetNodes() {
+            if (setNodes == null) {
+                setNodes = new ArrayList<>();
+            }
+
+            return setNodes;
+        }
+
+        private List<InsertValuesNode> ensureInsertValuesNodes() {
+            if (insertValuesNodes == null) {
+                insertValuesNodes = new ArrayList<>();
+            }
+
+            return insertValuesNodes;
         }
     }
 

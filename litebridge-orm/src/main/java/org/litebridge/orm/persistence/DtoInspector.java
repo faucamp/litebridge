@@ -5,7 +5,10 @@ import org.litebridge.commons.ClassUtils;
 import org.litebridge.tracking.FieldAccessor;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -57,11 +60,19 @@ public final class DtoInspector {
             // Composite primary key
             final Class<PkType> pkType = (Class<PkType>) ormTable.dtoPkClass();
 
-            if (List.class.isAssignableFrom(pkType)) {
+            if (Collection.class.isAssignableFrom(pkType)) {
                 final List<@Nullable Object> pkValues = new ArrayList<>(primaryKeyFields.size());
 
                 for (final FieldAccessor fieldAccessor : primaryKeyFields) {
                     pkValues.add(fieldAccessor.get(dto));
+                }
+
+                return (PkType) pkValues;
+            } else if (Map.class.isAssignableFrom(pkType)) {
+                final Map<String, @Nullable Object> pkValues = new LinkedHashMap<>(primaryKeyFields.size());
+
+                for (final FieldAccessor fieldAccessor : primaryKeyFields) {
+                    pkValues.put(fieldAccessor.name(), fieldAccessor.get(dto));
                 }
 
                 return (PkType) pkValues;
@@ -112,7 +123,7 @@ public final class DtoInspector {
      */
     static boolean isDtoPkSet(final Object dto, final OrmTable ormTable) {
         return ormTable.metaData().primaryKey().stream().allMatch(pkColumn -> {
-            final FieldAccessor embeddedDtoPkAccessor = ormTable.getFieldForColumnName(pkColumn.name());
+            final FieldAccessor embeddedDtoPkAccessor = ormTable.fieldForColumnName(pkColumn.name());
             final Object embeddedDtoPkValue = embeddedDtoPkAccessor.get(dto);
             return !Objects.equals(embeddedDtoPkValue, ClassUtils.getDefaultValue(embeddedDtoPkAccessor.type()));
         });

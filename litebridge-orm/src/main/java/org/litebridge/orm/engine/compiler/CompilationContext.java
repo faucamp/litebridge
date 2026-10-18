@@ -11,7 +11,7 @@ import java.util.List;
  * The compilation context is used to store information about the SQL statement being generated,
  * and ultimately maps this information to a SQL operation via the {@link #toOperation()} method.
  */
-sealed interface CompilationContext permits AbstractCompilationContext, InsertCompilationContext {
+sealed interface CompilationContext permits AbstractCompilationContext {
 
     /**
      * Returns the bind values for the generated SQL statement.

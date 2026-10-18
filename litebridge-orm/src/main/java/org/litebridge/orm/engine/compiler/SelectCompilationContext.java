@@ -392,7 +392,7 @@ final class SelectCompilationContext extends AbstractCompilationContext {
         final ConditionGroupSpec conditionGroupSpec = Objects.requireNonNull(whereConditionGroupSpecStack).current();
 
         final String[] primaryKeyFieldNames = tableMetaData.primaryKey().stream()
-                .map(columnMetaData -> ormTable.getFieldForColumnName(columnMetaData.name()).name())
+                .map(columnMetaData -> ormTable.fieldForColumnName(columnMetaData.name()).name())
                 .toArray(String[]::new);
 
         final Object id = conditionWithIdNode.id();

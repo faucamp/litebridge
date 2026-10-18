@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -141,7 +142,7 @@ public final class QueryBindValueExtractor {
 
                     for (final QueryNode updateChild : updateNodes) {
                         if (updateChild instanceof SetNode setNode) {
-                            bindValues.add(setNode.value());
+                            addBindValueBasedOnType(setNode.value(), bindValues, litebridgeContext);
                         }
                     }
                 }
@@ -155,7 +156,7 @@ public final class QueryBindValueExtractor {
                     for (final QueryNode insertChild : insertNodes) {
                         switch (insertChild) {
                             case InsertValuesNode insertValuesNode ->
-                                    Collections.addAll(bindValues, insertValuesNode.values());
+                                    addBindValuesBasedOnType(insertValuesNode.values(), bindValues, litebridgeContext);
                             case InsertDtoValuesNode insertDtoValuesNode ->
                                     extractDtoValues(insertDtoValuesNode, bindValues, litebridgeContext);
                             default -> { /* Ignore */ }
@@ -194,7 +195,7 @@ public final class QueryBindValueExtractor {
                         final OrmTable fkOrmTable = litebridgeContext.tableRegistry().getOrmTableOrThrow(value.getClass());
 
                         for (final ForeignKeyConstraint fkc : foreignKeyConstraints) {
-                            final FieldAccessor fkFieldAccessor = fkOrmTable.getFieldForColumnName(fkc.foreignKey().name());
+                            final FieldAccessor fkFieldAccessor = fkOrmTable.fieldForColumnName(fkc.foreignKey().name());
                             final Object pkValue = fkFieldAccessor.get(value);
                             bindValues.add(pkValue);
                             break;
@@ -244,27 +245,7 @@ public final class QueryBindValueExtractor {
                         continue;
                     }
 
-                    final Object rhs = conditionNode.rhs();
-
-                    if (rhs instanceof SelectTerminal<?> st) {
-                        extractBindValues(Objects.requireNonNull(SelectTerminalInspector.getNode(st)), bindValues, litebridgeContext);
-                        continue;
-                    }
-
-                    if (rhs instanceof QueryNode qn) {
-                        extractBindValues(qn, bindValues, litebridgeContext);
-                        continue;
-                    }
-
-                    if (rhs instanceof Column || rhs instanceof ExpressionSpec) {
-                        continue;
-                    }
-
-                    if (rhs instanceof Collection<?> collection) {
-                        bindValues.addAll(collection);
-                    } else {
-                        bindValues.add(rhs);
-                    }
+                    addBindValueBasedOnType(conditionNode.rhs(), bindValues, litebridgeContext);
                 }
                 case final ConditionWithIdNode conditionWithIdNode -> {
                     final Object id = conditionWithIdNode.id();
@@ -300,5 +281,32 @@ public final class QueryBindValueExtractor {
         }
 
         return nodes;
+    }
+
+    private static void addBindValueBasedOnType(final @Nullable Object value, final List<@Nullable Object> bindValues, final LitebridgeContext litebridgeContext) {
+        switch (value) {
+            case null -> bindValues.add(null);
+            case SelectTerminal<?> st ->
+                    extractBindValues(Objects.requireNonNull(SelectTerminalInspector.getNode(st)), bindValues, litebridgeContext);
+            case QueryNode qn -> extractBindValues(qn, bindValues, litebridgeContext);
+            case LinkedHashMap<?, ?> map ->
+                    addBindValuesBasedOnType(map.sequencedValues(), bindValues, litebridgeContext);
+            case Iterable<?> iterable -> addBindValuesBasedOnType(iterable, bindValues, litebridgeContext);
+            case ExpressionSpec es -> { /* Ignore */ }
+            case Column c -> { /* Ignore */ }
+            default -> bindValues.add(value);
+        }
+    }
+
+    private static void addBindValuesBasedOnType(final @Nullable Object[] values, final List<@Nullable Object> bindValues, final LitebridgeContext litebridgeContext) {
+        for (final Object value : values) {
+            addBindValueBasedOnType(value, bindValues, litebridgeContext);
+        }
+    }
+
+    private static void addBindValuesBasedOnType(final Iterable<?> values, final List<@Nullable Object> bindValues, final LitebridgeContext litebridgeContext) {
+        for (final Object value : values) {
+            addBindValueBasedOnType(value, bindValues, litebridgeContext);
+        }
     }
 }

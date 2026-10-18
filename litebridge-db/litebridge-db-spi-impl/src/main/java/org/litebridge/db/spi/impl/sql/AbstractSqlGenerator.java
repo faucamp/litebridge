@@ -251,13 +251,15 @@ public abstract class AbstractSqlGenerator {
         }
     }
 
-    protected String getColumnValueFragment(final UpdateColumn updateColumn) {
+    protected String getColumnValueFragment(final UpdateColumn updateColumn, final ClauseType clauseType, final Operation operation) {
         final ColumnValueGenerator columnValueGenerator = updateColumn.generator();
 
         if (columnValueGenerator != null) {
             return columnValueGenerator.generate();
         } else if (updateColumn.mathOperator() != null) {
             return mathOperationGenerator.createMathOperation(updateColumn.name(), updateColumn.mathOperator());
+        } else if (updateColumn.staticValue() != null) {
+            return updateColumn.staticValue().toSql(operation, clauseType);
         } else {
             return "?";
         }

@@ -50,11 +50,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-abstract sealed class AbstractCompilationContext implements CompilationContext permits DeleteCompilationContext, MergeCompilationContext, SelectCompilationContext, UpdateCompilationContext {
+abstract sealed class AbstractCompilationContext implements CompilationContext permits DeleteCompilationContext, InsertCompilationContext, MergeCompilationContext, SelectCompilationContext, UpdateCompilationContext {
 
     protected static final SelectExpressions EMPTY_SELECT_EXPRESSIONS = new SelectExpressions(Collections.emptyList(), Collections.emptyMap());
     protected final LitebridgeContext litebridgeContext;
@@ -549,6 +550,49 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
     }
 
+    /**
+     * Detects collection values in the specified raw values array and expands them into the resulting flattened value list.
+     *
+     * @param rawValues The raw input values to match the columns; can contain collections/maps.
+     * @return Flattened/expanded list of input values.
+     */
+    protected static List<@Nullable Object> expandValueList(final @Nullable Object[] rawValues) {
+        final List<@Nullable Object> valueList = new ArrayList<>();
+
+        for (Object rawValue : rawValues) {
+            expandAndAddValues(rawValue, valueList);
+        }
+
+        return valueList;
+    }
+
+    /**
+     * Detects collection values in the specified raw values array and expands them into the resulting flattened value list.
+     *
+     * @param rawValues The raw input values to match the columns; can contain collections/maps.
+     * @return Flattened/expanded list of input values.
+     */
+    protected static List<@Nullable Object> expandValueList(final List<@Nullable Object> rawValues) {
+        final List<@Nullable Object> valueList = new ArrayList<>();
+
+        for (Object rawValue : rawValues) {
+            expandAndAddValues(rawValue, valueList);
+        }
+
+        return valueList;
+    }
+
+    /**
+     * Detects if the specified value is a collection and expands it into the resulting flattened value list.
+     *
+     * @return Flattened/expanded list of input values.
+     */
+    protected static List<@Nullable Object> expandValueList(final @Nullable Object rawValue) {
+        final List<@Nullable Object> valueList = new ArrayList<>();
+        expandAndAddValues(rawValue, valueList);
+        return valueList;
+    }
+
     private ExpressionSpec resolveConditionExpressionSpec(final ExpressionSpec expressionSpec,
                                                           final List<SelectTarget> selectTargets,
                                                           final Operator operator) {
@@ -565,6 +609,16 @@ abstract sealed class AbstractCompilationContext implements CompilationContext p
         }
 
         return expressionSpec;
+    }
+
+    private static void expandAndAddValues(final @Nullable Object rawValue, final List<@Nullable Object> valueList) {
+        if (rawValue instanceof LinkedHashMap<?, ?> map) {
+            valueList.addAll(map.sequencedValues());
+        } else if (rawValue instanceof Collection<?> collection) {
+            valueList.addAll(collection);
+        } else {
+            valueList.add(rawValue);
+        }
     }
 
     private record TargetResolution(SelectTarget selectTarget,

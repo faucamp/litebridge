@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -46,6 +47,7 @@ public class OrmTable {
     private final TableMetaData metaData;
 
     private final List<FieldAccessor> primaryKeyFields;
+    private final Set<String> primaryKeyFieldNames;
     private final Map<FieldAccessor, MappedFieldTarget> fieldAccessorTargetMap;
     private final Map<String, MappedFieldTarget> fieldNameTargetMap;
     private final List<Map.Entry<FieldAccessor, MappedFieldTarget>> fieldTargetEntries;
@@ -190,6 +192,7 @@ public class OrmTable {
         this.nestedDtoClasses = nestedDtoClasses.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(nestedDtoClasses);
         this.fieldTargetEntries = Collections.unmodifiableList(orderedFieldTargetEntries);
         this.primaryKeyFields = createPrimaryKeyFields();
+        this.primaryKeyFieldNames = primaryKeyFields.stream().map(FieldAccessor::name).collect(Collectors.toSet());
 
         final int pkSize = primaryKeyFields.size();
 
@@ -233,6 +236,16 @@ public class OrmTable {
      */
     public List<FieldAccessor> primaryKeyFields() {
         return primaryKeyFields;
+    }
+
+    /**
+     * Checks if the specified field name is mapped to a primary key column.
+     *
+     * @param fieldName The DTO field name to check.
+     * @return True if the field is part of the primary key, false otherwise.
+     */
+    public boolean isFieldPartOfPrimaryKey(final String fieldName) {
+        return primaryKeyFieldNames.contains(fieldName);
     }
 
     /**
@@ -395,7 +408,7 @@ public class OrmTable {
      * @return the field accessor for the specified column name, or null if not found
      * @throws IllegalArgumentException if the specified column name is null or empty
      */
-    public FieldAccessor getFieldForColumnName(final String columnName) {
+    public FieldAccessor fieldForColumnName(final String columnName) {
         return ObjectUtils.requireNonNull(fieldForColumnNameOrNull(columnName), () -> new IllegalArgumentException("No field for column '" + columnName + "' in schema '" + metaData.schema() + "', table '" + metaData.name() + "'"));
     }
 

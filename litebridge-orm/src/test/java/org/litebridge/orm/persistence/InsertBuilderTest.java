@@ -35,7 +35,7 @@ class InsertBuilderTest {
         when(litebridgeContext.createQueryCompiler()).thenReturn(queryCompiler);
         when(queryCompiler.compile(any(QueryNode.class))).thenReturn(mock(PreparedOperation.class));
 
-        final InsertBuilder builder = new InsertBuilder(table, null, litebridgeContext);
+        final InsertBuilder builder = new InsertBuilder(new Object(), table, null, litebridgeContext);
         final LinkedHashMap<String, Object> row = new LinkedHashMap<>();
         row.put("TEST_COLUMN", "TEST_VALUE");
         builder.addRow(row);

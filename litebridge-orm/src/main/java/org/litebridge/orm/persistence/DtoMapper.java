@@ -178,7 +178,7 @@ public class DtoMapper {
                 rootMappingData = mappingData;
             }
 
-            final FieldAccessor fieldAccessor = mappingData.ormTable().getFieldForColumnName(column.name());
+            final FieldAccessor fieldAccessor = mappingData.ormTable().fieldForColumnName(column.name());
 
             // Check if we already have a mapping for this field
             FieldMapping fieldMapping = null;
@@ -305,7 +305,7 @@ public class DtoMapper {
                         continue;
                     }
 
-                    final FieldAccessor fieldAccessor = ormTable.getFieldForColumnName(mappedColumn.name());
+                    final FieldAccessor fieldAccessor = ormTable.fieldForColumnName(mappedColumn.name());
                     final GenericDtoDependency genericDtoDependency = new GenericDtoDependency(fieldAccessor, targetFieldMapping);
                     mappingData.addGenericDtoDependency(genericDtoDependency);
                 }
@@ -365,7 +365,7 @@ public class DtoMapper {
             }
 
             if (targetCol != null) {
-                final FieldAccessor targetPkField = targetOrmTable.getFieldForColumnName(targetCol.name());
+                final FieldAccessor targetPkField = targetOrmTable.fieldForColumnName(targetCol.name());
                 final int pkIndex = targetPkFields.indexOf(targetPkField);
                 if (pkIndex != -1) {
                     sortedColumns[pkIndex] = column;

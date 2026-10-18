@@ -4,6 +4,7 @@ import org.litebridge.commons.BooleanUtils;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.impl.sql.InsertSqlGenerator;
 import org.litebridge.db.spi.impl.sql.LabelGenerator;
 import org.litebridge.db.spi.impl.sql.MathOperationGenerator;
@@ -46,7 +47,7 @@ public final class OracleInsertSqlGenerator extends InsertSqlGenerator {
                         sql.append(", ");
                     }
 
-                    sql.append(getColumnValueFragment(insertColumn));
+                    sql.append(getColumnValueFragment(insertColumn, ClauseType.SELECT, insert));
                 }
 
                 sql.append(") ");

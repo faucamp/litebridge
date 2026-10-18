@@ -7,10 +7,14 @@ import org.litebridge.db.spi.update.Result;
 import org.litebridge.db.spi.update.UpdateResult;
 import org.litebridge.orm.engine.ast.QueryNode;
 
+import java.util.List;
+
 /**
  * Interface for building SQL execution/update statements.
  */
 public sealed interface StatementBuilder permits AbstractStatementBuilder, ManualUpsert, NoOpStatementBuilder {
+
+    Object dto();
 
     /**
      * Returns the current query node.
@@ -18,6 +22,13 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, Manua
      * @return the query node
      */
     QueryNode node();
+
+    /**
+     * Returns a cached copy of the AST node hash.
+     *
+     * @return the cached AST node hash
+     */
+    int nodeHash();
 
     /**
      * Returns the chain of statements built so far.
@@ -56,5 +67,13 @@ public sealed interface StatementBuilder permits AbstractStatementBuilder, Manua
      */
     default Class<? extends Result> resultType() {
         return UpdateResult.class;
+    }
+
+    default boolean combinable() {
+        return false;
+    }
+
+    default void combineWith(List<StatementBuilder> statementBuilders) {
+        throw new UnsupportedOperationException();
     }
 }

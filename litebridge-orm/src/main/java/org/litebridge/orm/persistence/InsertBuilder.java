@@ -23,14 +23,16 @@ sealed class InsertBuilder extends AbstractStatementBuilder permits MergeBuilder
     /**
      * Constructs a new {@code InsertBuilder}.
      *
+     * @param dto               The DTO to insert.
      * @param ormTable          The ORM table.
      * @param contextDtoClass   The parent/context DTO class.
      * @param litebridgeContext Litebridge context.
      */
-    public InsertBuilder(final OrmTable ormTable,
+    public InsertBuilder(final Object dto,
+                         final OrmTable ormTable,
                          final @Nullable Class<?> contextDtoClass,
                          final LitebridgeContext litebridgeContext) {
-        super(ormTable, contextDtoClass, litebridgeContext);
+        super(dto, ormTable, contextDtoClass, litebridgeContext);
     }
 
     public void addRow(final LinkedHashMap<String, @Nullable Object> fieldValues) {

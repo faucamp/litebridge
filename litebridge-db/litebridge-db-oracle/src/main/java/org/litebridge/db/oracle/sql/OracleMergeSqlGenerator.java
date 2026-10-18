@@ -88,7 +88,7 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
         if (!CollectionUtils.isEmpty(whenNotMatchedList)) {
             for (Merge.WhenMatched<Merge.MergeInsert> whenNotMatched : whenNotMatchedList) {
                 sql.append(" WHEN NOT MATCHED THEN ");
-                appendInsert(sql, whenNotMatched.operation());
+                appendInsert(sql, whenNotMatched.operation(), merge);
             }
         }
 
@@ -177,7 +177,7 @@ public class OracleMergeSqlGenerator extends MergeSqlGenerator {
 
             sql.append(labelGenerator.quoteIdentifier(updateColumn.name()));
             sql.append(" = ");
-            sql.append(getColumnValueFragment(updateColumn));
+            sql.append(getColumnValueFragment(updateColumn, ClauseType.SELECT, merge));
         }
 
         if (whenMatched.and() != null) {

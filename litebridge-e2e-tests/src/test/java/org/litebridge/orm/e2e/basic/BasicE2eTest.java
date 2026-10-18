@@ -738,6 +738,8 @@ public class BasicE2eTest extends AbstractE2eTest {
 
         final QueryPlanCache queryPlanCache = LitebridgeInspector.getQueryPlanCache(litebridge);
         assertEquals(1, queryPlanCache.size());
+
+        assertEquals(50, litebridge.select(Fn.count()).from(Person.class).oneOrThrow());
     }
 
     @TestTemplate

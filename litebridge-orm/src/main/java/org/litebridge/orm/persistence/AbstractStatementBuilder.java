@@ -18,6 +18,10 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
         permits AbstractConditionalStatementBuilder, InsertBuilder {
 
     /**
+     * The DTO associated with the statement.
+     */
+    protected Object dto;
+    /**
      * The ORM table associated with the statement.
      */
     protected final OrmTable ormTable;
@@ -33,25 +37,43 @@ public abstract sealed class AbstractStatementBuilder implements StatementBuilde
      * The current query node.
      */
     protected @Nullable QueryNode node;
+    protected int nodeHash = 0;
 
     /**
      * Constructs a new {@code AbstractStatementBuilder}.
      *
+     * @param dto               The DTO associated with the statement.
      * @param ormTable          The ORM table for the target DTO.
      * @param contextDtoClass   The parent/context DTO class.
      * @param litebridgeContext Litebridge context.
      */
-    protected AbstractStatementBuilder(final OrmTable ormTable,
+    protected AbstractStatementBuilder(final Object dto,
+                                       final OrmTable ormTable,
                                        final @Nullable Class<?> contextDtoClass,
                                        final LitebridgeContext litebridgeContext) {
+        this.dto = dto;
         this.ormTable = ormTable;
         this.contextDtoClass = contextDtoClass;
         this.litebridgeContext = litebridgeContext;
     }
 
     @Override
+    public Object dto() {
+        return dto;
+    }
+
+    @Override
     public QueryNode node() {
         return Objects.requireNonNull(node, "Statement builder node not set");
+    }
+
+    @Override
+    public int nodeHash() {
+        if (nodeHash == 0) {
+            nodeHash = node().hashCode();
+        }
+
+        return nodeHash;
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.litebridge.db.spi.impl.sql;
 import org.litebridge.db.spi.DatabaseProviderMetaData;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
+import org.litebridge.db.spi.expression.ClauseType;
 import org.litebridge.db.spi.tx.ConnectionProvider;
 import org.litebridge.db.spi.update.Insert;
 import org.litebridge.db.spi.update.UpdateColumn;
@@ -69,7 +70,7 @@ public class InsertSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                sql.append(getColumnValueFragment(insertColumn));
+                sql.append(getColumnValueFragment(insertColumn, ClauseType.SELECT, insert));
             }
 
             sql.append(')');

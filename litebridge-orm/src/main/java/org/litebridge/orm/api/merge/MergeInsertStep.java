@@ -5,10 +5,12 @@ import org.litebridge.orm.engine.LitebridgeContext;
 import org.litebridge.orm.engine.ast.InsertNode;
 import org.litebridge.orm.expression.ExpressionSpec;
 
+import java.util.stream.StreamSupport;
+
 /**
  * Step to specify the columns to insert into for a {@code WHEN NOT MATCHED INSERT} clause.
  */
-public class MergeInsertStep {
+public sealed class MergeInsertStep permits DtoMergeInsertStep {
 
     private final String table;
     private final LitebridgeContext litebridgeContext;
@@ -45,5 +47,17 @@ public class MergeInsertStep {
     public InsertValuesStep insert(final String... columns) {
         final InsertNode insertNode = new InsertNode(table, null, columns);
         return new InsertValuesStep(insertNode, litebridgeContext);
+    }
+
+    /**
+     * Creates a {@code WHEN NOT MATCHED INSERT} clause inserting values into the specified columns.
+     *
+     * @param columns the columns to insert into
+     * @return step to specify the values to insert
+     */
+    public InsertValuesStep insert(final Iterable<String> columns) {
+        final String[] columnArray = StreamSupport.stream(columns.spliterator(), false)
+                .toArray(String[]::new);
+        return insert(columnArray);
     }
 }

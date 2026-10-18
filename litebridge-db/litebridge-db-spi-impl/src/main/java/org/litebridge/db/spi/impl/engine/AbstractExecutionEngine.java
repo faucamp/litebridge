@@ -219,7 +219,19 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                                                  final ConnectionProvider connectionProvider) throws SQLException {
         if (getLogger().isTraceEnabled() && !CollectionUtils.isEmpty(preparedSql.bindValues())) {
             getLogger().trace("Generated SQL: {} with bind parameters: {}", preparedSql.sql(), preparedSql.bindValues().stream()
-                    .map(bindValue -> bindValue.value() != null ? bindValue.value() : "<null>")
+                    .map(bindValue -> {
+                        final Object value = bindValue.value();
+
+                        if (value == null) {
+                            return "NULL";
+                        }
+
+                        if (value instanceof String str) {
+                            return "'%s'".formatted(str);
+                        }
+
+                        return value;
+                    })
                     .toList());
         } else {
             getLogger().debug("Generated SQL: {}", preparedSql.sql());
@@ -257,7 +269,13 @@ abstract class AbstractExecutionEngine implements ExecutionEngine {
                     case String string -> preparedStatement.setString(ordinal[0]++, string);
                     case Timestamp timestamp -> preparedStatement.setTimestamp(ordinal[0]++, timestamp);
                     case byte[] bytes -> preparedStatement.setBytes(ordinal[0]++, bytes);
-                    default -> preparedStatement.setObject(ordinal[0]++, bindValue.value(), bindValue.sqlDataType());
+                    default -> {
+                        if (bindValue.sqlDataType() != Types.NULL) {
+                            preparedStatement.setObject(ordinal[0]++, bindValue.value(), bindValue.sqlDataType());
+                        } else {
+                            preparedStatement.setObject(ordinal[0]++, bindValue.value());
+                        }
+                    }
                 }
             }
         }

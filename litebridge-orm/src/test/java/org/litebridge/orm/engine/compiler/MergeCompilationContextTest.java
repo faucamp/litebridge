@@ -16,7 +16,6 @@ import org.litebridge.db.spi.generator.ColumnValueGenerator;
 import org.litebridge.db.spi.query.Condition;
 import org.litebridge.db.spi.query.LogicOperator;
 import org.litebridge.db.spi.query.Operator;
-import org.litebridge.db.spi.sql.BindValue;
 import org.litebridge.db.spi.update.Merge;
 import org.litebridge.orm.api.select.model.SelectExpressionMapper;
 import org.litebridge.orm.engine.LitebridgeContext;
@@ -28,7 +27,6 @@ import org.litebridge.orm.engine.ast.MergeNode;
 import org.litebridge.orm.engine.ast.SetNode;
 import org.litebridge.orm.engine.ast.UsingNode;
 import org.litebridge.orm.expression.ExpressionSpec;
-import org.litebridge.orm.expression.intent.ExpressionSpecArray;
 import org.litebridge.orm.expression.select.SelectColumnSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.persistence.OrmTable;
@@ -214,27 +212,22 @@ class MergeCompilationContextTest {
         // 1. Column by field name in DTO mode
         when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.DTO);
         compilationContext.whenMatchedUpdateSet(new SetNode(null, "name", "Alice"));
-        assertEquals(1, compilationContext.getWhenMatchedSpec().getUpdateColumns().size());
-        assertEquals(1, compilationContext.getWhenMatchedSpec().getBindValues().size());
+        assertEquals(1, compilationContext.getWhenMatchedSpec().getSetNodes().size());
 
         // 2. Column by column name in SQL mode
         when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.SQL);
         compilationContext.whenMatchedUpdateSet(new SetNode(null, "user_name", "Bob"));
-        assertEquals(2, compilationContext.getWhenMatchedSpec().getUpdateColumns().size());
+        assertEquals(2, compilationContext.getWhenMatchedSpec().getSetNodes().size());
 
         // 3. QueryField
         final QueryField queryField = new QueryField(UserDto.class, "name");
         compilationContext.whenMatchedUpdateSet(new SetNode(null, queryField, "Charlie"));
-        assertEquals(3, compilationContext.getWhenMatchedSpec().getUpdateColumns().size());
+        assertEquals(3, compilationContext.getWhenMatchedSpec().getSetNodes().size());
 
         // 4. ColumnExpressionSpec
         final SelectColumnSpec colSpec = new SelectColumnSpec(new Column(table, "age"));
         compilationContext.whenMatchedUpdateSet(new SetNode(null, colSpec, 30));
-        assertEquals(4, compilationContext.getWhenMatchedSpec().getUpdateColumns().size());
-
-        // 5. Unsupported expression spec
-        final SetNode invalidNode = new SetNode(null, new ExpressionSpecArray(new ExpressionSpec[0]), "val");
-        assertThrows(IllegalArgumentException.class, () -> compilationContext.whenMatchedUpdateSet(invalidNode));
+        assertEquals(4, compilationContext.getWhenMatchedSpec().getSetNodes().size());
     }
 
     @Test
@@ -257,38 +250,34 @@ class MergeCompilationContextTest {
         final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode(null, UserDto.class, null, null), litebridgeContext);
         compilationContext.addWhenMatchedSpec(false);
 
+        assertNull(compilationContext.getWhenMatchedSpec().getInsertNode());
+
         // 1. Column names in DTO mode
         when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.DTO);
         compilationContext.whenNotMatchedInsert(new InsertNode("users", null, new String[]{"name"}));
-        assertEquals(1, compilationContext.getWhenMatchedSpec().getColumnMetaDataList().size());
+        assertNotNull(compilationContext.getWhenMatchedSpec().getInsertNode());
+        compilationContext.getWhenMatchedSpec().setInsertNode(null);
 
         // 2. Column names in SQL mode
         when(litebridgeContext.mode()).thenReturn(LitebridgeContext.Mode.SQL);
         compilationContext.whenNotMatchedInsert(new InsertNode("users", null, new String[]{"age"}));
-        assertEquals(2, compilationContext.getWhenMatchedSpec().getColumnMetaDataList().size());
+        assertNotNull(compilationContext.getWhenMatchedSpec().getInsertNode());
+        compilationContext.getWhenMatchedSpec().setInsertNode(null);
 
         // 3. ExpressionSpecs: ColumnExpressionSpec & QueryField
         final SelectColumnSpec colSpec = new SelectColumnSpec(new Column(table, "age"));
         final QueryField qField = new QueryField(UserDto.class, "name");
         compilationContext.whenNotMatchedInsert(new InsertNode(null, UserDto.class, new ExpressionSpec[]{colSpec, qField}));
-        assertEquals(4, compilationContext.getWhenMatchedSpec().getColumnMetaDataList().size());
+        assertNotNull(compilationContext.getWhenMatchedSpec().getInsertNode());
+        compilationContext.getWhenMatchedSpec().setInsertNode(null);
 
-        // 4. QueryField with unknown field throws IllegalArgumentException
-        final QueryField unknownField = new QueryField(UserDto.class, "unknown");
-        final InsertNode unknownInsertNode = new InsertNode(null, UserDto.class, new ExpressionSpec[]{unknownField});
-        assertThrows(IllegalArgumentException.class, () -> compilationContext.whenNotMatchedInsert(unknownInsertNode));
-
-        // 5. Unsupported expression spec throws UnsupportedOperationException
-        final InsertNode unsupportedNode = new InsertNode(null, UserDto.class, new ExpressionSpec[]{new ExpressionSpecArray(new ExpressionSpec[0])});
-        assertThrows(UnsupportedOperationException.class, () -> compilationContext.whenNotMatchedInsert(unsupportedNode));
-
-        // 6. Early return when both columns and expressionSpecs are null
+        // 4. Early return when both columns and expressionSpecs are null
         final InsertNode emptyInsertNode = new InsertNode(null, null, null, null, null);
         compilationContext.whenNotMatchedInsert(emptyInsertNode);
     }
 
     @Test
-    void addInsertValuesAppendsBindValues() {
+    void addInsertValues() {
         // Given
         final LitebridgeContext context = createMockContext();
         final Table table = new Table("items");
@@ -302,13 +291,14 @@ class MergeCompilationContextTest {
         final MergeCompilationContext compilationContext = new MergeCompilationContext(new MergeNode("items", null, null, null), context);
         compilationContext.addWhenMatchedSpec(false);
         compilationContext.whenNotMatchedInsert(new InsertNode("items", null, new String[]{"id"}));
+        final InsertValuesNode insertValuesNode = new InsertValuesNode(null, new Object[]{100});
 
         // When
-        compilationContext.addInsertValues(new InsertValuesNode(null, new Object[]{100}));
+        compilationContext.addInsertValues(insertValuesNode);
 
         // Then
-        assertEquals(1, compilationContext.getWhenMatchedSpec().getBindValues().size());
-        assertEquals(new BindValue(100, Types.INTEGER), compilationContext.getWhenMatchedSpec().getBindValues().getFirst());
+        assertEquals(1, compilationContext.getWhenMatchedSpec().getInsertValuesNodes().size());
+        assertSame(insertValuesNode, compilationContext.getWhenMatchedSpec().getInsertValuesNodes().getFirst());
     }
 
     @Test
@@ -354,7 +344,7 @@ class MergeCompilationContextTest {
         final OrmTable roleOrmTable = mock(OrmTable.class);
         final FieldAccessor roleIdAccessor = mock(FieldAccessor.class);
         when(roleIdAccessor.get(roleObj)).thenReturn(99);
-        when(roleOrmTable.getFieldForColumnName("id")).thenReturn(roleIdAccessor);
+        when(roleOrmTable.fieldForColumnName("id")).thenReturn(roleIdAccessor);
         when(context.tableRegistry().getOrmTableOrThrow(RoleDto.class)).thenReturn(roleOrmTable);
         when(context.tableRegistry().getOrmTableOrThrow(roleTable)).thenReturn(userOrmTable);
 

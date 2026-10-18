@@ -239,18 +239,51 @@ public final class Fn {
     }
 
     /**
-     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data.
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data spanning one or more rows.
      * <p>
      * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
      * inline virtual table of hardcoded data without needing a physical database table.
+     * <p>
+     * For a single row of {@code VALUES} data, the {@code labels} and {@code values} arrays should contain the same number of elements.
+     * For multiple rows of {@code VALUES} data, the {@code values} array size should be a multiple of the {@code labels} array size.
      *
-     * @param tableAlias the alias of the virtual table to which the values belong
-     * @param labels     array of column labels
-     * @param values     array of nullable values
-     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     * @param tableAlias The alias of the virtual table to which the values belong.
+     * @param labels     Array of column labels.
+     * @param values     Array of nullable values. Must be the same length as {@code labels}, or a multiple of it.
+     * @return A new {@code ValuesSpec} instance containing the specified table alias, label, and value.
+     * @see #values(String, List, List) A list-based alternative.
+     * @see #values(String, List) A structured multi-row alternative.
      */
     public static ValuesSpec values(final String tableAlias, final String[] labels, final @Nullable Object[] values) {
-        return new ValuesSpec(tableAlias, labels, values);
+        final int rowCount = values.length / labels.length;
+
+        if (values.length % labels.length > 0) {
+            throw new IllegalArgumentException("The number of values must be a multiple of the number of labels.");
+        }
+
+        return new ValuesSpec(tableAlias, labels, values, rowCount);
+    }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple columns of hardcoded data spanning one or more rows.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     * <p>
+     * For a single row of {@code VALUES} data, the {@code labels} and {@code values} lists should contain the same number of elements.
+     * For multiple rows of {@code VALUES} data, the {@code values} list size should be a multiple of the {@code labels} list size.
+     *
+     * @param tableAlias The alias of the virtual table to which the values belong.
+     * @param labels     List of column labels
+     * @param values     List of nullable values. Must be the same length as {@code labels}, or a multiple of it.
+     * @return A new {@code ValuesSpec} instance containing the specified table alias, label, and value.
+     * @see #values(String, String[], Object[]) Array-based alternative.
+     * @see #values(String, List) Provides a structured multi-row alternative.
+     */
+    public static ValuesSpec values(final String tableAlias, final List<String> labels, final List<@Nullable Object> values) {
+        final String[] labelsArray = labels.toArray(new String[0]);
+        final Object[] objectArray = values.toArray(new Object[0]);
+        return values(tableAlias, labelsArray, objectArray);
     }
 
     /**
@@ -277,6 +310,39 @@ public final class Fn {
 
         return new ValuesSpec(tableAlias, labels, valueArray);
     }
+
+    /**
+     * Creates a SQL {@code VALUES} clause for multiple row, each containing multiple columns of hardcoded data.
+     * <p>
+     * The {@code VALUES} clause be used in {@code SELECT} or {@code MERGE} statements to construct a temporary,
+     * inline virtual table of hardcoded data without needing a physical database table.
+     *
+     * @param tableAlias the alias of the virtual table to which the values belong
+     * @param rows       List of rows, each row consisting of a map of column labels to nullable values. To preserve ordering, consider using a {@link LinkedHashMap}.
+     * @return a new {@code ValuesSpec} instance containing the specified table alias, label, and value
+     * @see #values(String, String[], Object[]) The generic {@code values()} factory method, which can handle single or multiple rows.
+     */
+    public static ValuesSpec values(final String tableAlias, final List<Map<String, @Nullable Object>> rows) {
+        final int rowCount = rows.size();
+        final int columnCount = rows.getFirst().size();
+        final String[] labels = new String[columnCount];
+        final @Nullable Object[] valueArray = new Object[rowCount * columnCount];
+        int i = 0;
+
+        for (final Map<String, @Nullable Object> row : rows) {
+            for (final Map.Entry<String, @Nullable Object> entry : row.entrySet()) {
+                if (i < columnCount) {
+                    labels[i] = entry.getKey();
+                }
+
+                valueArray[i] = entry.getValue();
+                i++;
+            }
+        }
+
+        return new ValuesSpec(tableAlias, labels, valueArray, rowCount);
+    }
+
     // Field/column selectors
 
     /**

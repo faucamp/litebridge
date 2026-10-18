@@ -18,13 +18,15 @@ public final class DeleteBuilder extends AbstractConditionalStatementBuilder {
     /**
      * Constructs a {@code DeleteBuilder} for the specified ORM table.
      *
+     * @param dto               The DTO to delete.
      * @param table             the table to delete from
      * @param litebridgeContext the ORM context
      */
-    public DeleteBuilder(final OrmTable table,
+    public DeleteBuilder(final Object dto,
+                         final OrmTable table,
                          final @Nullable Class<?> contextDtoClass,
                          final LitebridgeContext litebridgeContext) {
-        super(table, contextDtoClass, litebridgeContext);
+        super(dto, table, contextDtoClass, litebridgeContext);
         this.node = new DeleteNode(null, table.metaData().qualifiedName(), table.dtoClass());
     }
 

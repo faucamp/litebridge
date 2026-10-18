@@ -606,9 +606,9 @@ class AbstractSqlGeneratorTest {
         final UpdateColumn colDefault = new UpdateColumn("name");
 
         // When & Then
-        assertEquals("GEN_SQL()", sqlGenerator.getColumnValueFragment(colWithGen));
-        assertEquals("count + ?", sqlGenerator.getColumnValueFragment(colWithMath));
-        assertEquals("?", sqlGenerator.getColumnValueFragment(colDefault));
+        assertEquals("GEN_SQL()", sqlGenerator.getColumnValueFragment(colWithGen, ClauseType.SELECT, mock(Select.class)));
+        assertEquals("count + ?", sqlGenerator.getColumnValueFragment(colWithMath, ClauseType.SELECT, mock(Select.class)));
+        assertEquals("?", sqlGenerator.getColumnValueFragment(colDefault, ClauseType.SELECT, mock(Select.class)));
     }
 
     @Test

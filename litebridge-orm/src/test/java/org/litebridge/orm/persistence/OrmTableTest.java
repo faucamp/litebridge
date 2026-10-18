@@ -51,7 +51,7 @@ class OrmTableTest {
         assertSame(idColumn, ormTable.columnMetaDataForField("id"));
         assertSame(nameColumn, ormTable.columnMetaDataForField("name"));
         assertSame(idColumn, ormTable.getColumnMetaData("id"));
-        assertSame(nameField, ormTable.getFieldForColumnName("name"));
+        assertSame(nameField, ormTable.fieldForColumnName("name"));
         assertSame(idField, ormTable.fieldForColumnNameOrNull("id"));
         assertNull(ormTable.fieldForColumnNameOrNull("unknown"));
         assertTrue(ormTable.getNestedDtoClasses().isEmpty());
@@ -82,7 +82,7 @@ class OrmTableTest {
         final OrmTable ormTable = simpleOrmTable();
 
         // When/Then
-        assertThrows(IllegalArgumentException.class, () -> ormTable.getFieldForColumnName("unknown"));
+        assertThrows(IllegalArgumentException.class, () -> ormTable.fieldForColumnName("unknown"));
     }
 
     @Test
@@ -247,7 +247,7 @@ class OrmTableTest {
 
         // Then
         assertSame(nestedColumn, ormTable.columnMetaDataForField("nested"));
-        assertSame(nestedField, ormTable.getFieldForColumnName("nested_id"));
+        assertSame(nestedField, ormTable.fieldForColumnName("nested_id"));
         assertSame(inlineTable, ormTable.getContextTableRegistry().getOrmTable(InlineNestedDto.class));
         assertSame(nestedField, ormTable.mappedFieldTargets().getFirst().getKey());
         assertSame(nestedColumn, ormTable.mappedFieldTargets().getFirst().getValue());
@@ -277,7 +277,7 @@ class OrmTableTest {
         // Then
         assertEquals(List.of(AddressDto.class), ormTable.getNestedDtoClasses());
         assertSame(cityColumn, ormTable.columnMetaDataForField("address.city"));
-        assertSame(cityField, ormTable.getFieldForColumnName("city"));
+        assertSame(cityField, ormTable.fieldForColumnName("city"));
     }
 
     @Test

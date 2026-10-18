@@ -2,6 +2,7 @@ package org.litebridge.orm.engine.compiler;
 
 import org.jspecify.annotations.Nullable;
 import org.litebridge.db.spi.ColumnMetaData;
+import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.db.spi.Table;
 import org.litebridge.db.spi.TableMetaData;
 import org.litebridge.db.spi.generator.ColumnValueGenerator;
@@ -14,16 +15,13 @@ import org.litebridge.orm.expression.ColumnExpressionSpec;
 import org.litebridge.orm.expression.ExpressionSpec;
 import org.litebridge.orm.meta.QueryField;
 import org.litebridge.orm.meta.QueryFieldInspector;
-import org.litebridge.db.spi.MappedFieldTarget;
 import org.litebridge.orm.persistence.MappedCompositeKey;
 import org.litebridge.orm.persistence.OrmTable;
 import org.litebridge.orm.persistence.TableRegistry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -32,7 +30,7 @@ import java.util.TreeSet;
 /**
  * Compilation context for INSERT statements.
  */
-final class InsertCompilationContext implements CompilationContext {
+final class InsertCompilationContext extends AbstractCompilationContext {
 
     private final Table table;
     private final List<ColumnMetaData> columnMetaDataList = new ArrayList<>();
@@ -44,6 +42,7 @@ final class InsertCompilationContext implements CompilationContext {
 
     InsertCompilationContext(final InsertNode insertNode,
                              final LitebridgeContext litebridgeContext) {
+        super(litebridgeContext);
         final OrmTable ormTable;
         final TableMetaData tableMetaData;
 
@@ -165,17 +164,7 @@ final class InsertCompilationContext implements CompilationContext {
 
         if (rawValues.size() != insertColumns.size()) {
             // There are composite values that need to be expanded
-            values = new ArrayList<>(insertColumns.size());
-
-            for (Object rawValue : rawValues) {
-                if (rawValue instanceof LinkedHashMap<?, ?> map) {
-                    values.addAll(map.sequencedValues());
-                } else if (rawValue instanceof Collection<?> collection) {
-                    values.addAll(collection);
-                } else {
-                    values.add(rawValue);
-                }
-            }
+            values = expandValueList(rawValues);
         } else {
             values = rawValues;
         }

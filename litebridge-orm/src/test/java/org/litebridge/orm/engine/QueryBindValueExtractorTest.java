@@ -265,7 +265,7 @@ class QueryBindValueExtractorTest {
         final OrmTable fkOrmTable = mock(OrmTable.class);
         final FieldAccessor fkIdAccessor = mock(FieldAccessor.class);
         when(fkIdAccessor.get(parentDto)).thenReturn(999L);
-        when(fkOrmTable.getFieldForColumnName("id")).thenReturn(fkIdAccessor);
+        when(fkOrmTable.fieldForColumnName("id")).thenReturn(fkIdAccessor);
 
         final TableRegistry tableRegistry = mock(TableRegistry.class);
         when(tableRegistry.getOrmTable(SampleDto.class)).thenReturn(ormTable);

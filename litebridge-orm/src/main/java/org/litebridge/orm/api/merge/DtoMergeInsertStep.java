@@ -8,7 +8,7 @@ import org.litebridge.orm.engine.ast.InsertNode;
 /**
  * DTO-mode merge step for setting up {@code WHEN NOT MATCHED INSERT} clause.
  */
-public class DtoMergeInsertStep extends MergeInsertStep {
+public final class DtoMergeInsertStep extends MergeInsertStep {
 
     /**
      * Creates a new {@code DtoMergeInsertStep} instance.
@@ -40,6 +40,17 @@ public class DtoMergeInsertStep extends MergeInsertStep {
      */
     @Override
     public InsertValuesStep insert(final String... fields) {
+        return super.insert(fields);
+    }
+
+    /**
+     * Creates a {@code WHEN NOT MATCHED INSERT} clause inserting values into the specified DTO/entity fields.
+     *
+     * @param fields the DTO/entity fields to insert
+     * @return step to specify the values to insert
+     */
+    @Override
+    public InsertValuesStep insert(final Iterable<String> fields) {
         return super.insert(fields);
     }
 }

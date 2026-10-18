@@ -14,6 +14,7 @@ import org.litebridge.orm.e2e.compositepk.dto.CompositePkSimpleM2M;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkTyped;
 import org.litebridge.orm.e2e.compositepk.dto.CompositePkTypedClass;
 import org.litebridge.orm.e2e.setup.DbEnvDtoTableMapper;
+import org.litebridge.orm.expression.Fn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -278,8 +279,8 @@ class CompositePkTest extends AbstractE2eTest {
         // Save both DTOs using cascading
         litebridge.save(child1);
 
-        assertEquals(1, litebridge.select().from(compPkChildTable).list().size());
-        assertEquals(1, litebridge.select().from(compPkParentTable).list().size());
+        assertEquals(1, litebridge.select(Fn.count()).from(compPkChildTable).oneOrThrow());
+        assertEquals(1, litebridge.select(Fn.count()).from(compPkParentTable).oneOrThrow());
 
         // Retrieve first child DTO and related parent DTO via a join
         {

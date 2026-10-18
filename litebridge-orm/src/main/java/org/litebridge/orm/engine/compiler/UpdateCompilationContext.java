@@ -93,7 +93,7 @@ final class UpdateCompilationContext extends AbstractCompilationContext {
 
                                     if (setNode.value() instanceof Map<?, ?> map) {
                                         final String joinColName = cmd.getJoinColumn() != null ? cmd.getJoinColumn().name() : null;
-                                        final String pkFieldName = joinColName != null ? mappedCompositeKey.targetOrmTable().get().getFieldForColumnName(joinColName).name() : null;
+                                        final String pkFieldName = joinColName != null ? mappedCompositeKey.targetOrmTable().get().fieldForColumnName(joinColName).name() : null;
 
                                         if (map.containsKey(cmd.name())) {
                                             val = map.get(cmd.name());

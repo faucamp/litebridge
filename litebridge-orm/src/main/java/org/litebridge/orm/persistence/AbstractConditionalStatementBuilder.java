@@ -14,14 +14,16 @@ public abstract sealed class AbstractConditionalStatementBuilder extends Abstrac
     /**
      * Creates a new {@code AbstractConditionalStatementBuilder} instance.
      *
+     * @param dto               The DTO associated with the statement.
      * @param ormTable          The ORM table for the target DTO.
      * @param contextDtoClass   The parent/context DTO class.
      * @param litebridgeContext Litebridge context.
      */
-    public AbstractConditionalStatementBuilder(final OrmTable ormTable,
+    public AbstractConditionalStatementBuilder(final Object dto,
+                                               final OrmTable ormTable,
                                                final @Nullable Class<?> contextDtoClass,
                                                final LitebridgeContext litebridgeContext) {
-        super(ormTable, contextDtoClass, litebridgeContext);
+        super(dto, ormTable, contextDtoClass, litebridgeContext);
     }
 
     /**

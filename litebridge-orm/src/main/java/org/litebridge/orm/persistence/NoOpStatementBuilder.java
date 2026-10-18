@@ -26,7 +26,29 @@ public final class NoOpStatementBuilder implements StatementBuilder {
      * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
      */
     @Override
+    public Object dto() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Invoking this method will throw an {@link UnsupportedOperationException}.
+     *
+     * @return Not supported
+     * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
+     */
+    @Override
     public QueryNode node() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Invoking this method will throw an {@link UnsupportedOperationException}.
+     *
+     * @return Not supported
+     * @throws UnsupportedOperationException Always thrown as this operation is not supported in the {@code NoOpStatementBuilder} implementation.
+     */
+    @Override
+    public int nodeHash() {
         throw new UnsupportedOperationException();
     }
 

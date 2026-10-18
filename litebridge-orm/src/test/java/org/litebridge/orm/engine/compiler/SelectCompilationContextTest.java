@@ -220,7 +220,7 @@ class SelectCompilationContextTest {
         when(ormTable.columnMetaDataForField("id")).thenReturn(idCol);
 
         final FieldAccessor fieldAccessor = mock(FieldAccessor.class);
-        when(ormTable.getFieldForColumnName("id")).thenReturn(fieldAccessor);
+        when(ormTable.fieldForColumnName("id")).thenReturn(fieldAccessor);
         when(context.tableRegistry().getOrmTableOrThrow(UserDto.class)).thenReturn(ormTable);
 
         final SelectNode selectNode = new SelectNode(null, UserDto.class, null, null, null, null);

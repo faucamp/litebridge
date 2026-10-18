@@ -77,7 +77,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
                 sql.append(" THEN ");
 
                 if (whenMatched.operation() instanceof Merge.MergeUpdate update) {
-                    appendUpdate(sql, update);
+                    appendUpdate(sql, update, merge, ClauseType.SELECT);
                 } else if (whenMatched.operation() instanceof Merge.MergeDelete) {
                     sql.append("DELETE");
                 } else {
@@ -91,14 +91,17 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
         if (!CollectionUtils.isEmpty(whenNotMatchedList)) {
             for (Merge.WhenMatched<Merge.MergeInsert> whenNotMatched : whenNotMatchedList) {
                 sql.append(" WHEN NOT MATCHED THEN ");
-                appendInsert(sql, whenNotMatched.operation());
+                appendInsert(sql, whenNotMatched.operation(), merge);
             }
         }
 
         return sql.toString();
     }
 
-    protected void appendUpdate(final StringBuilder sql, final Merge.MergeUpdate update) {
+    protected void appendUpdate(final StringBuilder sql,
+                                final Merge.MergeUpdate update,
+                                final Operation operation,
+                                final ClauseType clauseType) {
         sql.append("UPDATE SET ");
 
         boolean first = true;
@@ -112,12 +115,14 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
 
             sql.append(labelGenerator.quoteIdentifier(updateColumn.name()));
             sql.append(" = ");
-            sql.append(getColumnValueFragment(updateColumn));
+            sql.append(getColumnValueFragment(updateColumn, clauseType, operation));
         }
 
     }
 
-    protected void appendInsert(final StringBuilder sql, final Merge.MergeInsert insert) {
+    protected void appendInsert(final StringBuilder sql,
+                                final Merge.MergeInsert insert,
+                                final Merge merge) {
         final List<String> columnNames = insert.columns().stream().map(UpdateColumn::name).toList();
         sql.append("INSERT (")
                 .append(String.join(", ", columnNames.stream().map(labelGenerator::quoteIdentifier).toList()))
@@ -137,7 +142,7 @@ public class MergeSqlGenerator extends AbstractSqlGenerator {
                     sql.append(", ");
                 }
 
-                sql.append(getColumnValueFragment(insertColumn));
+                sql.append(getColumnValueFragment(insertColumn, ClauseType.SELECT, merge));
             }
 
             sql.append(')');
