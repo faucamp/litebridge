@@ -17,7 +17,7 @@
     <description>Litebridge Spring Framework 6 and Spring Boot 3 integration</description>
 
     <properties>
-        <spring-boot.version>3.2.0</spring-boot.version>
+        <spring-boot.version>4.1.1</spring-boot.version>
     </properties>
 
     <dependencyManagement>
